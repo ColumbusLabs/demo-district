@@ -8,8 +8,22 @@
 **Build style:** Small, chat-friendly slices with a hard checkpoint after every slice.  
 **Model options used in this plan:** GPT-5.6 Sol and GPT-6 Astra Pro.
 
+<!-- passes-01-03-status -->
+## Current implementation checkpoint — World passes 1–3 (slices 5–12)
+
+**The walkable plaza now exists.** See [pass checkpoint and evidence](PASSES_01-03.md) and [art direction](WORLD_ART_DIRECTION.md).
+
+On 2026-09-24 the user set **desktop browser as the primary target** (mobile secondary but supported), approved CC0 third-party assets, and approved regrouping slices 5–22 into seven passes aimed directly at the mockup (below). Passes 1–3 ran back to back:
+
+- **Pass 1 — composition and light** (slices 5, 6, 10): layout-driven plaza, boulevard, water channels with coping and LED lines, beds, plinths, banners, collision against every solid, golden-hour sun, HDR sky and image-based lighting, haze, lake, and mountains.
+- **Pass 2 — architecture and landmark** (slices 7, 8, 12): parametric pavilion kit with three roof families, storefront frames, wood accents, soffit lighting, interior-mapped storefront glass; the arch-and-orb landmark over the fountain.
+- **Pass 3 — life and atmosphere** (slices 9, 11): procedural trees, shrubs, grasses, boulders, benches, planters, wind sway; shader water with Fresnel sky reflection, bank shading, LED spill, and a fountain.
+
+An early baseline of slice 20 was needed to keep software-rendered browsers (and CI) usable: automatic high/medium/low tiers. Next: **Pass 4 — interaction** (slices 13 signage, 14 targeting, 15 preview overlay). Native Sites acceptance and physical-device testing remain pending. No merge or deployment is authorized.
+<!-- /passes-01-03-status -->
+
 <!-- slice-04-status -->
-## Current implementation checkpoint — Slice 4
+## Historical implementation checkpoint — Slice 4
 
 **Slice 4 mobile/touch navigation implemented.** See [Slice 4 evidence](SLICE_04.md) and the [navigation contract](NAVIGATION.md).
 
@@ -17,7 +31,7 @@ A one-finger scene drag looks around, and an analog movement stick walks; both w
 
 The approved plaza mockup is now in the repository: [art direction](WORLD_ART_DIRECTION.md). The toolchain is on Node 26 (Node 24 also supported).
 
-Native Sites acceptance and physical iPhone/Android testing remain pending. No merge or deployment is authorized. **Milestone 1 (engine boots) is reached in emulation.** Next planned code slice: **5 — District graybox (6 Astra Pro).**
+Native Sites acceptance and physical iPhone/Android testing remain pending. No merge or deployment is authorized. **Milestone 1 (engine boots) is reached in emulation.** Next planned code slice at that checkpoint: **5 — District graybox (6 Astra Pro).**
 <!-- /slice-04-status -->
 
 <!-- slice-03-status -->
@@ -381,6 +395,7 @@ Each slice must end with:
 
 ### Slice 5 — District graybox
 **Model:** GPT-6 Astra Pro
+**Status:** Implemented in world pass 1. See [passes 1–3](PASSES_01-03.md).
 
 **Goal:** Recreate the selected Demo District mockup composition using primitives only.
 
@@ -404,6 +419,7 @@ Each slice must end with:
 
 ### Slice 6 — Ground, curbs, and water-channel geometry
 **Model:** GPT-5.6 Sol
+**Status:** Implemented in world pass 1.
 
 **Goal:** Replace the graybox floor with a readable plaza circulation system.
 
@@ -423,6 +439,7 @@ Each slice must end with:
 
 ### Slice 7 — Reusable pavilion architecture kit
 **Model:** GPT-6 Astra Pro
+**Status:** Implemented in world pass 2.
 
 **Goal:** Create a coherent architecture language that does not look like copied boxes.
 
@@ -445,6 +462,7 @@ Each slice must end with:
 
 ### Slice 8 — Hero arch and orb landmark
 **Model:** GPT-6 Astra Pro
+**Status:** Implemented in world pass 2.
 
 **Goal:** Build the central signature landmark that anchors Demo District visually.
 
@@ -466,6 +484,7 @@ Each slice must end with:
 
 ### Slice 9 — Landscaping kit
 **Model:** GPT-5.6 Sol
+**Status:** Implemented in world pass 3.
 
 **Goal:** Break up hard architecture and establish the premium outdoor atmosphere.
 
@@ -484,6 +503,7 @@ Each slice must end with:
 
 ### Slice 10 — Golden-hour lighting and sky
 **Model:** GPT-6 Astra Pro
+**Status:** Implemented in world pass 1 (baseline; tuned against the mockup).
 
 **Goal:** Establish the visual identity closest to the selected mockup.
 
@@ -506,6 +526,7 @@ Each slice must end with:
 
 ### Slice 11 — Water look and fountain motion
 **Model:** GPT-6 Astra Pro
+**Status:** Implemented in world pass 3.
 
 **Goal:** Make the water channels feel alive without using expensive fluid simulation.
 
@@ -526,6 +547,7 @@ Each slice must end with:
 
 ### Slice 12 — Storefront windows and implied interiors
 **Model:** GPT-5.6 Sol
+**Status:** Implemented in world pass 2 (interior-mapped storefront glass).
 
 **Goal:** Make pavilions feel occupied without modeling full interiors.
 
@@ -679,6 +701,7 @@ Each slice must end with:
 
 ### Slice 20 — Adaptive quality presets
 **Model:** GPT-6 Astra Pro
+**Status:** Baseline automatic tiers (high/medium/low) added early in pass 3; full presets and user override UI remain.
 
 **Goal:** Scale the same district across high-end desktops and phones.
 
@@ -1221,6 +1244,26 @@ Each slice must end with:
 - Public deployment remains a deliberate separate action.
 
 **Milestone:** DEMO DISTRICT V1 RELEASE CANDIDATE
+
+---
+
+## 8a. World passes (approved regrouping of slices 5–22)
+
+The slices above remain the definition of done. Execution groups them into passes that
+each end with tests, a checkpoint, and a side-by-side comparison against the mockup:
+
+| Pass | Slices | Outcome | Status |
+| --- | --- | --- | --- |
+| 1. Composition + light | 5, 6, 10 | Layout, circulation, collision, golden-hour lighting and sky | Done ([checkpoint](PASSES_01-03.md)) |
+| 2. Architecture + landmark | 7, 8, 12 | Pavilion kit, implied interiors, arch and orb | Done |
+| 3. Life + atmosphere | 9, 11 | Landscaping, water, fountain | Done |
+| 4. Interaction | 13, 14, 15 | Signage, targeting, preview overlay | Next |
+| 5. Mockup HUD | 16, 17, 21 | Search, map, loading in the mockup's frosted-pill style | Planned |
+| 6. Performance + quality | 18, 19, 20 | Measurement, optimization, full presets (baseline tiers exist) | Planned |
+| 7. WORLD ALPHA audit | 22 | Mockup comparison and go/no-go | Planned |
+
+A cheap draw-call/triangle counter runs from pass 1 on (development HUD) so phones are not
+quietly overloaded before pass 6.
 
 ---
 

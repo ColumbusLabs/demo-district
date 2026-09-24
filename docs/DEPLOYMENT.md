@@ -20,8 +20,10 @@ npm ci
 npm run dev
 ```
 
-Open `http://127.0.0.1:5173`. The preview is a diagnostic cube and neutral floor with
-keyboard, mouse, and touch walking/look controls, not the selected plaza. Choose Explore or click the
+Open `http://127.0.0.1:5173`. The preview is the Demo District plaza (world passes 1–3)
+with keyboard, mouse, and touch walking/look controls. The static build ships local world
+assets under `world/` (about 3.5 MB, CC0, see `public/world/LICENSES.md`) and requests
+nothing remote. Choose Explore or click the
 canvas, use WASD to walk, drag or use arrow keys to look, Escape to release focus,
 and Tab to reach page controls. Reset view and three walking speeds are available.
 On a phone, drag the scene to look and use the stick to walk; the `--host` option below lets a phone on your network try it. See `WORLD_ENGINE.md` and `NAVIGATION.md`.

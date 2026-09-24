@@ -59,3 +59,9 @@ test('one resource cleanup failure does not prevent remaining cleanup', () => {
   assert.equal(disposed, 1);
   scope.dispose();
 });
+test('a smaller content pixel budget lowers resolution without distorting the aspect', () => {
+  const low = measureViewport(1440, 900, 2, 8192, 420_000);
+  assert.ok(low.bufferWidth * low.bufferHeight <= 420_000);
+  assert.ok(Math.abs(low.bufferWidth / low.bufferHeight - 1440 / 900) < 0.01);
+  assert.deepEqual(measureViewport(1440, 900, 2, 8192, NaN), measureViewport(1440, 900, 2, 8192));
+});

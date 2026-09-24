@@ -1,8 +1,8 @@
 import { BoxGeometry, Color, DirectionalLight, HemisphereLight, Mesh, MeshStandardMaterial, PlaneGeometry, Scene } from 'three';
-import type { ResourceScope } from './runtime.ts';
+import type { ContentContext, WorldContent } from './World.ts';
 
 /** Temporary diagnostic content, not the plaza or its eventual lighting/art direction. */
-export function createTestScene(resources: ResourceScope): { scene: Scene; update: (delta: number) => void } {
+export function createTestScene({ resources }: ContentContext): WorldContent {
   const scene = new Scene();
   scene.background = new Color(0xcbd5d6);
   const floor = new Mesh(

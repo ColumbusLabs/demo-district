@@ -1,11 +1,12 @@
 # Demo District — Agent contract
 
-Read `docs/IMPLEMENTATION_PLAN.md`, the latest `docs/SLICE_04.md` checkpoint, `docs/DEPLOYMENT.md`, and (for any visual work) `docs/WORLD_ART_DIRECTION.md` with its mockup before editing.
+Read `docs/IMPLEMENTATION_PLAN.md` (including section 8a, world passes), the latest `docs/PASSES_01-03.md` checkpoint, `docs/DEPLOYMENT.md`, and (for any visual work) `docs/WORLD_ART_DIRECTION.md` with its mockup before editing.
 
 ## Scope and branch
 
 - Work on `build/demo-district-v1`; never write application changes to `main` without approval.
-- Execute only the requested slice and stop at its acceptance boundary.
+- Execute only the requested slice or pass and stop at its acceptance boundary.
+- Desktop browser is the primary target; mobile must keep working through lighter quality tiers.
 - Do not merge, open a PR, deploy, publish, or change Site access unless explicitly requested.
 - Preserve future slices in the implementation plan; update status rather than rewriting the roadmap.
 - Confirm the branch head before writing. Never force-push over another agent's work.
@@ -27,9 +28,15 @@ Read `docs/IMPLEMENTATION_PLAN.md`, the latest `docs/SLICE_04.md` checkpoint, `d
 - Use a fresh canvas after destroy. Register owned GPU resources with `ResourceScope`/`world.own`.
 - Desktop navigation is focus-scoped WASD, drag-look, and arrow-key look. No automatic focus, pointer lock, head bob, jumping, sprint, or mousewheel interception.
 - Touch navigation is a one-finger look drag plus the analog movement stick, handled by the same `NavigationController` and motion state. Touch must never take keyboard focus, block pinch zoom, or scroll the page during world interaction. `html[data-input]` affects presentation only.
-- Keep movement math independent of scene geometry. This slice has coarse perimeter bounds, not building/obstacle physics.
+- Keep movement math independent of scene geometry. Collision uses blocker footprints (oriented boxes and circles) supplied as data.
+- The district plan lives in `src/world/district/layout.ts` as pure data; geometry and blockers both derive from it. Change the layout there, never by hand-placing meshes. `tests/unit/district-layout.test.mjs` must keep spawn, storefront aprons, and the plaza reachable and water unwalkable.
+- World content plugs into `createWorld({ content })`; the engine test cube stays the default. Content owns its scene, may supply `render`/`resize` (post-processing) and a pixel budget, and registers every GPU resource with the scope. Assets that finish loading after teardown must be dropped.
+- Quality tiers (`src/world/district/quality.ts`): high on desktop GPUs, medium on touch-primary devices, low on software renderers. CI browsers are SwiftShader and therefore test the low tier; judge visuals on a real GPU. Keep lower tiers strictly cheaper.
+- Static shadows: set `renderer.shadowMap.needsUpdate` when content changes; do not enable per-frame shadow updates without measurement.
+- World assets are local under `public/world/`, CC0 preferred, and recorded in `public/world/LICENSES.md`. No remote assets, CDNs, or creator media without permission.
 - Suspension, blur, Escape, Tab, context loss, and teardown must clear held keys, stick, drags, and momentum. Reduced motion must remain navigable, with no idle animation loop once movement settles.
 - Do not preload creator sites, add iframes, scrape X, or load remote fonts/CDN scripts at startup.
+- Development-only `?engine-test` mounts the engine test scene for engine/controller lifecycle tests; keep it behind `import.meta.env.DEV` (the artifact check fails otherwise).
 - D1, R2, authentication, ratings, submissions, and real project records remain later slices. No fake hosting IDs or storage bindings.
 
 ## Checks and evidence
@@ -37,10 +44,11 @@ Read `docs/IMPLEMENTATION_PLAN.md`, the latest `docs/SLICE_04.md` checkpoint, `d
 - Use Node 26 (pinned in `.nvmrc`; Node 24 remains supported), `npm ci`, and `npm run verify`.
 - Browser checks: `npx --no-install playwright install chromium`, `npm run test:browser`, `npm run test:lifecycle`.
 - Lifecycle tests exercise real HMR and restore their temporary source edit. Run them serially.
+- For visual work, compare renders against `docs/art/plaza-mockup.jpg` on a real GPU (headless Chromium with `--use-angle=metal` on macOS works) and record views in the checkpoint.
 - Phone-sized Chromium, including CDP touch emulation, is not physical iPhone/Safari testing or a performance benchmark.
 - Native Sites acceptance remains pending until a real saved version is validated. A static build is not proof.
 - Never mark unrun checks as passed. Record exact source, evidence, and any limitation.
-- Commit real dependency lockfiles; never fabricate hashes. Slice 4 added no dependencies.
+- Commit real dependency lockfiles; never fabricate hashes. Passes 1–3 added no npm dependencies (Three.js addons ship with `three`).
 - Update the checkpoint and affected run instructions after each slice.
 
 ## Handoff

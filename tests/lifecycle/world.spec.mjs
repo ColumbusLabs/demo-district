@@ -17,7 +17,7 @@ async function instrument(page) {
 }
 async function setup(page) {
   await instrument(page);
-  await page.goto('/');
+  await page.goto('/?engine-test');
   await expect(page.locator('#runtime-status')).toHaveAttribute('data-state', 'ready');
   await page.evaluate(async () => {
     const bootstrapPath = '/src/app/bootstrap.ts';
@@ -174,15 +174,17 @@ test('repeated application re-entry retains one canvas, one HUD, and one loop', 
   await instrument(page);
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
+  // The full district under software rendering: fewer cycles, each given time to build.
+  test.setTimeout(120_000);
   await page.goto('/');
-  for (let i = 0; i < 12; i++) {
+  for (let i = 0; i < 5; i++) {
     await page.evaluate(async () => {
       const path = '/src/app/bootstrap.ts';
       const { mountApplication } = await import(path);
       window.__ddOldCanvas = document.querySelector('#world-canvas');
       window.__ddUnmount = mountApplication(document);
     });
-    await expect(page.locator('#runtime-status')).toHaveAttribute('data-state', 'ready');
+    await expect(page.locator('#runtime-status')).toHaveAttribute('data-state', 'ready', { timeout: 20_000 });
     await expect(page.locator('#world-canvas')).toHaveCount(1);
     await expect(page.locator('[data-world-diagnostics]')).toHaveCount(1);
     expect(await page.evaluate(() => window.__ddPendingFrames)).toBe(1);

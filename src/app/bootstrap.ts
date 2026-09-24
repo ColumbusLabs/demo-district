@@ -1,4 +1,5 @@
 import { createWorld } from '../world/World.ts';
+import { createDistrict, districtNavigation } from '../world/district/index.ts';
 import type { World, WorldState } from '../world/World.ts';
 import { createNavigationController } from '../world/controls/NavigationController.ts';
 import type { NavigationController, NavigationMode } from '../world/controls/NavigationController.ts';
@@ -33,6 +34,7 @@ export function mountApplication(doc: Document): () => void {
   canvas.removeAttribute('width');
   canvas.removeAttribute('height');
   canvas.dataset.navigation = 'idle';
+  canvas.dataset.content = 'loading';
   placeholder.replaceWith(canvas);
   let disposed = false;
   let world: World | undefined;
@@ -63,7 +65,7 @@ export function mountApplication(doc: Document): () => void {
     if (state === 'running') {
       status.dataset.state = 'ready';
       status.textContent = 'World engine ready';
-      detail.textContent = `Three.js r${world?.revision ?? ''} · Movement test only. No creator experiences are loaded.`;
+      detail.textContent = `Three.js r${world?.revision ?? ''} · District preview. No creator experiences are loaded.`;
     } else if (state === 'stopped' || state === 'suspended') {
       status.dataset.state = 'paused';
       status.textContent = 'World rendering paused';
@@ -113,11 +115,20 @@ export function mountApplication(doc: Document): () => void {
   if (speed) speed.value = '3.2';
   try {
     if (import.meta.env.DEV) diagnostics = createWorldDiagnostics(doc);
-    world = createWorld(canvas, { onStateChange: showState, ...(diagnostics ? { onFrame: diagnostics.update } : {}) });
+    // Development-only: `?engine-test` mounts the lightweight engine scene so lifecycle tests of
+    // the engine and controls do not pay for the district. Stripped from production builds.
+    const engineTest = import.meta.env.DEV && new URLSearchParams(win.location.search).has('engine-test');
+    world = createWorld(canvas, {
+      ...(engineTest ? {} : { content: createDistrict }),
+      onStateChange: showState,
+      onContentReady: () => { if (!disposed) canvas.dataset.content = 'ready'; },
+      ...(diagnostics ? { onFrame: diagnostics.update } : {}),
+    });
     const activeWorld = world;
     controls = createNavigationController(canvas, world.camera, {
       invalidate: () => activeWorld.invalidate(),
       canNavigate: () => activeWorld.snapshot().state === 'running',
+      ...(engineTest ? {} : { config: districtNavigation() }),
       movePad,
       onModeChange: (next) => {
         mode = next;

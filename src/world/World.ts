@@ -4,6 +4,31 @@ import { FrameClock, measureViewport, ResourceScope } from './runtime.ts';
 import type { Disposable, Viewport } from './runtime.ts';
 import { createTestScene } from './test-scene.ts';
 
+/** Everything scene content may use. The renderer is shared, never re-created or scheduled by content. */
+export interface ContentContext {
+  resources: ResourceScope;
+  renderer: WebGLRenderer;
+  camera: PerspectiveCamera;
+  /** Request a redraw, e.g. after an asynchronous asset arrives. Safe after destruction. */
+  invalidate: () => void;
+}
+export interface WorldContent {
+  scene: Scene;
+  /** Decorative animation; the engine skips it under reduced motion. */
+  update: (deltaSeconds: number, elapsedSeconds: number) => void;
+  /** Replaces the default `renderer.render(scene, camera)`, e.g. for post-processing. */
+  render?: () => void;
+  /** Called with the CSS size and pixel ratio whenever the drawing buffer changes. */
+  resize?: (width: number, height: number, pixelRatio: number) => void;
+  /** Settles when essential assets have loaded (or failed and fallen back). */
+  ready?: Promise<void>;
+  /** Maximum drawing-buffer pixels; defaults to the engine budget. Lower tiers render smaller. */
+  pixelBudget?: number;
+  /** Rendering tier chosen by the content, reported in snapshots. */
+  quality?: string;
+}
+export type ContentFactory = (context: ContentContext) => WorldContent;
+
 export type WorldState = 'stopped' | 'running' | 'suspended' | 'context-lost' | 'failed' | 'destroyed';
 /** Systems share the world's single scheduler. Suspend must not request rendering. */
 export interface FrameSystem extends Disposable {
@@ -23,6 +48,8 @@ export interface WorldSnapshot {
   triangles: number;
   geometries: number;
   textures: number;
+  contentReady: boolean;
+  quality: string;
 }
 export interface World {
   readonly scene: Scene;
@@ -40,6 +67,10 @@ export interface World {
 export interface WorldOptions {
   onStateChange?: (state: WorldState) => void;
   onFrame?: (snapshot: WorldSnapshot) => void;
+  /** Scene content; defaults to the lightweight engine test scene. */
+  content?: ContentFactory;
+  /** Called once when the content's essential assets have settled. */
+  onContentReady?: () => void;
 }
 const owners = new WeakMap<HTMLCanvasElement, World>();
 
@@ -68,6 +99,8 @@ export function createWorld(canvas: HTMLCanvasElement, options: WorldOptions = {
   let elapsedSeconds = 0;
   let lastDeltaSeconds = 0;
   let lastReport = -Infinity;
+  let contentReady = false;
+  let invalidateLater: () => void = () => undefined;
   const setState = (next: WorldState): void => {
     if (next === state) return;
     state = next;
@@ -99,19 +132,30 @@ export function createWorld(canvas: HTMLCanvasElement, options: WorldOptions = {
     renderer.outputColorSpace = SRGBColorSpace;
     renderer.toneMapping = ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1;
+    renderer.info.autoReset = false;
     const activeRenderer = renderer;
     const maxDimension = Number(context.getParameter(context.MAX_RENDERBUFFER_SIZE));
-    const fixture = createTestScene(resources);
-    scene = fixture.scene;
     const camera = new PerspectiveCamera(55, 1, 0.1, 120);
     camera.position.set(0, 1.7, 6);
     camera.lookAt(0, 0.85, 0);
+    const fixture = (options.content ?? createTestScene)({
+      resources, renderer: activeRenderer, camera, invalidate: () => invalidateLater(),
+    });
+    scene = fixture.scene;
+    const ready = fixture.ready ?? Promise.resolve();
+    ready.catch(() => undefined).finally(() => {
+      if (destroyed) return;
+      contentReady = true;
+      options.onContentReady?.();
+      invalidateLater();
+    });
     const reducedMotion = win.matchMedia('(prefers-reduced-motion: reduce)');
     const snapshot = (): WorldSnapshot => ({
       state, loopActive, frames, elapsedSeconds, lastDeltaSeconds,
       viewport: viewport ? { ...viewport } : null, cameraAspect: camera.aspect,
       drawCalls: activeRenderer.info.render.calls, triangles: activeRenderer.info.render.triangles,
       geometries: activeRenderer.info.memory.geometries, textures: activeRenderer.info.memory.textures,
+      contentReady, quality: fixture.quality ?? 'default',
     });
     const report = (time: number, force = false): void => {
       if (options.onFrame && (force || time - lastReport >= 250)) {
@@ -126,9 +170,11 @@ export function createWorld(canvas: HTMLCanvasElement, options: WorldOptions = {
         const tick = advance ? clock.tick(time) : { delta: 0, elapsed: elapsedSeconds };
         lastDeltaSeconds = tick.delta;
         elapsedSeconds = tick.elapsed;
-        if (advance && !reducedMotion.matches) fixture.update(tick.delta);
+        if (advance && !reducedMotion.matches) fixture.update(tick.delta, tick.elapsed);
         for (const system of systems) system.update(tick.delta);
-        activeRenderer.render(fixture.scene, camera);
+        // Multi-pass content resets stats per pass; count the whole frame instead.
+        activeRenderer.info.reset();
+        if (fixture.render) fixture.render(); else activeRenderer.render(fixture.scene, camera);
         frames += 1;
         report(time);
       } catch {
@@ -172,7 +218,7 @@ export function createWorld(canvas: HTMLCanvasElement, options: WorldOptions = {
     const resize = (): void => {
       if (destroyed || failed || contextLost) return;
       const bounds = canvas.getBoundingClientRect();
-      const next = measureViewport(bounds.width, bounds.height, win.devicePixelRatio, maxDimension);
+      const next = measureViewport(bounds.width, bounds.height, win.devicePixelRatio, maxDimension, fixture.pixelBudget);
       drawable = next !== null;
       const changed = next !== null && (viewport === null || viewport.width !== next.width ||
         viewport.height !== next.height || viewport.pixelRatio !== next.pixelRatio);
@@ -180,6 +226,7 @@ export function createWorld(canvas: HTMLCanvasElement, options: WorldOptions = {
         activeRenderer.setDrawingBufferSize(next.width, next.height, next.pixelRatio);
         camera.aspect = next.width / next.height;
         camera.updateProjectionMatrix();
+        fixture.resize?.(next.width, next.height, next.pixelRatio);
         viewport = next;
       }
       reconcile(changed);
@@ -220,6 +267,7 @@ export function createWorld(canvas: HTMLCanvasElement, options: WorldOptions = {
     };
     watchResolution();
     removers.push(() => resolution?.removeEventListener('change', onResolution));
+    invalidateLater = () => { if (!destroyed) reconcile(true); };
     const world: World = {
       scene: fixture.scene, camera, revision: REVISION,
       start: () => {

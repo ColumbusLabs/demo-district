@@ -122,3 +122,29 @@ test('analog stick input walks proportionally slower than full input', () => {
   const full = travel(forward, 60, 2);
   near((6 - slow.z) / (6 - full.z), half.forward, 0.02);
 });
+test('box blockers stop the footprint at their face and allow sliding along it', () => {
+  const config = movementConfig({ spawn: { x: 0, z: 6, yaw: 0, pitch: 0 }, blockers: [{ x: 0, z: 0, halfWidth: 2, halfDepth: 1 }] });
+  const state = travel(forward, 60, 3, config);
+  near(state.z, 1.3); near(state.vz, 0);
+  const slide = travel({ ...forward, right: 1 }, 60, 3, config);
+  assert.ok(slide.x > 2); assert.ok(slide.z < 1.3 - 1e-3 || slide.x > 2.29);
+});
+test('rotated boxes and circles use their true shape', () => {
+  const rotated = movementConfig({ spawn: { x: 0, z: 6, yaw: 0, pitch: 0 }, blockers: [{ x: 0, z: 0, halfWidth: 1, halfDepth: 3, angle: Math.PI / 2 }] });
+  near(travel(forward, 60, 3, rotated).z, 1.3);
+  const circle = movementConfig({ spawn: { x: 0, z: 6, yaw: 0, pitch: 0 }, blockers: [{ x: 0, z: 0, radius: 2 }] });
+  const state = travel(forward, 60, 3, circle);
+  assert.ok(Math.hypot(state.x, state.z) >= 2.3 - 1e-6);
+});
+test('a spawn inside a blocker is pushed out, and malformed blockers are rejected', () => {
+  const config = movementConfig({ spawn: { x: 0.1, z: 0, yaw: 0, pitch: 0 }, blockers: [{ x: 0, z: 0, halfWidth: 1, halfDepth: 3 }] });
+  const state = initialMotion(config); near(state.x, 1.3);
+  for (const bad of [{ x: NaN, z: 0, radius: 1 }, { x: 0, z: 0, radius: 0 }, { x: 0, z: 0, halfWidth: -1, halfDepth: 1 }, { x: 0, z: 0, halfWidth: 1, halfDepth: 1, angle: Infinity }]) {
+    assert.throws(() => movementConfig({ blockers: [bad] }));
+  }
+});
+test('blockers are copied so later layout edits cannot move walls under the player', () => {
+  const blockers = [{ x: 0, z: 0, radius: 1 }];
+  const config = movementConfig({ blockers }); blockers[0].radius = 50;
+  assert.equal(config.blockers[0].radius, 1);
+});

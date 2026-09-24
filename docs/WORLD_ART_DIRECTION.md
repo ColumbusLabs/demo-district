@@ -15,4 +15,12 @@
 - **Signage:** restrained, integrated plinth and wall signs plus a pair of tall banners. Calm typography, no advertising noise.
 - **HUD:** minimal frosted dark pills floating over the scene: menu at top left, search at top center, map and profile at top right, and a small input hint at bottom center. The Slice 4 movement stick follows this language.
 
-The implementation plan's art-direction guardrails (section 17) and WORLD ALPHA gate (section 11) govern how closely each slice must match.
+## Current state (after world pass 3)
+
+![Pass 3 spawn render](art/pass-03-spawn.jpg)
+
+Matched: framing (landmark ~55 m ahead, channels and plinths in the foreground, gate pavilions flanking), golden-hour sun with a blue partly cloudy sky, white stone architecture with lit soffits and glowing storefronts, crossed white arches with a chrome orb, dark water with LED edge light, allee trees, lake and mountains.
+
+Open gaps, by pass: signage text and banner messaging (4); the frosted HUD, search, and map (5); richer vegetation and mid-ground planters/lights, people or life, and quality tuning (6–7). The render is a stylized real-time likeness; it will not reach the mockup's offline photorealism, especially on lower tiers.
+
+The implementation plan's art-direction guardrails (section 17) and WORLD ALPHA gate (section 11) govern how closely each pass must match.

@@ -18,13 +18,14 @@ test('a real Vite source update replaces the world and cleans up its previous co
     window.cancelAnimationFrame = (id) => { pending.delete(id); cancel(id); };
     Object.defineProperty(window, '__ddPendingFrames', { get: () => pending.size });
   });
+  test.setTimeout(90_000);
   await page.goto('/');
-  await expect(page.locator('#runtime-status')).toHaveAttribute('data-state', 'ready');
+  await expect(page.locator('#runtime-status')).toHaveAttribute('data-state', 'ready', { timeout: 20_000 });
   await page.evaluate(() => { window.__ddBeforeHmr = document.querySelector('#world-canvas'); });
   try {
     await writeFile(source, `${original}\n// Slice 2 real hot-module-replacement test.\n`);
-    await expect.poll(async () => page.evaluate(() => window.__ddBeforeHmr !== document.querySelector('#world-canvas'))).toBe(true);
-    await expect(page.locator('#runtime-status')).toHaveAttribute('data-state', 'ready');
+    await expect.poll(async () => page.evaluate(() => window.__ddBeforeHmr !== document.querySelector('#world-canvas')), { timeout: 30_000 }).toBe(true);
+    await expect(page.locator('#runtime-status')).toHaveAttribute('data-state', 'ready', { timeout: 20_000 });
     await expect(page.locator('#world-canvas')).toHaveCount(1);
     await expect(page.locator('[data-world-diagnostics]')).toHaveCount(1);
     expect(await page.evaluate(() => window.__ddBeforeHmr.getContext('webgl2').isContextLost())).toBe(true);

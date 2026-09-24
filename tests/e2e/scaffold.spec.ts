@@ -10,7 +10,7 @@ test('production engine renders the test scene without external requests or deve
   });
   const response = await page.goto('/');
   expect(response?.status()).toBe(200);
-  await expect(page).toHaveTitle('Demo District — Engine preview');
+  await expect(page).toHaveTitle('Demo District — World preview');
   await expect(page.getByRole('heading', { name: 'Demo District', exact: true })).toBeVisible();
   await expect(page.locator('#runtime-status')).toHaveAttribute('data-state', 'ready');
   await expect(page.locator('#runtime-detail')).toContainText('Three.js r186');
@@ -33,10 +33,12 @@ test('canvas follows portrait, landscape, and desktop size with a capped backing
     await expect.poll(async () => page.locator('#world-canvas').evaluate((element) => {
       const canvas = element as HTMLCanvasElement;
       const box = canvas.getBoundingClientRect();
-      const ratio = Math.min(devicePixelRatio, 2, Math.sqrt(3_686_400 / (box.width * box.height)));
+      // The quality tier picks the pixel budget (software renderers get a smaller one), so check
+      // the invariants: undistorted aspect, DPR ≤ 2, and never above the high-tier budget.
+      const ratio = canvas.width / box.width;
       return box.width === innerWidth && box.height === innerHeight &&
-        Math.abs(canvas.width - Math.floor(box.width * ratio)) <= 1 &&
         Math.abs(canvas.height - Math.floor(box.height * ratio)) <= 1 &&
+        ratio <= Math.min(devicePixelRatio, 2) + 1e-6 && canvas.width * canvas.height <= 3_686_400 &&
         document.documentElement.scrollWidth <= document.documentElement.clientWidth;
     })).toBe(true);
   }

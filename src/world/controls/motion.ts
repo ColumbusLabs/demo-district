@@ -1,4 +1,8 @@
 /** Pure, meter/second-based navigation math. No renderer, DOM, or scene imports. */
+/** Solid footprint on the ground plane: an oriented box (half extents, yaw in radians) or a circle. */
+export type Blocker =
+  | { x: number; z: number; halfWidth: number; halfDepth: number; angle?: number }
+  | { x: number; z: number; radius: number };
 export interface MovementConfig {
   speed: number;
   acceleration: number;
@@ -11,6 +15,7 @@ export interface MovementConfig {
   maxPitch: number;
   bounds: { minX: number; maxX: number; minZ: number; maxZ: number };
   spawn: { x: number; z: number; yaw: number; pitch: number };
+  blockers: readonly Blocker[];
 }
 export interface MotionState { x: number; z: number; vx: number; vz: number; yaw: number; pitch: number }
 export interface MovementInput { forward: number; right: number; yaw: number; pitch: number }
@@ -24,6 +29,7 @@ export function movementConfig(overrides: Partial<MovementConfig> = {}): Movemen
     ...overrides,
     bounds: { minX: -35, maxX: 35, minZ: -35, maxZ: 35, ...overrides.bounds },
     spawn: { x: 0, z: 6, yaw: 0, pitch: -0.08, ...overrides.spawn },
+    blockers: (overrides.blockers ?? []).map((blocker) => ({ ...blocker })),
   };
   for (const [key, value] of Object.entries(config)) {
     if (typeof value === 'number' && (!Number.isFinite(value) || value <= 0)) {
@@ -39,6 +45,12 @@ export function movementConfig(overrides: Partial<MovementConfig> = {}): Movemen
       config.bounds.maxZ - config.bounds.minZ <= 2 * config.radius) {
     throw new RangeError('Navigation bounds and spawn must be finite and usable.');
   }
+  for (const blocker of config.blockers) {
+    const sizes = 'radius' in blocker ? [blocker.radius] : [blocker.halfWidth, blocker.halfDepth];
+    if (![blocker.x, blocker.z, ...sizes, 'angle' in blocker ? blocker.angle ?? 0 : 0].every(Number.isFinite) || sizes.some((size) => size <= 0)) {
+      throw new RangeError('Navigation blockers must be finite with positive size.');
+    }
+  }
   return config;
 }
 const clamp = (value: number, low: number, high: number): number => Math.min(high, Math.max(low, value));
@@ -52,7 +64,44 @@ export function rotateView(state: MotionState, yawDelta: number, pitchDelta: num
   if (Number.isFinite(pitchDelta)) state.pitch = clamp(state.pitch + pitchDelta, -config.maxPitch, config.maxPitch);
 }
 export function resetMotion(state: MotionState): void { state.vx = 0; state.vz = 0; }
+/** Push the footprint circle out of one blocker and cancel velocity into it. Returns whether it moved. */
+function resolveBlocker(state: MotionState, blocker: Blocker, radius: number): boolean {
+  let nx: number; let nz: number; let depth: number;
+  if ('radius' in blocker) {
+    const dx = state.x - blocker.x; const dz = state.z - blocker.z;
+    const distance = Math.hypot(dx, dz); const reach = radius + blocker.radius;
+    if (distance >= reach) return false;
+    [nx, nz] = distance > 1e-9 ? [dx / distance, dz / distance] : [0, 1];
+    depth = reach - distance;
+  } else {
+    const angle = blocker.angle ?? 0; const cos = Math.cos(angle); const sin = Math.sin(angle);
+    // Into box space: rotate the offset by -angle about Y (Three.js yaw convention).
+    const ox = state.x - blocker.x; const oz = state.z - blocker.z;
+    const lx = ox * cos - oz * sin; const lz = ox * sin + oz * cos;
+    const cx = clamp(lx, -blocker.halfWidth, blocker.halfWidth); const cz = clamp(lz, -blocker.halfDepth, blocker.halfDepth);
+    let px = lx - cx; let pz = lz - cz; const distance = Math.hypot(px, pz);
+    if (distance >= radius) return false;
+    if (distance > 1e-9) { px /= distance; pz /= distance; depth = radius - distance; }
+    else {
+      // Center inside the box: leave through the nearest face.
+      const outX = blocker.halfWidth - Math.abs(lx); const outZ = blocker.halfDepth - Math.abs(lz);
+      if (outX < outZ) { px = Math.sign(lx) || 1; pz = 0; depth = outX + radius; }
+      else { px = 0; pz = Math.sign(lz) || 1; depth = outZ + radius; }
+    }
+    nx = px * cos + pz * sin; nz = -px * sin + pz * cos;
+  }
+  state.x += nx * depth; state.z += nz * depth;
+  const into = state.vx * nx + state.vz * nz;
+  if (into < 0) { state.vx -= into * nx; state.vz -= into * nz; }
+  return true;
+}
 export function constrainMotion(state: MotionState, config: MovementConfig): void {
+  // A few passes settle corners where two blockers meet; each pass only removes penetration.
+  for (let pass = 0; pass < 4; pass++) {
+    let moved = false;
+    for (const blocker of config.blockers) moved = resolveBlocker(state, blocker, config.radius) || moved;
+    if (!moved) break;
+  }
   const { bounds, radius } = config;
   const x = clamp(state.x, bounds.minX + radius, bounds.maxX - radius);
   const z = clamp(state.z, bounds.minZ + radius, bounds.maxZ - radius);

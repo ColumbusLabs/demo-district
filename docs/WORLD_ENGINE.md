@@ -1,12 +1,28 @@
-# World engine — through Slice 4
+# World engine — through world pass 3
 
 ## Scope
 
 `src/world/World.ts` owns the renderer, perspective camera, and scene lifecycle.
-The preview contains a slowly rotating diagnostic cube on a neutral floor with two
-inexpensive lights. Slices 3 and 4 add first-person keyboard, mouse, and touch
-navigation through a separate controller; the district itself and creator directory
-are later work. Dependencies remain as locked in Slice 1. No remote assets or creator sites
+Scene content is pluggable: the application mounts the Demo District plaza
+(`src/world/district/`); the engine's default content is still the diagnostic cube used
+by engine lifecycle tests. Slices 3 and 4 add first-person keyboard, mouse, and touch
+navigation through a separate controller. The creator directory is later work.
+
+## Content contract
+
+`createWorld(canvas, { content })` calls the factory once with `{ resources, renderer,
+camera, invalidate }` and expects a `WorldContent`:
+
+- `scene` and `update(delta, elapsed)` for decorative motion (skipped under reduced motion).
+- Optional `render()` to replace `renderer.render` (the district uses bloom), and
+  `resize(width, height, pixelRatio)` whenever the drawing buffer changes.
+- Optional `ready` promise; `onContentReady` and `snapshot().contentReady` report it. The app
+  mirrors it as `canvas[data-content="ready"]`.
+- Optional `pixelBudget` (drawing-buffer pixel cap) and `quality` label for snapshots.
+
+Content registers every owned GPU resource with `resources`; asynchronous loads that land
+after teardown must be discarded. `invalidate` is safe after destruction. Renderer statistics
+are accumulated per frame (not per pass), so multi-pass content reports true draw calls. Dependencies remain as locked in Slice 1. No remote assets or creator sites
 are loaded. See [navigation](NAVIGATION.md).
 
 ## Ownership and API
@@ -104,7 +120,7 @@ Production tests use `dist/` on 4173. Lifecycle tests use development modules on
 serially to avoid source-change interference. Browser tests use actual Three.js/
 WebGL 2 through Chromium/SwiftShader at desktop and phone-sized viewports, not
 physical iPhone/Safari or GPU benchmarks. Native Sites acceptance remains pending.
-See [Slice 4 evidence](SLICE_04.md) and the [no-paid CI policy](CI_COST_POLICY.md).
+See [passes 1–3 evidence](PASSES_01-03.md) and the [no-paid CI policy](CI_COST_POLICY.md).
 
 ## Primary API references
 
@@ -112,5 +128,5 @@ See [Slice 4 evidence](SLICE_04.md) and the [no-paid CI policy](CI_COST_POLICY.m
 - https://threejs.org/docs/pages/BufferGeometry.html
 - https://threejs.org/docs/pages/Material.html
 
-Next code boundary: Slice 5, the district graybox. No plaza, backend, storage,
-authentication, or creator data is implemented yet.
+Next code boundary: pass 4 (signage, interaction targeting, preview overlay). No backend,
+storage, authentication, or creator data is implemented yet.

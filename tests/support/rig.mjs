@@ -14,7 +14,7 @@ export async function setup(page, config = {}) {
     window.cancelAnimationFrame = (id) => { pending.delete(id); cancel(id); };
     Object.defineProperty(window, '__frames', { get: () => pending.size });
   });
-  await page.goto('/');
+  await page.goto('/?engine-test');
   await expect(page.locator('#runtime-status')).toHaveAttribute('data-state', 'ready');
   await page.evaluate(async (config) => {
     const bootstrap = '/src/app/bootstrap.ts';

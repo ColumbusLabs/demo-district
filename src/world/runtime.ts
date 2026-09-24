@@ -49,13 +49,14 @@ export interface Viewport {
 }
 
 /** Limit DPR, total pixels, and the GPU's maximum renderbuffer dimension. */
-export function measureViewport(width: number, height: number, dpr: number, maxDimension = 8192): Viewport | null {
+export function measureViewport(width: number, height: number, dpr: number, maxDimension = 8192, pixelBudget = 3_686_400): Viewport | null {
   if (!Number.isFinite(width) || !Number.isFinite(height) || width < 1 || height < 1) return null;
   const w = Math.floor(width);
   const h = Math.floor(height);
   const ratio = Number.isFinite(dpr) && dpr > 0 ? dpr : 1;
   const limit = Number.isFinite(maxDimension) && maxDimension >= 1 ? maxDimension : 8192;
-  const pixelRatio = Math.min(ratio, 2, Math.sqrt(3_686_400 / (w * h)), limit / w, limit / h);
+  const budget = Number.isFinite(pixelBudget) && pixelBudget >= 1 ? pixelBudget : 3_686_400;
+  const pixelRatio = Math.min(ratio, 2, Math.sqrt(budget / (w * h)), limit / w, limit / h);
   if (w * pixelRatio < 1 || h * pixelRatio < 1) return null;
   return { width: w, height: h, pixelRatio,
     bufferWidth: Math.max(1, Math.floor(w * pixelRatio)),

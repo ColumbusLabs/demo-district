@@ -6,9 +6,11 @@ Demo District turns discovery into a place: a pedestrian exhibition district wit
 
 ## Current build
 
-**Slice 4: touch navigation implemented.** See [verification evidence](docs/SLICE_04.md).
+**World passes 1–3: the walkable plaza.** See [the checkpoint and side-by-side with the mockup](docs/PASSES_01-03.md).
 
-The current preview is a test cube and neutral floor. On a keyboard: WASD walking, drag/arrow-key looking. On a phone: drag to look and an analog stick to walk. Both have adjustable speed and reset. It is not yet the selected plaza or a live project directory. Native ChatGPT Sites acceptance and physical-device testing remain pending. Nothing has been merged or deployed.
+The preview is now the Demo District plaza itself: golden-hour sky and lighting, stone boulevard and water channels, eight pavilions from a reusable kit with lit storefront interiors, the arch-and-orb landmark over a fountain, trees and planting, a lake, and mountains. You walk it with WASD and mouse on desktop, or drag and the stick on a phone, and you collide with everything solid. Storefronts are not yet linked to real projects; signage, interaction, search, and the HUD come next. Desktop browsers are the primary target; phones and software-rendered browsers get lighter automatic quality tiers. Native ChatGPT Sites acceptance and physical-device testing remain pending. Nothing has been merged or deployed.
+
+![Current spawn view](docs/art/pass-03-spawn.jpg)
 
 ## Try the preview locally
 
@@ -21,7 +23,7 @@ npm ci
 npm run dev
 ```
 
-Development runs at `http://127.0.0.1:5173`. On a phone, drag the scene to look and use the stick at the bottom left to walk. On a computer, choose **Explore** or click the scene, then use WASD to walk. Drag to look, or use arrow keys. Escape releases focus and Tab moves through the page controls. Reset view returns to the spawn. No pointer lock, head bob, jumping, or automatic camera movement is required.
+Development runs at `http://127.0.0.1:5173` (add `?quality=high|medium|low` to force a rendering tier). On a phone, drag the scene to look and use the stick at the bottom left to walk. On a computer, choose **Explore** or click the scene, then use WASD to walk. Drag to look, or use arrow keys. Escape releases focus and Tab moves through the page controls. Reset view returns to the spawn. No pointer lock, head bob, jumping, or automatic camera movement is required.
 
 ```sh
 node scripts/check-ci-policy.mjs
@@ -52,7 +54,7 @@ Walking is optional. Search, a map, and direct navigation will provide faster wa
 
 ## Roadmap and implementation
 
-[The detailed implementation plan](docs/IMPLEMENTATION_PLAN.md) contains 48 bounded slices. Recent execution evidence is in [Slice 1](docs/SLICE_01.md), [Slice 2](docs/SLICE_02.md), [Slice 3](docs/SLICE_03.md), and [Slice 4](docs/SLICE_04.md). Next: **Slice 5 — District graybox (6 Astra Pro).**
+[The detailed implementation plan](docs/IMPLEMENTATION_PLAN.md) contains 48 bounded slices; world slices 5–22 now run as seven passes. Execution evidence: [Slice 1](docs/SLICE_01.md), [Slice 2](docs/SLICE_02.md), [Slice 3](docs/SLICE_03.md), [Slice 4](docs/SLICE_04.md), and [passes 1–3](docs/PASSES_01-03.md). Next: **Pass 4 — signage, interaction targeting, and the project preview overlay.**
 
 The build proceeds through engine/navigation, district construction, World Alpha, persisted project discovery, ratings/authentication, submissions/moderation, creator claims, and release checks. Work stays on `build/demo-district-v1`. Each requested slice ends at its defined boundary with checks and a checkpoint; merge and deployment require separate approval.
 
