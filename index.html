@@ -12,20 +12,22 @@
   <body>
     <main id="app">
       <div id="world-root"><canvas id="world-canvas" tabindex="0" role="img" aria-label="Interactive movement test scene" aria-describedby="navigation-hint" data-navigation="idle"></canvas></div>
+      <!-- Touch movement stick. Keyboard and screen-reader users navigate without it. -->
+      <div id="move-pad" class="move-pad" aria-hidden="true" hidden><span class="move-pad__knob"></span></div>
       <section class="shell" aria-labelledby="district-title">
         <header class="shell__header">
           <span class="wordmark">DEMO DISTRICT</span>
-          <span class="stage">Movement preview · Slice 03</span>
+          <span class="stage">Movement preview · Slice 04</span>
         </header>
         <div class="shell__intro">
           <h1 id="district-title">Demo District</h1>
-          <p class="scope-note">Try walking and looking around this test space.<br />The district and touch controls come next.</p>
+          <p class="scope-note">Try walking and looking around this test space.<br />The district itself comes next.</p>
         </div>
         <footer class="shell__footer">
           <div class="navigation-controls" aria-label="Preview navigation">
             <button id="enter-navigation" type="button" disabled>Explore</button>
             <button id="reset-view" type="button" disabled>Reset view</button>
-            <label for="walk-speed">Walk speed</label>
+            <label for="walk-speed" class="walk-speed-label">Walk speed</label>
             <select id="walk-speed" disabled>
               <option value="2">Leisurely</option>
               <option value="3.2" selected>Normal</option>

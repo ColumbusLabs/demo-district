@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { advanceMotion, hasMomentum, initialMotion, movementConfig, resetMotion, rotateView } from '../../src/world/controls/motion.ts';
+import { advanceMotion, hasMomentum, initialMotion, movementConfig, resetMotion, rotateView, stickInput } from '../../src/world/controls/motion.ts';
 const idle = { forward: 0, right: 0, yaw: 0, pitch: 0 };
 const forward = { ...idle, forward: 1 };
 const near = (a, b, tolerance = 1e-6) => assert.ok(Math.abs(a - b) <= tolerance, `${a} differs from ${b}`);
@@ -90,4 +90,35 @@ test('spawn is constrained and configured speed controls distance', () => {
   const slow = travel(forward, 60, 1, movementConfig({ speed: 2 }));
   const fast = travel(forward, 60, 1, movementConfig({ speed: 4 }));
   near(6 - fast.z, (6 - slow.z) * 2);
+});
+test('touch look sensitivity is configurable and validated like other settings', () => {
+  assert.equal(movementConfig().touchSensitivity, 0.006);
+  for (const value of [0, -1, NaN]) assert.throws(() => movementConfig({ touchSensitivity: value }));
+});
+test('stick dead zone ignores small thumb drift, then ramps from zero', () => {
+  assert.deepEqual(stickInput(0, 0, 30), { x: 0, y: 0, right: 0, forward: 0 });
+  const drift = stickInput(3, -3, 30);
+  assert.equal(drift.right, 0); assert.equal(drift.forward, 0); assert.ok(drift.x > 0);
+  const edge = stickInput(0, -30 * 0.16, 30);
+  assert.ok(edge.forward > 0 && edge.forward < 0.02);
+  const half = stickInput(0, -15, 30);
+  near(half.forward, (0.5 - 0.15) / 0.85); assert.equal(half.right, 0);
+});
+test('stick maps screen axes to walking axes and clamps to the unit disc', () => {
+  const up = stickInput(0, -300, 30); near(up.forward, 1); near(up.y, -1); assert.equal(up.right, 0);
+  const right = stickInput(300, 0, 30); near(right.right, 1); assert.equal(right.forward, 0);
+  const diagonal = stickInput(300, 300, 30);
+  near(Math.hypot(diagonal.x, diagonal.y), 1); near(Math.hypot(diagonal.right, diagonal.forward), 1);
+  assert.ok(diagonal.right > 0 && diagonal.forward < 0);
+});
+test('malformed stick samples produce no movement', () => {
+  for (const [dx, dy, travel] of [[NaN, 0, 30], [0, Infinity, 30], [10, 10, 0], [10, 10, -5], [10, 10, NaN]]) {
+    assert.deepEqual(stickInput(dx, dy, travel), { x: 0, y: 0, right: 0, forward: 0 });
+  }
+});
+test('analog stick input walks proportionally slower than full input', () => {
+  const half = stickInput(0, -15, 30);
+  const slow = travel({ ...idle, forward: half.forward }, 60, 2);
+  const full = travel(forward, 60, 2);
+  near((6 - slow.z) / (6 - full.z), half.forward, 0.02);
 });

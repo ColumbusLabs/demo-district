@@ -1,44 +1,7 @@
 import { expect, test } from '@playwright/test';
+import { engine, settle, setup, state } from '../support/rig.mjs';
 
-async function setup(page, config = {}) {
-  await page.addInitScript(() => {
-    const request = window.requestAnimationFrame.bind(window);
-    const cancel = window.cancelAnimationFrame.bind(window);
-    const pending = new Set();
-    window.requestAnimationFrame = (callback) => {
-      const id = request((time) => { pending.delete(id); callback(time); });
-      pending.add(id); return id;
-    };
-    window.cancelAnimationFrame = (id) => { pending.delete(id); cancel(id); };
-    Object.defineProperty(window, '__frames', { get: () => pending.size });
-  });
-  await page.goto('/');
-  await expect(page.locator('#runtime-status')).toHaveAttribute('data-state', 'ready');
-  await page.evaluate(async (config) => {
-    const bootstrap = '/src/app/bootstrap.ts';
-    const { mountApplication } = await import(bootstrap);
-    mountApplication(document)();
-    const old = document.querySelector('#world-canvas');
-    const canvas = old.cloneNode(false); old.replaceWith(canvas);
-    const worldPath = '/src/world/World.ts';
-    const controlPath = '/src/world/controls/DesktopController.ts';
-    const { createWorld } = await import(worldPath);
-    const { createDesktopController } = await import(controlPath);
-    const world = createWorld(canvas);
-    const control = createDesktopController(canvas, world.camera, {
-      config, invalidate: () => world.invalidate(), canNavigate: () => world.snapshot().state === 'running',
-    });
-    world.addSystem(control);
-    window.__nav = { world, control };
-    world.start();
-  }, config);
-}
-const state = (page) => page.evaluate(() => window.__nav.control.snapshot());
-const engine = (page) => page.evaluate(() => window.__nav.world.snapshot());
 const focus = (page) => page.evaluate(() => window.__nav.control.focus());
-const settle = (page) => expect.poll(async () => {
-  const s = await state(page); return s.vx === 0 && s.vz === 0;
-}).toBe(true);
 
 test('movement requires deliberate focus and uses the existing frame loop', async ({ page }) => {
   await setup(page);

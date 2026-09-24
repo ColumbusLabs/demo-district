@@ -1,6 +1,6 @@
 # Demo District — Agent contract
 
-Read `docs/IMPLEMENTATION_PLAN.md`, the latest `docs/SLICE_03.md` checkpoint, and `docs/DEPLOYMENT.md` before editing.
+Read `docs/IMPLEMENTATION_PLAN.md`, the latest `docs/SLICE_04.md` checkpoint, `docs/DEPLOYMENT.md`, and (for any visual work) `docs/WORLD_ART_DIRECTION.md` with its mockup before editing.
 
 ## Scope and branch
 
@@ -23,11 +23,12 @@ Read `docs/IMPLEMENTATION_PLAN.md`, the latest `docs/SLICE_03.md` checkpoint, an
 
 - World logic belongs in `src/world/`; app mounting in `src/app/`; presentation in `src/ui/`.
 - Use portable TypeScript and direct Three.js imports. No mandatory UI framework or host SDK yet.
-- Read `docs/WORLD_ENGINE.md` and `docs/DESKTOP_NAVIGATION.md`. The world owns the sole renderer/scheduler; controls join through `addSystem` and `invalidate`, never their own animation loop.
+- Read `docs/WORLD_ENGINE.md` and `docs/NAVIGATION.md`. The world owns the sole renderer/scheduler; controls join through `addSystem` and `invalidate`, never their own animation loop.
 - Use a fresh canvas after destroy. Register owned GPU resources with `ResourceScope`/`world.own`.
 - Desktop navigation is focus-scoped WASD, drag-look, and arrow-key look. No automatic focus, pointer lock, head bob, jumping, sprint, or mousewheel interception.
+- Touch navigation is a one-finger look drag plus the analog movement stick, handled by the same `NavigationController` and motion state. Touch must never take keyboard focus, block pinch zoom, or scroll the page during world interaction. `html[data-input]` affects presentation only.
 - Keep movement math independent of scene geometry. This slice has coarse perimeter bounds, not building/obstacle physics.
-- Suspension, blur, Escape, Tab, context loss, and teardown must clear held input and momentum. Reduced motion must remain navigable, with no idle animation loop once movement settles.
+- Suspension, blur, Escape, Tab, context loss, and teardown must clear held keys, stick, drags, and momentum. Reduced motion must remain navigable, with no idle animation loop once movement settles.
 - Do not preload creator sites, add iframes, scrape X, or load remote fonts/CDN scripts at startup.
 - D1, R2, authentication, ratings, submissions, and real project records remain later slices. No fake hosting IDs or storage bindings.
 
@@ -36,10 +37,10 @@ Read `docs/IMPLEMENTATION_PLAN.md`, the latest `docs/SLICE_03.md` checkpoint, an
 - Use Node 26 (pinned in `.nvmrc`; Node 24 remains supported), `npm ci`, and `npm run verify`.
 - Browser checks: `npx --no-install playwright install chromium`, `npm run test:browser`, `npm run test:lifecycle`.
 - Lifecycle tests exercise real HMR and restore their temporary source edit. Run them serially.
-- Phone-sized Chromium is not physical iPhone/Safari testing or a performance benchmark.
+- Phone-sized Chromium, including CDP touch emulation, is not physical iPhone/Safari testing or a performance benchmark.
 - Native Sites acceptance remains pending until a real saved version is validated. A static build is not proof.
 - Never mark unrun checks as passed. Record exact source, evidence, and any limitation.
-- Commit real dependency lockfiles; never fabricate hashes. No new dependencies are needed for Slice 3.
+- Commit real dependency lockfiles; never fabricate hashes. Slice 4 added no dependencies.
 - Update the checkpoint and affected run instructions after each slice.
 
 ## Handoff

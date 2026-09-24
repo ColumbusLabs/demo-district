@@ -21,10 +21,10 @@ npm run dev
 ```
 
 Open `http://127.0.0.1:5173`. The preview is a diagnostic cube and neutral floor with
-desktop walking/look controls, not the selected plaza. Choose Explore or click the
+keyboard, mouse, and touch walking/look controls, not the selected plaza. Choose Explore or click the
 canvas, use WASD to walk, drag or use arrow keys to look, Escape to release focus,
 and Tab to reach page controls. Reset view and three walking speeds are available.
-Touch navigation is the next slice. See `WORLD_ENGINE.md` and `DESKTOP_NAVIGATION.md`.
+On a phone, drag the scene to look and use the stick to walk; the `--host` option below lets a phone on your network try it. See `WORLD_ENGINE.md` and `NAVIGATION.md`.
 No secrets are required; `.env.example` documents that boundary.
 
 For another device on a trusted local network, explicitly opt in with

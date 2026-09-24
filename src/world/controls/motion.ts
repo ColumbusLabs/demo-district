@@ -6,6 +6,7 @@ export interface MovementConfig {
   eyeHeight: number;
   radius: number;
   sensitivity: number;
+  touchSensitivity: number;
   keyboardLookSpeed: number;
   maxPitch: number;
   bounds: { minX: number; maxX: number; minZ: number; maxZ: number };
@@ -13,11 +14,13 @@ export interface MovementConfig {
 }
 export interface MotionState { x: number; z: number; vx: number; vz: number; yaw: number; pitch: number }
 export interface MovementInput { forward: number; right: number; yaw: number; pitch: number }
+/** Knob offset (x/y, unit disc, screen axes) and dead-zone-rescaled walking input. */
+export interface StickInput { x: number; y: number; right: number; forward: number }
 
 export function movementConfig(overrides: Partial<MovementConfig> = {}): MovementConfig {
   const config: MovementConfig = {
     speed: 3.2, acceleration: 12, deceleration: 18, eyeHeight: 1.7, radius: 0.3,
-    sensitivity: 0.0025, keyboardLookSpeed: 1.5, maxPitch: Math.PI * 0.47,
+    sensitivity: 0.0025, touchSensitivity: 0.006, keyboardLookSpeed: 1.5, maxPitch: Math.PI * 0.47,
     ...overrides,
     bounds: { minX: -35, maxX: 35, minZ: -35, maxZ: 35, ...overrides.bounds },
     spawn: { x: 0, z: 6, yaw: 0, pitch: -0.08, ...overrides.spawn },
@@ -89,4 +92,18 @@ export function advanceMotion(state: MotionState, input: MovementInput, seconds:
   state.vz = targetZ + (state.vz - targetZ) * decay;
   if (length === 0 && Math.hypot(state.vx, state.vz) < 0.001) resetMotion(state);
   constrainMotion(state, config);
+}
+
+/** Map a thumb offset from the stick center to a unit-disc knob position and analog walking input. */
+export function stickInput(dx: number, dy: number, travel: number, deadZone = 0.15): StickInput {
+  if (!Number.isFinite(dx) || !Number.isFinite(dy) || !(travel > 0)) return { x: 0, y: 0, right: 0, forward: 0 };
+  const length = Math.hypot(dx, dy) / travel;
+  const scale = length > 1 ? 1 / length : 1;
+  const x = (dx / travel) * scale;
+  const y = (dy / travel) * scale;
+  const magnitude = Math.min(length, 1);
+  if (magnitude <= deadZone) return { x, y, right: 0, forward: 0 };
+  // Rescale so walking starts from zero at the dead-zone edge instead of jumping to 15% speed.
+  const gain = (magnitude - deadZone) / (1 - deadZone) / magnitude;
+  return { x, y, right: x * gain, forward: 0 - y * gain };
 }

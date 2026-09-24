@@ -78,7 +78,7 @@ The world currently has coarse perimeter constraints, not obstacle/building coll
 The test cube remains a diagnostic object. Native Sites validation remains pending.
 No deployment, merge, pull request, provisioning, or Site-access change was performed.
 
-Detailed contracts: [navigation](DESKTOP_NAVIGATION.md), [engine](WORLD_ENGINE.md),
+Detailed contracts: [navigation](NAVIGATION.md), [engine](WORLD_ENGINE.md),
 [CI cost policy](CI_COST_POLICY.md), and [implementation roadmap](IMPLEMENTATION_PLAN.md).
 
 Next: **Slice 4 — Mobile/touch navigation baseline (5.6 Sol).**

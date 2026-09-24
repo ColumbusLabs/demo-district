@@ -8,8 +8,20 @@
 **Build style:** Small, chat-friendly slices with a hard checkpoint after every slice.  
 **Model options used in this plan:** GPT-5.6 Sol and GPT-6 Astra Pro.
 
+<!-- slice-04-status -->
+## Current implementation checkpoint — Slice 4
+
+**Slice 4 mobile/touch navigation implemented.** See [Slice 4 evidence](SLICE_04.md) and the [navigation contract](NAVIGATION.md).
+
+A one-finger scene drag looks around, and an analog movement stick walks; both work together. Touch never takes keyboard focus, pinch zoom is kept, and the page does not scroll during world interaction. Touch-primary devices hide keyboard-only hints and use a compact layout that covers less than 30% of a phone screen. Keyboard, mouse, and touch share one controller, one motion state, and the engine's single scheduler.
+
+The approved plaza mockup is now in the repository: [art direction](WORLD_ART_DIRECTION.md). The toolchain is on Node 26 (Node 24 also supported).
+
+Native Sites acceptance and physical iPhone/Android testing remain pending. No merge or deployment is authorized. **Milestone 1 (engine boots) is reached in emulation.** Next planned code slice: **5 — District graybox (6 Astra Pro).**
+<!-- /slice-04-status -->
+
 <!-- slice-03-status -->
-## Current implementation checkpoint — Slice 3
+## Historical implementation checkpoint — Slice 3
 
 **Slice 3 desktop navigation implemented.** See [Slice 3 acceptance and exact CI evidence](SLICE_03.md) for verification status.
 
@@ -17,7 +29,7 @@ Focus-scoped WASD walking, drag/arrow-key look, configurable speeds, human eye h
 
 The user's no-paid-Actions requirement is recorded in [CI cost policy](CI_COST_POLICY.md) and AGENTS.md. Only public-repository standard Ubuntu execution is approved; caches and artifact uploads are disabled.
 
-Native Sites acceptance remains pending. No merge or deployment is authorized. Next planned code slice after verification: **4 — Mobile/touch navigation baseline (5.6 Sol).**
+Native Sites acceptance remains pending. No merge or deployment is authorized. Next planned code slice at that checkpoint: **4 — Mobile/touch navigation baseline (5.6 Sol).**
 <!-- /slice-03-status -->
 
 <!-- slice-02-status -->
@@ -161,7 +173,7 @@ demo-district/
 ├─ AGENTS.md
 ├─ docs/
 │  ├─ IMPLEMENTATION_PLAN.md
-│  ├─ WORLD_ART_DIRECTION.md
+│  ├─ WORLD_ART_DIRECTION.md   (with art/plaza-mockup.jpg)
 │  ├─ PERFORMANCE_BUDGET.md
 │  ├─ DATA_MODEL.md
 │  └─ DEPLOYMENT.md
@@ -349,6 +361,7 @@ Each slice must end with:
 
 ### Slice 4 — Mobile/touch navigation baseline
 **Model:** GPT-5.6 Sol
+**Status:** Implemented. See [Slice 4 evidence](SLICE_04.md); physical-device and native Sites validation remain pending.
 
 **Goal:** Prove the project is mobile-capable before the environment becomes expensive.
 

@@ -1,5 +1,8 @@
 import { expect, test } from '@playwright/test';
 
+// Keyboard/mouse presentation. Touch-primary devices get the stick layout instead (touch.spec.mjs).
+test.beforeEach(({ hasTouch }) => { test.skip(hasTouch, 'Touch-primary layout hides keyboard-only controls.'); });
+
 test('production controls focus the canvas, allow escape, and expose speed/reset without pointer lock', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#runtime-status')).toHaveAttribute('data-state', 'ready');

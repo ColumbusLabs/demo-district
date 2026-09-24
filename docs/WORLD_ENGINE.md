@@ -1,13 +1,13 @@
-# World engine — through Slice 3
+# World engine — through Slice 4
 
 ## Scope
 
 `src/world/World.ts` owns the renderer, perspective camera, and scene lifecycle.
 The preview contains a slowly rotating diagnostic cube on a neutral floor with two
-inexpensive lights. Slice 3 adds first-person desktop navigation through a separate
-controller; the district itself, touch controls, and creator directory are later
-work. Dependencies remain as locked in Slice 1. No remote assets or creator sites
-are loaded. See [desktop navigation](DESKTOP_NAVIGATION.md).
+inexpensive lights. Slices 3 and 4 add first-person keyboard, mouse, and touch
+navigation through a separate controller; the district itself and creator directory
+are later work. Dependencies remain as locked in Slice 1. No remote assets or creator sites
+are loaded. See [navigation](NAVIGATION.md).
 
 ## Ownership and API
 
@@ -104,7 +104,7 @@ Production tests use `dist/` on 4173. Lifecycle tests use development modules on
 serially to avoid source-change interference. Browser tests use actual Three.js/
 WebGL 2 through Chromium/SwiftShader at desktop and phone-sized viewports, not
 physical iPhone/Safari or GPU benchmarks. Native Sites acceptance remains pending.
-See [Slice 3 evidence](SLICE_03.md) and the [no-paid CI policy](CI_COST_POLICY.md).
+See [Slice 4 evidence](SLICE_04.md) and the [no-paid CI policy](CI_COST_POLICY.md).
 
 ## Primary API references
 
@@ -112,5 +112,5 @@ See [Slice 3 evidence](SLICE_03.md) and the [no-paid CI policy](CI_COST_POLICY.m
 - https://threejs.org/docs/pages/BufferGeometry.html
 - https://threejs.org/docs/pages/Material.html
 
-Next code boundary: Slice 4, mobile/touch navigation. No plaza, backend, storage,
+Next code boundary: Slice 5, the district graybox. No plaza, backend, storage,
 authentication, or creator data is implemented yet.
