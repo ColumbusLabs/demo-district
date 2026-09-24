@@ -2,7 +2,7 @@
 
 **Branch:** `build/demo-district-v1`  
 **Baseline:** `24009e1` (Node 26 toolchain on top of the verified Slice 3 source)  
-**Status:** implemented and verified locally. Physical-device and native Sites acceptance remain pending.
+**Status:** implemented and verified locally and in CI. Physical-device and native Sites acceptance remain pending.
 
 ## Delivered
 
@@ -15,9 +15,13 @@
 
 No new dependency, plaza geometry, interaction targets, backend, merge, PR, or deployment is part of this slice.
 
-## Verified execution (local)
+## Verified execution
 
-Run on macOS with Node 26.8.2 / npm 11.19.1 from a clean `npm ci`. CI on the pushed commit is recorded separately.
+Run on macOS with Node 26.8.2 / npm 11.19.1 from a clean `npm ci`, then reproduced in CI:
+
+**Tested source:** `6c6cfd6`  
+**GitHub Actions run:** https://github.com/ColumbusLabs/demo-district/actions/runs/36066402883  
+**Job:** `107857061711` (success, standard `ubuntu-latest`, public-repository gate, no cache/artifacts). CI counts match the table below exactly.
 
 | Check | Result |
 | --- | --- |
