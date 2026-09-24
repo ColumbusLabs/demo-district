@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#17252b" />
+    <meta name="description" content="Demo District: a walkable community showcase for AI-created projects. Currently in development." />
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="/src/ui/styles.css" />
+    <title>Demo District — Foundation preview</title>
+  </head>
+  <body>
+    <main id="app">
+      <div id="world-root" aria-hidden="true">
+        <canvas id="world-canvas"></canvas>
+      </div>
+      <section class="shell" aria-labelledby="district-title">
+        <header class="shell__header">
+          <span class="wordmark">DEMO DISTRICT</span>
+          <span class="stage">Foundation preview</span>
+        </header>
+        <div class="shell__intro">
+          <p class="eyebrow">A place for what you create.</p>
+          <h1 id="district-title">Demo District</h1>
+          <p class="intro">The district is taking shape.</p>
+          <p class="scope-note">This is the foundation build. The walkable world comes next.</p>
+        </div>
+        <footer class="shell__footer">
+          <p id="runtime-status" role="status" aria-live="polite" data-state="loading">Checking the world canvas…</p>
+          <p id="runtime-detail">No creator experiences are loaded in this preview.</p>
+          <noscript><p>JavaScript is disabled. Enable it to initialize the 3D canvas. The district has not opened yet.</p></noscript>
+        </footer>
+      </section>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
