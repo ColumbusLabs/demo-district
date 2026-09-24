@@ -11,17 +11,29 @@
   </head>
   <body>
     <main id="app">
-      <div id="world-root" aria-hidden="true"><canvas id="world-canvas"></canvas></div>
+      <div id="world-root"><canvas id="world-canvas" tabindex="0" role="img" aria-label="Interactive movement test scene" aria-describedby="navigation-hint" data-navigation="idle"></canvas></div>
       <section class="shell" aria-labelledby="district-title">
         <header class="shell__header">
           <span class="wordmark">DEMO DISTRICT</span>
-          <span class="stage">Engine preview · Slice 02</span>
+          <span class="stage">Movement preview · Slice 03</span>
         </header>
         <div class="shell__intro">
           <h1 id="district-title">Demo District</h1>
-          <p class="scope-note">A test object, a neutral floor, and the engine underneath.<br />The district and walking controls come later.</p>
+          <p class="scope-note">Try walking and looking around this test space.<br />The district and touch controls come next.</p>
         </div>
         <footer class="shell__footer">
+          <div class="navigation-controls" aria-label="Preview navigation">
+            <button id="enter-navigation" type="button" disabled>Explore</button>
+            <button id="reset-view" type="button" disabled>Reset view</button>
+            <label for="walk-speed">Walk speed</label>
+            <select id="walk-speed" disabled>
+              <option value="2">Leisurely</option>
+              <option value="3.2" selected>Normal</option>
+              <option value="5">Brisk</option>
+            </select>
+          </div>
+          <p id="navigation-hint">Keyboard and mouse: WASD to walk, drag or arrow keys to look. Escape releases focus; Tab moves to the page controls.</p>
+          <p id="navigation-status" role="status" aria-live="polite">Navigation is starting.</p>
           <p id="runtime-status" role="status" aria-live="polite" data-state="loading">Starting the world engine…</p>
           <p id="runtime-detail">No creator experiences are loaded in this preview.</p>
           <noscript><p>JavaScript is disabled. Enable it to initialize the 3D world. The district has not opened yet.</p></noscript>
