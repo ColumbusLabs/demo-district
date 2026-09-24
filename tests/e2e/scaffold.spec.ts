@@ -42,7 +42,7 @@ test('canvas fills the viewport and the shell has no horizontal overflow after r
 test('unavailable WebGL shows useful fallback instead of a blank page', async ({ page }) => {
   await page.addInitScript(() => {
     const original = HTMLCanvasElement.prototype.getContext;
-    HTMLCanvasElement.prototype.getContext = function (type: string, ...args: unknown[]) {
+    HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, type: string, ...args: unknown[]) {
       if (type === 'webgl2' || type === 'webgl' || type === 'experimental-webgl') return null;
       return Reflect.apply(original, this, [type, ...args]);
     } as typeof original;
