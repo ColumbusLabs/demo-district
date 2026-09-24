@@ -33,7 +33,7 @@ Read `docs/IMPLEMENTATION_PLAN.md`, the latest `docs/SLICE_03.md` checkpoint, an
 
 ## Checks and evidence
 
-- Use Node 22 (at least 22.12), `npm ci`, and `npm run verify`.
+- Use Node 26 (pinned in `.nvmrc`; Node 24 remains supported), `npm ci`, and `npm run verify`.
 - Browser checks: `npx --no-install playwright install chromium`, `npm run test:browser`, `npm run test:lifecycle`.
 - Lifecycle tests exercise real HMR and restore their temporary source edit. Run them serially.
 - Phone-sized Chromium is not physical iPhone/Safari testing or a performance benchmark.

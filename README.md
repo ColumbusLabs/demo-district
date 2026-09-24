@@ -12,7 +12,7 @@ The current preview is a test cube and neutral floor with WASD walking, drag/arr
 
 ## Try the preview locally
 
-Use Node 22 (at least 22.12) and the committed npm lockfile. No credentials are required.
+Use Node 26 (Node 24 is also supported) and the committed npm lockfile. No credentials are required.
 
 ```sh
 nvm install
