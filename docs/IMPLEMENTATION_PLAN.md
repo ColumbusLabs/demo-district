@@ -8,6 +8,18 @@
 **Build style:** Small, chat-friendly slices with a hard checkpoint after every slice.  
 **Model options used in this plan:** GPT-5.6 Sol and GPT-6 Astra Pro.
 
+<!-- slice-01-status -->
+## Implementation status — September 24, 2026
+
+**Slice 1: scaffold verified; native Sites acceptance pending.**
+
+Clean npm ci, 4 repository checks, strict TypeScript check, production build, static artifact check, 12 Chromium smoke cases, and runtime dependency audit passed. Browser cases cover desktop and phone-sized Chromium, not physical iPhone/Safari.
+
+CI evidence: https://github.com/ColumbusLabs/demo-district/actions/runs/36051654434 (source commit `fcc14ad08d8b119a4d1b841d6c8791e0fc67d551`). See [Slice 1 evidence](SLICE_01.md) and [Sites handoff](DEPLOYMENT.md).
+
+No Site was provisioned, saved, deployed, or published. No merge was performed. The final Slice 1 acceptance item requires the native Sites save-only workflow; a green Vite build is not a substitute. Next planned implementation: Slice 2 (Three.js engine shell), with this host-verification gate still explicit.
+<!-- /slice-01-status -->
+
 ---
 
 ## 1. Product vision
@@ -234,6 +246,7 @@ Each slice must end with:
 
 ### Slice 1 — Repository contract and Sites-compatible scaffold
 **Model:** GPT-6 Astra Pro
+**Status:** Scaffold verified; native Sites compatibility check pending. See the implementation status above.
 
 **Goal:** Establish a repository that ChatGPT Sites can actually build before adding product code.
 

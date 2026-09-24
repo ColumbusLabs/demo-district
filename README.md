@@ -73,7 +73,7 @@ ChatGPT Sites is the initial hosting target, but the Three.js world should remai
 
 ## Planned technology
 
-The exact application scaffold will be verified against the current ChatGPT Sites runtime before implementation begins.
+The client scaffold now uses Vite + TypeScript with a direct Three.js dependency. It produces a tested static artifact; acceptance by the native Sites runtime remains a separate, pending gate. D1, R2, and authentication below remain planned, not provisioned.
 
 Current direction:
 
@@ -159,13 +159,13 @@ These can be reconsidered only after the core discovery experience proves itself
 
 ## Current status
 
-**Status:** Planning complete; implementation has not started.
+**Status:** Slice 1 scaffold implemented and checked. Native ChatGPT Sites acceptance is still pending; nothing has been deployed or merged.
 
 The detailed implementation plan is the first committed project document.
 
-The next implementation task is:
+The next verification step is the native Sites save-only check in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
-**Slice 1 — Repository contract and Sites-compatible scaffold**
+The next planned code slice is **Slice 2 — Three.js engine shell**.
 
 Model assignment: **GPT-6 Astra Pro**
 
@@ -174,3 +174,18 @@ No production deployment should occur until explicitly approved.
 ---
 
 Demo District is intended to be a community place for discovering what people are actually making with the newest AI models — not just reading benchmark numbers or watching model announcements.
+
+## Run the scaffold
+
+Use Node 22 (at least 22.12). No credentials are required.
+
+```sh
+nvm install
+nvm use
+npm ci
+npm run dev
+```
+
+Local development: `http://127.0.0.1:5173`. For the production artifact, run `npm run verify` then `npm run preview` and open `http://127.0.0.1:4173`. Browser smoke checks: `npx playwright install chromium` then `npm run test:browser`. See [deployment and validation](docs/DEPLOYMENT.md), [agent contract](AGENTS.md), and [Slice 1 evidence](docs/SLICE_01.md).
+
+This is an empty, labeled foundation canvas—not the plaza, movement system, or a live directory. It does not request or embed external creator experiences.
