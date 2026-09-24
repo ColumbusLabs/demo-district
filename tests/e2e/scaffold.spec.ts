@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-test('production page initializes the actual Three.js WebGL canvas without remote requests', async ({ page }, info) => {
+test('production engine renders the test scene without external requests or development diagnostics', async ({ page }, info) => {
   const errors: string[] = [];
   const externalRequests: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
@@ -10,32 +10,35 @@ test('production page initializes the actual Three.js WebGL canvas without remot
   });
   const response = await page.goto('/');
   expect(response?.status()).toBe(200);
-  await expect(page).toHaveTitle('Demo District — Foundation preview');
+  await expect(page).toHaveTitle('Demo District — Engine preview');
   await expect(page.getByRole('heading', { name: 'Demo District', exact: true })).toBeVisible();
   await expect(page.locator('#runtime-status')).toHaveAttribute('data-state', 'ready');
   await expect(page.locator('#runtime-detail')).toContainText('Three.js r186');
   expect(await page.locator('#world-canvas').evaluate((element) => {
-    const gl = (element as HTMLCanvasElement).getContext('webgl2');
-    return gl !== null && !gl.isContextLost();
+    const canvas = element as HTMLCanvasElement;
+    const gl = canvas.getContext('webgl2');
+    return gl !== null && !gl.isContextLost() && canvas.width > 1 && canvas.height > 1;
   })).toBe(true);
+  await expect(page.locator('[data-world-diagnostics]')).toHaveCount(0);
   expect(errors).toEqual([]);
   expect(externalRequests).toEqual([]);
-  await page.screenshot({ path: info.outputPath('foundation.png'), fullPage: true });
+  await page.screenshot({ path: info.outputPath('engine.png'), fullPage: true });
 });
 
-test('canvas fills the viewport and the shell has no horizontal overflow after resize', async ({ page }) => {
+test('canvas follows portrait, landscape, and desktop size with a capped backing buffer', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#runtime-status')).toHaveAttribute('data-state', 'ready');
   for (const size of [{ width: 390, height: 844 }, { width: 844, height: 390 }, { width: 1440, height: 900 }]) {
     await page.setViewportSize(size);
-    const metrics = await page.locator('#world-canvas').evaluate((canvas) => {
-      const bounds = canvas.getBoundingClientRect();
-      return { width: bounds.width, height: bounds.height, viewportWidth: innerWidth, viewportHeight: innerHeight,
-        pageWidth: document.documentElement.scrollWidth, clientWidth: document.documentElement.clientWidth };
-    });
-    expect(metrics.width).toBe(metrics.viewportWidth);
-    expect(metrics.height).toBe(metrics.viewportHeight);
-    expect(metrics.pageWidth).toBeLessThanOrEqual(metrics.clientWidth);
+    await expect.poll(async () => page.locator('#world-canvas').evaluate((element) => {
+      const canvas = element as HTMLCanvasElement;
+      const box = canvas.getBoundingClientRect();
+      const ratio = Math.min(devicePixelRatio, 2, Math.sqrt(3_686_400 / (box.width * box.height)));
+      return box.width === innerWidth && box.height === innerHeight &&
+        Math.abs(canvas.width - Math.floor(box.width * ratio)) <= 1 &&
+        Math.abs(canvas.height - Math.floor(box.height * ratio)) <= 1 &&
+        document.documentElement.scrollWidth <= document.documentElement.clientWidth;
+    })).toBe(true);
   }
 });
 
@@ -53,17 +56,22 @@ test('unavailable WebGL shows useful fallback instead of a blank page', async ({
   await expect(page.getByRole('heading', { name: 'Demo District', exact: true })).toBeVisible();
 });
 
-test('graphics context loss changes status without trapping the page', async ({ page }) => {
+test('real graphics context loss recovers the production renderer', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#runtime-status')).toHaveAttribute('data-state', 'ready');
-  await page.locator('#world-canvas').evaluate((canvas) => {
-    canvas.dispatchEvent(new Event('webglcontextlost'));
+  await page.locator('#world-canvas').evaluate((element) => {
+    const canvas = element as HTMLCanvasElement;
+    const extension = canvas.getContext('webgl2')?.getExtension('WEBGL_lose_context');
+    if (!extension) throw new Error('Test browser must support context loss.');
+    canvas.addEventListener('webglcontextlost', () => { setTimeout(() => extension.restoreContext(), 500); }, { once: true });
+    extension.loseContext();
   });
   await expect(page.locator('#runtime-status')).toHaveAttribute('data-state', 'unavailable');
-  await expect(page.locator('#runtime-detail')).toContainText('Reload this preview');
+  await expect(page.locator('#runtime-detail')).toContainText('restore graphics');
+  await expect(page.locator('#runtime-status')).toHaveAttribute('data-state', 'ready');
 });
 
-test('reduced motion does not start animations or capture the pointer', async ({ page }) => {
+test('reduced motion retains a rendered scene without capturing the pointer', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
   await expect(page.locator('#runtime-status')).toHaveAttribute('data-state', 'ready');
@@ -71,7 +79,7 @@ test('reduced motion does not start animations or capture the pointer', async ({
     .toEqual({ animations: 0, captured: false });
 });
 
-test('no-JavaScript visitors still receive the project identity and an explanation', async ({ browser }) => {
+test('no-JavaScript visitors receive identity and an explanation', async ({ browser }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
   try {
     const page = await context.newPage();
@@ -80,4 +88,14 @@ test('no-JavaScript visitors still receive the project identity and an explanati
     await expect(page.locator('noscript p')).toContainText('JavaScript is disabled');
     await expect(page.locator('noscript p')).toBeVisible();
   } finally { await context.close(); }
+});
+
+test('back-forward cache page lifecycle pauses and resumes without remounting', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('#runtime-status')).toHaveAttribute('data-state', 'ready');
+  await page.evaluate(() => window.dispatchEvent(new PageTransitionEvent('pagehide', { persisted: true })));
+  await expect(page.locator('#runtime-status')).toHaveAttribute('data-state', 'paused');
+  await page.evaluate(() => window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true })));
+  await expect(page.locator('#runtime-status')).toHaveAttribute('data-state', 'ready');
+  await expect(page.locator('#world-canvas')).toHaveCount(1);
 });

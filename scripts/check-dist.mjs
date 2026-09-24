@@ -6,8 +6,8 @@ const root = path.resolve('dist');
 const html = await readFile(path.join(root, 'index.html'), 'utf8');
 assert.ok(html.includes('id="world-canvas"'), 'Build must retain the world canvas.');
 assert.ok(!html.includes('/src/'), 'Build must not contain source-module references.');
-assert.ok(!/https?:\/\//.test(html), 'Scaffold must not request remote assets.');
-assert.ok(!/<iframe\b/i.test(html), 'No external project frames in the scaffold.');
+assert.ok(!/https?:\/\//.test(html), 'Entry HTML must not request remote assets.');
+assert.ok(!/<iframe\b/i.test(html), 'No external project frames.');
 const references = [...html.matchAll(/(?:src|href)="([^"#]+)"/g)]
   .map((match) => match[1]).filter((ref) => !ref.startsWith('data:'));
 assert.ok(references.some((ref) => ref.endsWith('.js')), 'Bundled JavaScript is required.');
@@ -17,5 +17,10 @@ for (const ref of references) {
   assert.ok((await stat(destination)).isFile(), `Missing asset: ${ref}`);
 }
 const entries = await readdir(path.join(root, 'assets'));
-assert.ok(entries.every((name) => !name.endsWith('.map')), 'Do not publish source maps in this scaffold.');
-console.log(`Static artifact check passed: ${references.length} local entry assets; no embeds or remote entry assets.`);
+assert.ok(entries.every((name) => !name.endsWith('.map')), 'Do not publish source maps.');
+for (const file of entries.filter((name) => name.endsWith('.js'))) {
+  const js = await readFile(path.join(root, 'assets', file), 'utf8');
+  assert.ok(!js.includes('DEVELOPMENT · WORLD ENGINE'), 'Development HUD leaked into production.');
+  assert.ok(!js.includes('__ddWorld'), 'Browser test globals leaked into production.');
+}
+console.log(`Static artifact check passed: ${references.length} local entry assets; no embeds, remote entries, or development HUD.`);
