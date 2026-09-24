@@ -2,7 +2,7 @@
 
 **Branch:** `build/demo-district-v1`  
 **Baseline:** `86247406a66deebdb41c5c0a25b401d797751819`  
-**Status:** implementation prepared; independent CI verification pending.
+**Status:** implemented and verified; native Sites acceptance remains pending.
 
 ## Delivered
 
@@ -31,3 +31,18 @@ handlers, not operating-system tab throttling or actual bfcache eligibility.
 No deploy, merge, pull request, or Site-access change is part of this slice.
 
 Next planned slice: **3 — First-person camera and desktop movement (6 Astra Pro).**
+
+## Verified execution
+
+Clean npm ci; 11 repository/runtime unit tests; strict TypeScript; Vite production
+build; static artifact/HUD exclusion checks; 14 production-browser cases; and 18
+development lifecycle cases (including actual HMR) passed. Runtime dependency audit
+passed. All browser cases use real Three.js/WebGL 2 in Chromium at desktop and
+phone-sized viewports. No skipped cases are counted as passes.
+
+Run: https://github.com/ColumbusLabs/demo-district/actions/runs/36054505223
+Tested source: `84da0e26c6061825b74d756f3f32b1969b881244`
+
+The temporary documentation-checkpoint job only updates these documentation files
+after verification succeeds and checks the branch has not advanced before pushing.
+It and its helper are removed at final handoff; normal CI remains read-only.

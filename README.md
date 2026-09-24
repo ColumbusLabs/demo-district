@@ -159,13 +159,13 @@ These can be reconsidered only after the core discovery experience proves itself
 
 ## Current status
 
-**Status:** Slice 1 scaffold implemented and checked. Native ChatGPT Sites acceptance is still pending; nothing has been deployed or merged.
+**Status:** Slice 2 world engine implemented and verified. Native ChatGPT Sites acceptance is still pending; nothing has been deployed or merged.
 
 The detailed implementation plan is the first committed project document.
 
 The next verification step is the native Sites save-only check in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
-The next planned code slice is **Slice 2 — Three.js engine shell**.
+The next planned code slice is **Slice 3 — First-person camera and desktop movement**.
 
 Model assignment: **GPT-6 Astra Pro**
 
@@ -175,7 +175,7 @@ No production deployment should occur until explicitly approved.
 
 Demo District is intended to be a community place for discovering what people are actually making with the newest AI models — not just reading benchmark numbers or watching model announcements.
 
-## Run the scaffold
+## Run the engine preview
 
 Use Node 22 (at least 22.12). No credentials are required.
 
@@ -186,6 +186,6 @@ npm ci
 npm run dev
 ```
 
-Local development: `http://127.0.0.1:5173`. For the production artifact, run `npm run verify` then `npm run preview` and open `http://127.0.0.1:4173`. Browser smoke checks: `npx playwright install chromium` then `npm run test:browser`. See [deployment and validation](docs/DEPLOYMENT.md), [agent contract](AGENTS.md), and [Slice 1 evidence](docs/SLICE_01.md).
+Local development: `http://127.0.0.1:5173`. For the production artifact, run `npm run verify` then `npm run preview` and open `http://127.0.0.1:4173`. Browser smoke checks: `npx playwright install chromium` then `npm run test:browser` and `npm run test:lifecycle`. See [deployment and validation](docs/DEPLOYMENT.md), [agent contract](AGENTS.md), and [Slice 1 evidence](docs/SLICE_01.md).
 
-This is an empty, labeled foundation canvas—not the plaza, movement system, or a live directory. It does not request or embed external creator experiences.
+This is a real Three.js test scene with a cube and neutral floor—not the plaza, movement system, or a live directory. The engine handles resizing, pause/resume, reduced motion, context recovery, HMR, and cleanup. See [engine contract](docs/WORLD_ENGINE.md) and [Slice 2 evidence](docs/SLICE_02.md). It does not request or embed external creator experiences.

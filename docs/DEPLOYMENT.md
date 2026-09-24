@@ -2,7 +2,7 @@
 
 ## Current boundary
 
-This repository is a portable static Vite + TypeScript + Three.js scaffold. It is **not yet a Sites-validated project**. There is no Site ID, saved version, production URL, database, storage bucket, or sign-in integration.
+This repository is a portable static Vite + TypeScript + Three.js engine preview. It is **not yet a Sites-validated project**. There is no Site ID, saved version, production URL, database, storage bucket, or sign-in integration.
 
 The current chat has GitHub read/write access, but no native Sites operation was exposed; plugin discovery did not return a Sites management integration. Public documentation establishes the workflow, not acceptance of these exact build artifacts. Do not replace that missing evidence with a claim of compatibility.
 
@@ -15,7 +15,7 @@ npm ci
 npm run dev
 ```
 
-Open `http://127.0.0.1:5173`. The preview is deliberately a labeled empty world canvas, not the selected plaza mockup. No secrets are required. `.env.example` documents that boundary.
+Open `http://127.0.0.1:5173`. The preview is deliberately a test cube on a neutral floor, not the selected plaza mockup. Engine ownership and lifecycle are documented in `WORLD_ENGINE.md`. No secrets are required. `.env.example` documents that boundary.
 
 For another device on a trusted local network, explicitly opt in with `npm run dev -- --host 0.0.0.0`; otherwise servers bind to loopback only. Do not expose the development server publicly.
 
@@ -25,10 +25,11 @@ For another device on a trusted local network, explicitly opt in with `npm run d
 npm run verify
 npx playwright install chromium
 npm run test:browser
+npm run test:lifecycle
 npm run preview
 ```
 
-`verify` runs repository checks, strict TypeScript checking, the Vite production build, and a static-artifact check. Browser tests start their own production build/preview server on port 4173, which must be free. On Linux CI use `npx playwright install --with-deps chromium`.
+`verify` runs repository checks, strict TypeScript checking, the Vite production build, and a static-artifact check. Browser tests start their own production build/preview server on port 4173, which must be free. The separate lifecycle suite starts Vite on port 5173 and requires that port to be free; it restores the temporary source edit used for HMR verification. On Linux CI use `npx playwright install --with-deps chromium`.
 
 `preview` serves `dist/` at `http://127.0.0.1:4173`. It is a local inspection tool, not a production server. Vite documents this distinction: https://vite.dev/guide/static-deploy.html
 

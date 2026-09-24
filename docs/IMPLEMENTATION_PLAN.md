@@ -8,8 +8,25 @@
 **Build style:** Small, chat-friendly slices with a hard checkpoint after every slice.  
 **Model options used in this plan:** GPT-5.6 Sol and GPT-6 Astra Pro.
 
+<!-- slice-02-status -->
+## Current implementation checkpoint — Slice 2
+
+**Slice 2 implemented and verified as a portable Three.js engine.**
+
+Clean locked installation, repository/runtime unit tests, strict typecheck,
+production build/static checks, production-browser tests, development lifecycle
+and real HMR tests, and runtime dependency audit passed in CI.
+
+Evidence: https://github.com/ColumbusLabs/demo-district/actions/runs/36054505223 (tested source `84da0e26c6061825b74d756f3f32b1969b881244`).
+See [Slice 2 evidence](SLICE_02.md) and [engine contract](WORLD_ENGINE.md).
+
+Native Sites acceptance from Slice 1 remains pending; this is not a claim of Sites
+validation or physical mobile performance. No merge or deployment was performed.
+Next code slice: **3 — First-person camera and desktop movement (6 Astra Pro).**
+<!-- /slice-02-status -->
+
 <!-- slice-01-status -->
-## Implementation status — September 24, 2026
+## Historical Slice 1 checkpoint — September 24, 2026
 
 **Slice 1: scaffold verified; native Sites acceptance pending.**
 
@@ -17,7 +34,7 @@ Clean npm ci, 4 repository checks, strict TypeScript check, production build, st
 
 CI evidence: https://github.com/ColumbusLabs/demo-district/actions/runs/36051654434 (source commit `fcc14ad08d8b119a4d1b841d6c8791e0fc67d551`). See [Slice 1 evidence](SLICE_01.md) and [Sites handoff](DEPLOYMENT.md).
 
-No Site was provisioned, saved, deployed, or published. No merge was performed. The final Slice 1 acceptance item requires the native Sites save-only workflow; a green Vite build is not a substitute. Next planned implementation: Slice 2 (Three.js engine shell), with this host-verification gate still explicit.
+No Site was provisioned, saved, deployed, or published. No merge was performed. The final Slice 1 acceptance item requires the native Sites save-only workflow; a green Vite build is not a substitute. At that checkpoint, the next planned implementation was Slice 2. See the current checkpoint above for subsequent work; the host-verification gate remains explicit.
 <!-- /slice-01-status -->
 
 ---
@@ -272,6 +289,7 @@ Each slice must end with:
 
 ### Slice 2 — Three.js engine shell
 **Model:** GPT-6 Astra Pro
+**Status:** Implemented and verified. See [Slice 2 evidence](SLICE_02.md); native Sites validation remains pending.
 
 **Goal:** Create the reusable world lifecycle without building the district yet.
 
