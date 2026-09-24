@@ -6,7 +6,7 @@ Demo District turns discovery into a place: a pedestrian exhibition district wit
 
 ## Current build
 
-**Slice 3: desktop movement implementation checkpoint; see [verification status](docs/SLICE_03.md).**
+**Slice 3: desktop movement implemented and verified.** See [verification evidence](docs/SLICE_03.md): 39 unit/policy tests, 20 production-browser cases, and 40 lifecycle/navigation cases passed, along with clean installation, typechecking, build, and runtime audit.
 
 The current preview is a test cube and neutral floor with WASD walking, drag/arrow-key looking, adjustable speed, and reset. It is not yet the selected plaza, touch-navigation experience, or live project directory. Native ChatGPT Sites acceptance remains pending. Nothing has been merged or deployed.
 
@@ -50,7 +50,7 @@ Walking is optional. Search, a map, and direct navigation will provide faster wa
 
 ## Roadmap and implementation
 
-[The detailed implementation plan](docs/IMPLEMENTATION_PLAN.md) contains 48 bounded slices. Recent execution evidence is in [Slice 1](docs/SLICE_01.md), [Slice 2](docs/SLICE_02.md), and [Slice 3](docs/SLICE_03.md).
+[The detailed implementation plan](docs/IMPLEMENTATION_PLAN.md) contains 48 bounded slices. Recent execution evidence is in [Slice 1](docs/SLICE_01.md), [Slice 2](docs/SLICE_02.md), and [Slice 3](docs/SLICE_03.md). Next: **Slice 4 — Mobile/touch navigation baseline (5.6 Sol).**
 
 The build proceeds through engine/navigation, district construction, World Alpha, persisted project discovery, ratings/authentication, submissions/moderation, creator claims, and release checks. Work stays on `build/demo-district-v1`. Each requested slice ends at its defined boundary with checks and a checkpoint; merge and deployment require separate approval.
 

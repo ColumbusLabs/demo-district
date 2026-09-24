@@ -8,8 +8,20 @@
 **Build style:** Small, chat-friendly slices with a hard checkpoint after every slice.  
 **Model options used in this plan:** GPT-5.6 Sol and GPT-6 Astra Pro.
 
+<!-- slice-03-status -->
+## Current implementation checkpoint — Slice 3
+
+**Slice 3 desktop navigation implemented.** See [Slice 3 acceptance and exact CI evidence](SLICE_03.md) for verification status.
+
+Focus-scoped WASD walking, drag/arrow-key look, configurable speeds, human eye height, coarse perimeter bounds, and safe input cleanup now share the engine's single scheduler. Reduced motion supports deliberate navigation without idle decorative animation. No pointer lock is required.
+
+The user's no-paid-Actions requirement is recorded in [CI cost policy](CI_COST_POLICY.md) and AGENTS.md. Only public-repository standard Ubuntu execution is approved; caches and artifact uploads are disabled.
+
+Native Sites acceptance remains pending. No merge or deployment is authorized. Next planned code slice after verification: **4 — Mobile/touch navigation baseline (5.6 Sol).**
+<!-- /slice-03-status -->
+
 <!-- slice-02-status -->
-## Current implementation checkpoint — Slice 2
+## Historical implementation checkpoint — Slice 2
 
 **Slice 2 implemented and verified as a portable Three.js engine.**
 
@@ -22,7 +34,7 @@ See [Slice 2 evidence](SLICE_02.md) and [engine contract](WORLD_ENGINE.md).
 
 Native Sites acceptance from Slice 1 remains pending; this is not a claim of Sites
 validation or physical mobile performance. No merge or deployment was performed.
-Next code slice: **3 — First-person camera and desktop movement (6 Astra Pro).**
+Next code slice at that checkpoint: **3 — First-person camera and desktop movement (6 Astra Pro).**
 <!-- /slice-02-status -->
 
 <!-- slice-01-status -->
@@ -313,6 +325,7 @@ Each slice must end with:
 
 ### Slice 3 — First-person camera and desktop movement
 **Model:** GPT-6 Astra Pro
+**Status:** Implemented. Current acceptance status and exact-source CI results are recorded in [Slice 3 evidence](SLICE_03.md).
 
 **Goal:** Make the empty world feel deliberately navigable rather than like a Three.js debug scene.
 
