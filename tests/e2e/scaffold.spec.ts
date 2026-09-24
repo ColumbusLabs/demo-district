@@ -77,6 +77,7 @@ test('no-JavaScript visitors still receive the project identity and an explanati
     const page = await context.newPage();
     await page.goto('http://127.0.0.1:4173/');
     await expect(page.getByRole('heading', { name: 'Demo District', exact: true })).toBeVisible();
-    await expect(page.locator('noscript')).toContainText('JavaScript is disabled');
+    await expect(page.locator('noscript p')).toContainText('JavaScript is disabled');
+    await expect(page.locator('noscript p')).toBeVisible();
   } finally { await context.close(); }
 });
