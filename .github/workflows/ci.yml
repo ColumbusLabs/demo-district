@@ -42,25 +42,3 @@ jobs:
           name: world-engine-evidence
           path: test-results/
           retention-days: 7
-  # Temporary, success-only checkpoint for exact in-place roadmap edits from chat.
-  checkpoint:
-    needs: verify
-    if: github.event_name == 'push' && github.repository == 'ColumbusLabs/demo-district' && github.ref == 'refs/heads/build/demo-district-v1'
-    runs-on: ubuntu-latest
-    timeout-minutes: 3
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-      - name: Update the checkpoint without rewriting future slices
-        run: node scripts/record-slice-02.mjs
-      - name: Commit documentation only if the reviewed source is still the branch head
-        run: |
-          if git diff --quiet; then exit 0; fi
-          current=$(git ls-remote origin refs/heads/build/demo-district-v1 | cut -f1)
-          test "$current" = "$GITHUB_SHA"
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add README.md AGENTS.md docs/IMPLEMENTATION_PLAN.md docs/DEPLOYMENT.md docs/SLICE_02.md
-          git commit -m 'slice-02: record verified world engine checkpoint'
-          git push origin HEAD:refs/heads/build/demo-district-v1

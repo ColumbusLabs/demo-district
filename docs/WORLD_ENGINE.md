@@ -15,6 +15,7 @@ remain exactly as locked in Slice 1. No remote assets or creator sites are loade
 - `stop()` cancels frame work and resets the delta clock; repeated calls are safe.
 - `resize()` synchronizes CSS dimensions, drawing buffer, and camera projection.
 - `snapshot()` returns a detached diagnostic value, not mutable renderer state.
+- `own(resource)` registers a disposable owned by this world, returning it unchanged.
 - `destroy()` is terminal and idempotent. It cancels animation, unsubscribes browser
   events/observers/media queries, disposes owned materials/geometries, clears the
   scene, disposes the renderer, and deliberately loses the retired canvas context.
@@ -26,10 +27,11 @@ remain exactly as locked in Slice 1. No remote assets or creator sites are loade
   the renderer stays private. No Three.js objects are installed on `window`.
 
 `ResourceScope` explicitly tracks ownership and disposes shared resources once.
-Register future geometries, materials, textures, and other owned disposables with
-that scope; attaching an object to the scene is **not** ownership registration.
-Do not indiscriminately dispose assets shared with another world. Resource cleanup
-continues through individual failures before reporting an aggregate error.
+Register future owned geometries, materials, textures, and other disposables with
+`world.own(resource)`; scene factories receive the scope directly. Attaching an
+object to the scene is **not** ownership registration. Do not indiscriminately
+dispose assets shared with another world. Resource cleanup continues through
+individual failures before reporting an aggregate error.
 
 ## Scheduling and resilience
 
@@ -39,7 +41,8 @@ The clock discards time spent suspended and clamps resumed/long-frame simulation
 deltas to 50 ms. This is a simulation safety limit, not an FPS measurement.
 
 Reduced-motion mode freezes the test object's animation and renders on demand
-(initial frame, resize, restoration) without an ongoing loop. Preference changes
+(initial frame, resize, restoration, or resuming a hidden canvas) without an ongoing
+loop. Even an unchanged-size canvas repaints after resuming. Preference changes
 are handled while the page is open. No pointer capture or controls are installed.
 
 A real `webglcontextlost` event cancels the loop and shows a recovery message.

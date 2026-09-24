@@ -100,6 +100,11 @@ test('reduced motion switches to demand-only rendering and responds to resize', 
   await page.waitForTimeout(200);
   expect((await snapshot(page)).frames).toBe(initial.frames);
   expect(await page.evaluate(() => window.__ddPendingFrames)).toBe(0);
+  await page.locator('#world-root').evaluate((root) => { root.style.display = 'none'; });
+  await expect.poll(async () => (await snapshot(page)).state).toBe('suspended');
+  await page.locator('#world-root').evaluate((root) => { root.style.display = ''; });
+  await expect.poll(async () => (await snapshot(page)).frames).toBeGreaterThan(initial.frames);
+  expect((await snapshot(page)).loopActive).toBe(false);
   await page.setViewportSize({ width: 750, height: 500 });
   await expect.poll(async () => (await snapshot(page)).frames).toBeGreaterThan(initial.frames);
   await page.emulateMedia({ reducedMotion: 'no-preference' });
@@ -128,7 +133,10 @@ test('destroy drains owned GPU resources and all subscriptions exactly once', as
     window.__ddDisposals = { geometries: 0, materials: 0 };
     world.scene.traverse((object) => {
       if (object.geometry) object.geometry.addEventListener('dispose', () => { window.__ddDisposals.geometries++; });
-      if (object.material) object.material.addEventListener('dispose', () => { window.__ddDisposals.materials++; });
+      if (object.material) {
+        world.own(object.material);
+        object.material.addEventListener('dispose', () => { window.__ddDisposals.materials++; });
+      }
     });
     world.destroy();
     world.destroy();
@@ -154,7 +162,6 @@ test('DPR-only changes update resolution even while rendering on demand', async 
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await setup(page);
   await page.evaluate(() => window.__ddWorld.start());
-  // A resize signal is the fallback for browsers that do not emit a resolution query change.
   await page.evaluate(() => {
     Object.defineProperty(window, 'devicePixelRatio', { configurable: true, get: () => 1.25 });
     window.dispatchEvent(new Event('resize'));

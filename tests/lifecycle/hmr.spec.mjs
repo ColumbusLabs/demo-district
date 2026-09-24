@@ -6,6 +6,18 @@ test('a real Vite source update replaces the world and cleans up its previous co
   const original = await readFile(source, 'utf8');
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
+  await page.addInitScript(() => {
+    const request = window.requestAnimationFrame.bind(window);
+    const cancel = window.cancelAnimationFrame.bind(window);
+    const pending = new Set();
+    window.requestAnimationFrame = (callback) => {
+      const id = request((time) => { pending.delete(id); callback(time); });
+      pending.add(id);
+      return id;
+    };
+    window.cancelAnimationFrame = (id) => { pending.delete(id); cancel(id); };
+    Object.defineProperty(window, '__ddPendingFrames', { get: () => pending.size });
+  });
   await page.goto('/');
   await expect(page.locator('#runtime-status')).toHaveAttribute('data-state', 'ready');
   await page.evaluate(() => { window.__ddBeforeHmr = document.querySelector('#world-canvas'); });
@@ -16,6 +28,7 @@ test('a real Vite source update replaces the world and cleans up its previous co
     await expect(page.locator('#world-canvas')).toHaveCount(1);
     await expect(page.locator('[data-world-diagnostics]')).toHaveCount(1);
     expect(await page.evaluate(() => window.__ddBeforeHmr.getContext('webgl2').isContextLost())).toBe(true);
+    expect(await page.evaluate(() => window.__ddPendingFrames)).toBe(1);
     expect(errors).toEqual([]);
   } finally {
     await writeFile(source, original);

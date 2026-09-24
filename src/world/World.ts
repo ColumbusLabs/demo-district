@@ -1,7 +1,7 @@
 import { ACESFilmicToneMapping, PerspectiveCamera, REVISION, SRGBColorSpace, WebGLRenderer } from 'three';
 import type { Scene } from 'three';
 import { FrameClock, measureViewport, ResourceScope } from './runtime.ts';
-import type { Viewport } from './runtime.ts';
+import type { Disposable, Viewport } from './runtime.ts';
 import { createTestScene } from './test-scene.ts';
 
 export type WorldState = 'stopped' | 'running' | 'suspended' | 'context-lost' | 'failed' | 'destroyed';
@@ -25,6 +25,7 @@ export interface World {
   start(): void;
   stop(): void;
   resize(): void;
+  own<T extends Disposable>(resource: T): T;
   destroy(): void;
   snapshot(): WorldSnapshot;
 }
@@ -143,11 +144,12 @@ export function createWorld(canvas: HTMLCanvasElement, options: WorldOptions = {
         report(win.performance.now(), true);
         return;
       }
+      const resumed = state !== 'running';
       if (reducedMotion.matches) {
         pauseLoop();
         setState('running');
-        // No ongoing loop when the temporary scene has no permitted animation.
-        if (redraw) render(win.performance.now(), false);
+        // Resuming an unchanged-size canvas must repaint even in demand mode.
+        if (redraw || resumed) render(win.performance.now(), false);
       } else {
         setState('running');
         if (!loopActive) {
@@ -229,6 +231,7 @@ export function createWorld(canvas: HTMLCanvasElement, options: WorldOptions = {
       },
       stop: () => { if (!destroyed) { requested = false; reconcile(); } },
       resize,
+      own: <T extends Disposable>(resource: T): T => resources.track(resource),
       snapshot,
       destroy: () => {
         if (destroyed) return;
