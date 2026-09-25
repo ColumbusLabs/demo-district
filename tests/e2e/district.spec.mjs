@@ -13,8 +13,9 @@ test('the district streams only local world assets, all successfully, with no er
   await expect(page.locator('#world-canvas')).toHaveAttribute('data-content', 'ready', { timeout: 30_000 });
   expect(external).toEqual([]);
   expect(assets.filter((a) => a.status !== 200)).toEqual([]);
-  // 4 PBR sets x 3 maps, the lighting HDR, and the sky backdrop.
-  expect(new Set(assets.map((a) => a.path)).size).toBe(14);
+  // 4 PBR sets x 3 maps, the lighting HDR, the sky backdrop, and the Blender tree models.
+  expect(new Set(assets.map((a) => a.path)).size).toBe(15);
+  expect(assets.some((a) => a.path.endsWith('/world/models/trees.glb'))).toBe(true);
   expect(errors).toEqual([]);
 });
 

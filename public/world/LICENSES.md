@@ -1,6 +1,6 @@
 # World asset sources and licenses
 
-Every file under `public/world/` comes from [Poly Haven](https://polyhaven.com) and is
+Every file under `public/world/` except `models/` comes from [Poly Haven](https://polyhaven.com) and is
 released under **CC0 1.0** (public domain dedication; no attribution required, credited
 here anyway). Files were downloaded on 2026-09-24 and modified as noted. No creator
 project media is stored here.
@@ -13,6 +13,8 @@ project media is stored here.
 | `textures/plastered_wall_04_*.webp` | Plastered Wall 04 | Rob Tuytel | https://polyhaven.com/a/plastered_wall_04 | 1k set; diffuse brightened, desaturated to 45%, levels lifted; roughness at half size; WebP. |
 | `textures/rock_boulder_dry_*.webp` | Rock Boulder Dry | Dimitrios Savva (photography), Rico Cilliers (processing) | https://polyhaven.com/a/rock_boulder_dry | 1k set; diffuse brightened and desaturated to 35%; roughness at half size; WebP. |
 | `textures/red_oak_veneer_*.webp` | Red Oak Veneer | Jenelle van Heerden | https://polyhaven.com/a/red_oak_veneer | 1k set; roughness at half size; WebP. |
+
+| `models/trees.glb` | District trees (4 species × 2 LODs, leaf-spray atlas, bark texture) | Demo District (generated) | `tools/blender/trees.py` | Original work generated from code with fixed seeds; no external inputs. Built with Blender 5.0 (`bpy`) and meshopt-compressed with glTF Transform. |
 
 Procedural textures (leaf clusters, hedges, lawn, grass tufts, city facades) are generated in the browser
 by `src/world/district/materials.ts` and have no external source.

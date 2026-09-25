@@ -71,7 +71,7 @@ export function createDistrict({ resources, renderer, camera, invalidate }: Cont
   buildSignage(root, m, batch, renderer, resources);
   const orbDrift = buildLandmark(root, m, batch, resources);
   const windTime = { value: 0 };
-  buildLandscape(root, m, batch, resources, windTime, quality.outerTrees);
+  const trees = buildLandscape(root, m, batch, resources, windTime, quality.outerTrees, isDisposed);
   buildSurroundings(root, m, batch, lights, resources, quality.outerTrees);
   batch.build(root);
   lights.build(root, { castShadow: false, receiveShadow: false });
@@ -102,7 +102,7 @@ export function createDistrict({ resources, renderer, camera, invalidate }: Cont
     quality: quality.tier,
     animated: quality.animated,
     ready: (() => {
-      const tasks = [env.ready, env.skyReady, ...m.tasks];
+      const tasks = [env.ready, env.skyReady, trees, ...m.tasks];
       let settled = 0;
       options.onProgress?.(0);
       for (const task of tasks) void task.finally(() => { settled += 1; if (!disposed) options.onProgress?.(settled / tasks.length); });

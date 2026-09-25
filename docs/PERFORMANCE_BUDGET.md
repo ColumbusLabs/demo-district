@@ -77,15 +77,23 @@ It renders four fixed views synchronously, forcing GPU completion with a 1-pixel
 | --- | --- | --- |
 | High tier, desktop 1440×900, reference GPU (M5), median | ≤ 6 ms (≥ 2.5× headroom under 16.7 ms) | 2.7 ms |
 | High tier, DPR 2, reference GPU, median | ≤ 8 ms | 5.0 ms |
-| Draw calls at spawn | ≤ 120 | 94 |
-| Triangles in view | ≤ 150k | 87k |
+| Draw calls at spawn | ≤ 120 | 106 (Blender trees, SwiftShader count) |
+| Triangles in view | ≤ 150k | 144k at spawn (Blender trees, SwiftShader count) |
 | Initial transfer | ≤ 5 MB | 2.27 MB |
 | Local assets ready (broadband) | ≤ 2 s | about 0.5 s |
-| JS bundle (uncompressed) | ≤ 750 kB | 680 kB |
+| JS bundle (uncompressed) | ≤ 750 kB | 717 kB main + 71 kB lazy glTF loader |
 
 **Adaptive safety net.** In automatic mode, if the smoothed frame interval stays above 26 ms (about 38 fps) for 4 s after a 3 s warmup, the world steps down one tier in place. Judging starts only once content has loaded. A visitor's explicit graphics choice is never overridden. The governor's logic is unit-tested and exercised end to end on SwiftShader.
 
 **City ring (2026-09-25).** The entrance colonnade, city blocks, hills, and skyline add about 24k triangles and 5 draw calls (spawn: 121k triangles, 100 draws). An A/B run under identical conditions shows no measurable frame-time change: all city geometry merges into existing per-material batches. The low tier drops the skyline and roof light accents.
+
+**Blender trees (2026-09-25).** Trees now come from `public/world/models/trees.glb` (see [TREES_BLENDER.md](TREES_BLENDER.md)). Planter and terrace trees use ~1.5k-triangle models; groves and street trees use a ~430-triangle LOD. Measured with SwiftShader at 1440×900 (counts only; SwiftShader frame times are not meaningful):
+
+- High spawn: 100 → 106 draws, 121.6k → 144.3k triangles. Plaza and promenade: 129k.
+- Low spawn: 104.5k triangles.
+- Main bundle: 687 → 717 kB, plus a 71 kB lazy loader chunk. The GLB adds 263 kB of transfer.
+
+Frame time on the reference GPU is not yet re-measured.
 
 ## Quality tiers
 
