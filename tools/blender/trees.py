@@ -2,7 +2,7 @@
 
 Run with the Blender Python module (``pip install bpy==5.0.1``) or inside Blender:
 
-    python3 tools/blender/trees.py                       # writes public/world/models/trees.glb
+    python3 tools/blender/trees.py                       # writes tools/blender/build/trees.raw.glb
     python3 tools/blender/trees.py --preview docs/art    # also renders docs/art/trees-blender.jpg (Cycles)
 
 Everything is generated here from fixed seeds: geometry, the leaf-spray atlas, and the bark
@@ -607,7 +607,7 @@ def render_preview(objects: dict[str, bpy.types.Object], path: str) -> None:
 
 def main(argv: list[str]) -> None:
     parser = argparse.ArgumentParser(description=__doc__.split('\n')[0])
-    parser.add_argument('--out', default=os.path.join(ROOT, 'public', 'world', 'models', 'trees.glb'))
+    parser.add_argument('--out', default=os.path.join(ROOT, 'tools', 'blender', 'build', 'trees.raw.glb'))
     parser.add_argument('--work', default=os.path.join(ROOT, 'tools', 'blender', 'build'))
     parser.add_argument('--preview', help='directory for a Cycles preview render (optional)')
     args = parser.parse_args(argv)

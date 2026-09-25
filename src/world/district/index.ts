@@ -69,7 +69,7 @@ export function createDistrict({ resources, renderer, camera, invalidate }: Cont
   buildGround(root, m, water, resources);
   const glass = new Map(district.pavilions.map((slot) => [slot.id, buildPavilion(slot, m, batch, lights, root, env.skyTexture, resources)] as const));
   buildSignage(root, m, batch, renderer, resources);
-  const orbDrift = buildLandmark(root, m, batch, resources);
+  const landmark = buildLandmark(root, m, batch, resources, isDisposed);
   const windTime = { value: 0 };
   const trees = buildLandscape(root, m, batch, resources, windTime, quality.outerTrees, isDisposed);
   buildSurroundings(root, m, batch, lights, resources, quality.outerTrees);
@@ -94,7 +94,7 @@ export function createDistrict({ resources, renderer, camera, invalidate }: Cont
     update: (_delta, elapsed) => {
       for (const material of Object.values(water)) { const time = material.uniforms.time; if (time) time.value = elapsed; }
       windTime.value = elapsed;
-      orbDrift(elapsed);
+      landmark.drift(elapsed);
       jets(elapsed);
     },
     ...(post ? { render: post.render, resize: post.resize } : {}),
@@ -102,7 +102,7 @@ export function createDistrict({ resources, renderer, camera, invalidate }: Cont
     quality: quality.tier,
     animated: quality.animated,
     ready: (() => {
-      const tasks = [env.ready, env.skyReady, trees, ...m.tasks];
+      const tasks = [env.ready, env.skyReady, trees, landmark.ready, ...m.tasks];
       let settled = 0;
       options.onProgress?.(0);
       for (const task of tasks) void task.finally(() => { settled += 1; if (!disposed) options.onProgress?.(settled / tasks.length); });

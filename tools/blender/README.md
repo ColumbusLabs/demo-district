@@ -8,6 +8,7 @@ Nothing here runs in CI or the app bundle.
 | Script | Output | What it makes |
 | --- | --- | --- |
 | `trees.py` | `public/world/models/trees.glb` | Three upright street trees and the leaning framing tree, each at two levels of detail, with a generated leaf-spray atlas and bark texture. |
+| `landmark.py` | `public/world/models/landmark.glb` | The landmark's sculpture: a lancet main arch and two crescent wings, as one mesh. The orb, fountain, and footings stay in code. |
 
 ## Setup
 
@@ -17,16 +18,21 @@ Nothing here runs in CI or the app bundle.
 ## Rebuild
 
 ```sh
-tools/blender/build-trees.sh                      # regenerate public/world/models/trees.glb
-tools/blender/build-trees.sh --preview docs/art   # also write docs/art/trees-blender.jpg (Cycles, ~1 min on 4 CPUs)
+tools/blender/build.sh                            # regenerate every model in public/world/models/
+tools/blender/build.sh landmark                   # just one
+PREVIEW=docs/art tools/blender/build.sh           # also write docs/art/<model>-blender.jpg (Cycles, ~1 min each on 4 CPUs)
 ```
 
-`trees.py` prints triangle and vertex counts per mesh; the intermediate uncompressed GLB and
-textures go to `tools/blender/build/` (ignored).
+Each script prints triangle counts. The intermediate uncompressed GLBs and textures go to
+`tools/blender/build/`, which is git-ignored.
 
 ## Contract with the world code
 
-`src/world/district/landscape.ts` loads the GLB and expects:
+All models load through `src/world/district/models.ts`, which lazy-loads the glTF loader and bakes meshopt-quantized primitives into float geometry.
+
+### Trees
+
+`src/world/district/landscape.ts` loads `trees.glb` and expects:
 
 - Nodes `street_a|street_b|street_c|framing` + `_lod0|_lod1`, each a mesh with two primitives whose materials are named `tree_bark` and `tree_leaves`.
 - Meters, +Y up, trunk base at the origin; the framing tree leans toward +X.
@@ -38,9 +44,20 @@ The world code replaces the file's materials with its own (vertex colors, alpha 
 sway), so material tweaks here only affect the Cycles preview and other glTF viewers. If the
 file fails to load, the district falls back to its procedural trees.
 
+### Landmark
+
+`src/world/district/landmark.ts` loads `landmark.glb` and expects:
+
+- One mesh, `landmark_arch`.
+- Meters, +Y up, the landmark center at the origin, the boulevard toward +Z, and leg bases at y = 0. The world sets it on the plaza at `district.landmark`.
+- Its material is replaced by the district's satin `arch` material. Until the file loads, and if it fails, a procedural lancet stands in.
+- Mesh extras `height`, `span`, and `footings` (ground contacts in the model frame). `tests/unit/landmark-model.test.mjs` checks the footings against `landmarkFootings()` in `layout.ts`, which drives the navigation blockers and stone footing geometry.
+
+If you change `SPAN`, `SPRING`, `LANCET`, or the `WING_*` constants, update `district.landmark` in `layout.ts` to the printed footings. The unit test fails until the two agree.
+
 ## Budgets
 
-LOD0 is used for the 28 trees in planters and on the terrace (≈1.5k triangles, 2k for the
+The landmark is ~8.5k triangles in one draw call. For trees, LOD0 is used for the 28 trees in planters and on the terrace (≈1.5k triangles, 2k for the
 framing tree); LOD1 for up to 100 grove and street trees (≈390 triangles). Keep spawn under
 the 150k-triangle and 120-draw budgets in `docs/PERFORMANCE_BUDGET.md`, and re-measure with
 `node scripts/measure.mjs` after any change to counts.

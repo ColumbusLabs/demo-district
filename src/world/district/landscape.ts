@@ -1,16 +1,17 @@
 import {
-  BufferAttribute, BufferGeometry, CylinderGeometry, DoubleSide, IcosahedronGeometry, InstancedMesh, Matrix4, Mesh,
+  BufferAttribute, BufferGeometry, CylinderGeometry, DoubleSide, IcosahedronGeometry, InstancedMesh, Matrix4,
   MeshStandardMaterial, PlaneGeometry, Quaternion, Vector3,
 } from 'three';
-import type { Group, Material, Object3D, Texture } from 'three';
+import type { Group, Material, Mesh, Texture } from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { ResourceScope } from '../runtime.ts';
 import { place } from './geometry.ts';
 import type { StaticBatch } from './geometry.ts';
 import { district } from './layout.ts';
 import type { Rect } from './layout.ts';
-import { assetUrl, random } from './materials.ts';
+import { random } from './materials.ts';
 import type { DistrictMaterials } from './materials.ts';
+import { bake, disposeModel, loadModel, meshesOf } from './models.ts';
 
 const up = new Vector3(0, 1, 0);
 /** Tapered limb from `from` to `to`, as a non-indexed geometry ready to merge. */
@@ -80,38 +81,15 @@ function treeTemplate(seed: number, height: number, shape: { lean?: Vector3; spr
 const treeKinds = ['street_a', 'street_b', 'street_c', 'framing'] as const;
 interface TreeModels { near: TreeTemplate[]; far: TreeTemplate[]; barkMap: Texture; leafMap: Texture }
 
-/** Float copy of a glTF primitive (meshopt data is quantized) with its node transform baked in. */
-function bake(mesh: Mesh): BufferGeometry {
-  const source = mesh.geometry; const geometry = new BufferGeometry();
-  for (const name of ['position', 'normal', 'uv', 'color']) {
-    const attribute = source.getAttribute(name);
-    if (!attribute) continue;
-    const size = attribute.itemSize; const out = new Float32Array(attribute.count * size);
-    const read = [attribute.getX, attribute.getY, attribute.getZ, attribute.getW].slice(0, size);
-    for (let i = 0; i < attribute.count; i++) read.forEach((get, k) => { out[i * size + k] = get.call(attribute, i); });
-    geometry.setAttribute(name, new BufferAttribute(out, size));
-  }
-  if (source.index) geometry.setIndex(Array.from(source.index.array));
-  geometry.applyMatrix4(mesh.matrixWorld);
-  return geometry;
-}
-
-/**
- * Loads public/world/models/trees.glb; resolves null on failure or after teardown. The glTF
- * loader and meshopt decoder are a separate chunk, fetched while the loading screen is up.
- */
+/** Loads public/world/models/trees.glb; resolves null on failure or after teardown. */
 function loadTrees(resources: ResourceScope, disposed: () => boolean): Promise<TreeModels | null> {
-  return Promise.all([import('three/addons/loaders/GLTFLoader.js'), import('three/addons/libs/meshopt_decoder.module.js')]).then(([{ GLTFLoader }, { MeshoptDecoder }]) =>
-    new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync(assetUrl('models/trees.glb'))).then((gltf) => {
-    gltf.scene.updateMatrixWorld(true);
-    const meshes: Mesh[] = [];
-    gltf.scene.traverse((object: Object3D) => { if (object instanceof Mesh) meshes.push(object); });
+  return loadModel('trees.glb').then((gltf) => {
+    if (!gltf) return null;
+    const meshes = meshesOf(gltf.scene);
     const material = (mesh: Mesh): MeshStandardMaterial | undefined => (Array.isArray(mesh.material) ? undefined : mesh.material as MeshStandardMaterial);
     const part = (tree: string, kind: 'tree_bark' | 'tree_leaves'): Mesh | undefined => {
       const node = gltf.scene.getObjectByName(tree);
-      let found: Mesh | undefined;
-      node?.traverse((object: Object3D) => { if (!found && object instanceof Mesh && material(object)?.name === kind) found = object; });
-      return found;
+      return node ? meshesOf(node).find((mesh) => material(mesh)?.name === kind) : undefined;
     };
     const lod = (level: number): TreeTemplate[] | null => {
       const list: TreeTemplate[] = [];
@@ -123,21 +101,17 @@ function loadTrees(resources: ResourceScope, disposed: () => boolean): Promise<T
       return list;
     };
     const near = disposed() ? null : lod(0); const far = near ? lod(1) : null;
-    const barkMap = meshes.map(material).find((m) => m?.name === 'tree_bark')?.map;
-    const leafMap = meshes.map(material).find((m) => m?.name === 'tree_leaves')?.map;
+    const barkMap = meshes.map(material).find((m) => m?.name === 'tree_bark')?.map ?? null;
+    const leafMap = meshes.map(material).find((m) => m?.name === 'tree_leaves')?.map ?? null;
     // Only the two textures and the baked copies survive; the loader's own objects go now.
-    for (const mesh of meshes) {
-      mesh.geometry.dispose();
-      const m = material(mesh);
-      if (m) { for (const texture of [m.map, m.normalMap, m.roughnessMap]) if (texture && texture !== barkMap && texture !== leafMap) texture.dispose(); m.dispose(); }
-    }
+    disposeModel(gltf.scene, new Set([barkMap, leafMap]));
     if (!near || !far || !barkMap || !leafMap || disposed()) {
       for (const t of [...(near ?? []), ...(far ?? [])]) { t.trunk.dispose(); t.leaves.dispose(); }
       barkMap?.dispose(); leafMap?.dispose();
       return null;
     }
     return { near, far, barkMap: resources.track(barkMap), leafMap: resources.track(leafMap) };
-  }).catch(() => null);
+  });
 }
 
 /** Wind sway on foliage via a vertex hook; `time` stays frozen under reduced motion. */
