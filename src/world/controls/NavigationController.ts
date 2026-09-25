@@ -1,6 +1,6 @@
 import type { PerspectiveCamera } from 'three';
 import type { FrameSystem } from '../World.ts';
-import { advanceMotion, hasMomentum, initialMotion, movementConfig, resetMotion, rotateView, stickInput } from './motion.ts';
+import { advanceMotion, constrainMotion, hasMomentum, initialMotion, movementConfig, resetMotion, rotateView, stickInput } from './motion.ts';
 import type { MovementConfig, MotionState } from './motion.ts';
 
 export type NavigationMode = 'idle' | 'active' | 'dragging';
@@ -8,6 +8,8 @@ export interface NavigationController extends FrameSystem {
   focus(): void;
   resetView(): void;
   setSpeed(speed: number): void;
+  /** Move instantly to a destination (constrained to walkable space), clearing held input. */
+  teleport(target: { x: number; z: number; yaw: number; pitch?: number }): void;
   snapshot(): MotionState & { mode: NavigationMode; speed: number; pressedKeys: number; touches: number; stick: { right: number; forward: number } };
 }
 interface ControllerOptions {
@@ -46,6 +48,7 @@ export function createNavigationController(canvas: HTMLCanvasElement, camera: Pe
   let stickMove = { right: 0, forward: 0 };
   // A touch interaction engages navigation without focusing the canvas, and lasts until momentum settles.
   let touchSession = false;
+
   const listen = (target: EventTarget, name: string, handler: EventListener, opts?: AddEventListenerOptions): void => {
     target.addEventListener(name, handler, opts);
     removers.push(() => target.removeEventListener(name, handler, opts));
@@ -227,6 +230,14 @@ export function createNavigationController(canvas: HTMLCanvasElement, camera: Pe
     resetView: (): void => {
       if (disposed) return;
       suspend(); motion = initialMotion(config); applyCamera(); wake();
+    },
+    teleport: (target) => {
+      if (disposed) return;
+      keys.clear(); releaseDrag(); releaseStick(); touchSession = false;
+      const destination = { x: target.x, z: target.z, yaw: target.yaw, pitch: target.pitch ?? 0, vx: 0, vz: 0 };
+      rotateView(destination, 0, 0, config);
+      constrainMotion(destination, config);
+      motion = destination; applyCamera(); updateMode(); wake();
     },
     setSpeed: (speed: number): void => {
       if (!Number.isFinite(speed) || speed < 0.5 || speed > 8) throw new RangeError('Walk speed must be 0.5–8 m/s.');

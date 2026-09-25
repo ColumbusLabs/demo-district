@@ -31,8 +31,10 @@ export async function setup(page, config = {}) {
       config, movePad: document.querySelector('#move-pad'), invalidate: () => world.invalidate(), canNavigate: () => world.snapshot().state === 'running',
     });
     world.addSystem(control);
-    // The unmounted application hid its stick; this bare rig drives the same element.
+    // The unmounted application hid its stick and reset its loading overlay (ready for a
+    // remount); this bare rig drives the stick itself and needs the overlay out of the way.
     document.querySelector('#move-pad').hidden = false;
+    document.querySelector('#loading').setAttribute('data-done', '');
     window.__nav = { world, control };
     world.start();
   }, config);

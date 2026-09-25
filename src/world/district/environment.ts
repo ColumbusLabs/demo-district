@@ -36,6 +36,8 @@ export interface Environment {
   sun: DirectionalLight;
   skyTexture: Texture;
   ready: Promise<void>;
+  /** Settles when the sky backdrop image has loaded or failed. */
+  skyReady: Promise<void>;
 }
 
 /** Procedural ridge ring: layered sines give believable, deterministic silhouettes. */
@@ -82,7 +84,10 @@ export function createEnvironment(scene: Scene, renderer: WebGLRenderer, resourc
   scene.add(sun, sun.target);
 
   // Cropped upper-hemisphere backdrop for the dome and water reflections.
-  const skyTexture = resources.track(new TextureLoader().load(assetUrl('sky/kloppenheim_06_upper.webp'), () => { if (!disposed()) invalidate(); }));
+  let skySettled: () => void = () => undefined;
+  const skyReady = new Promise<void>((resolve) => { skySettled = resolve; });
+  const skyTexture = resources.track(new TextureLoader().load(assetUrl('sky/kloppenheim_06_upper.webp'),
+    () => { if (!disposed()) invalidate(); skySettled(); }, undefined, () => skySettled()));
   skyTexture.colorSpace = SRGBColorSpace;
   skyTexture.wrapS = RepeatWrapping;
   const dome = new Mesh(
@@ -147,5 +152,5 @@ export function createEnvironment(scene: Scene, renderer: WebGLRenderer, resourc
       resolve();
     });
   });
-  return { sun, skyTexture, ready };
+  return { sun, skyTexture, ready, skyReady };
 }

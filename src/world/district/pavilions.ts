@@ -97,7 +97,7 @@ function storefrontGlass(slot: PavilionSlot, width: number, height: number, skyM
           vec2 screen = abs(p - vec2(0.0, 0.05)) - vec2(0.62, 0.48);
           float inside = step(max(screen.x, screen.y), 0.0);
           vec3 art = mix(hsv(hue, 0.65, 1.0), hsv(hue + 0.18, 0.8, 0.55), 0.5 + 0.5 * p.y);
-          art += hsv(hue + 0.5, 0.4, 1.0) * smoothstep(0.55, 0.0, length(p - vec2(0.25, 0.2))) * 0.8;
+          art += hsv(hue + 0.5, 0.4, 1.0) * smoothstep(0.55, 0.0, length(p - vec2(0.25, 0.2))) * 0.35;
           vec3 wall = vec3(0.07, 0.065, 0.06) * mix(0.55, 1.0, up);
           room = mix(wall, art * 1.7, inside);
         } else if (t == far.y) {

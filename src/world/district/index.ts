@@ -30,7 +30,12 @@ export interface District extends WorldContent {
   highlight: (id: string | null) => void;
 }
 
-export function createDistrict({ resources, renderer, camera, invalidate }: ContentContext): District {
+export interface DistrictOptions {
+  /** Asset loading progress, 0–1, for the loading screen. */
+  onProgress?: (fraction: number) => void;
+}
+
+export function createDistrict({ resources, renderer, camera, invalidate }: ContentContext, options: DistrictOptions = {}): District {
   const quality = chooseQuality(renderer, renderer.domElement.ownerDocument.defaultView?.location.search ?? '');
   let disposed = false;
   resources.track({ dispose: () => { disposed = true; } });
@@ -87,6 +92,12 @@ export function createDistrict({ resources, renderer, camera, invalidate }: Cont
     pixelBudget: quality.pixelBudget,
     quality: quality.tier,
     animated: quality.animated,
-    ready: Promise.all([env.ready, m.ready]).then(() => { refresh(); }),
+    ready: (() => {
+      const tasks = [env.ready, env.skyReady, ...m.tasks];
+      let settled = 0;
+      options.onProgress?.(0);
+      for (const task of tasks) void task.finally(() => { settled += 1; if (!disposed) options.onProgress?.(settled / tasks.length); });
+      return Promise.all(tasks).then(() => { refresh(); });
+    })(),
   };
 }

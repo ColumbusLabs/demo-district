@@ -17,9 +17,10 @@ export interface Interactions extends FrameSystem {
   focused(): string | null;
 }
 
-// A press becomes a click/tap only if it barely moved and was quick; drags stay looks.
+// A press becomes a click/tap only if it barely moved; drags stay looks. No time limit: slow
+// frames on low-end or software-rendered devices can delay pointerup well past a second, and
+// nothing in the world uses long-press.
 const clickSlop = 8;
-const clickMs = 600;
 
 /**
  * One interaction contract for mouse, touch, and keyboard. Pointer picks test only registered
@@ -32,7 +33,7 @@ export function createInteractions(canvas: HTMLCanvasElement, camera: Perspectiv
   let hovered: TargetVolume | null = null;
   let nearby: TargetVolume | null = null;
   let focus: string | null = null;
-  let press: { id: number; x: number; y: number; t: number } | undefined;
+  let press: { id: number; x: number; y: number } | undefined;
   let disposed = false;
   const listen = (target: EventTarget, name: string, handler: EventListener): void => {
     target.addEventListener(name, handler);
@@ -72,13 +73,13 @@ export function createInteractions(canvas: HTMLCanvasElement, camera: Perspectiv
   listen(canvas, 'pointerdown', (raw) => {
     const event = raw as PointerEvent;
     if (event.button !== 0 || !event.isPrimary) return;
-    press = { id: event.pointerId, x: event.clientX, y: event.clientY, t: event.timeStamp };
+    press = { id: event.pointerId, x: event.clientX, y: event.clientY };
   });
   listen(doc, 'pointerup', (raw) => {
     const event = raw as PointerEvent;
     const start = press; press = undefined;
     if (!start || start.id !== event.pointerId) return;
-    if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > clickSlop || event.timeStamp - start.t > clickMs) return;
+    if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > clickSlop) return;
     activate(pickAt(event.clientX, event.clientY), 'pointer');
   });
   listen(doc, 'pointercancel', () => { press = undefined; });

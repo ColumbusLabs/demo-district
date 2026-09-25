@@ -3,7 +3,13 @@ import { createDistrict, districtNavigation } from '../world/district/index.ts';
 import type { District } from '../world/district/index.ts';
 import { createInteractions } from '../world/interactions/InteractionManager.ts';
 import type { Interactions } from '../world/interactions/InteractionManager.ts';
-import { projectForSlot } from '../data/showcase.ts';
+import { projectForSlot, showcase } from '../data/showcase.ts';
+import { createHud } from '../ui/hud.ts';
+import type { Hud } from '../ui/hud.ts';
+import { createMinimap } from '../ui/minimap.ts';
+import type { Minimap } from '../ui/minimap.ts';
+import { createSearch } from '../ui/search.ts';
+import type { SearchBox } from '../ui/search.ts';
 import { createProjectPreview } from '../ui/project-preview.ts';
 import type { ProjectPreview } from '../ui/project-preview.ts';
 import type { World, WorldState } from '../world/World.ts';
@@ -27,6 +33,9 @@ export function mountApplication(doc: Document): () => void {
   const speed = doc.querySelector<HTMLSelectElement>('#walk-speed');
   const movePad = doc.querySelector<HTMLElement>('#move-pad');
   const prompt = doc.querySelector<HTMLElement>('#world-prompt');
+  const searchInput = doc.querySelector<HTMLInputElement>('#search-input');
+  const searchList = doc.querySelector<HTMLUListElement>('#search-results');
+  const mapSvg = doc.querySelector<SVGSVGElement>('#minimap-svg');
   const win = doc.defaultView;
   if (!placeholder || !status || !detail || !win) {
     const notice = doc.createElement('p');
@@ -50,6 +59,12 @@ export function mountApplication(doc: Document): () => void {
   let interactions: Interactions | undefined;
   let preview: ProjectPreview | undefined;
   let focusedSlot: string | null = null;
+  let hud: Hud | undefined;
+  let minimap: Minimap | undefined;
+  let search: SearchBox | undefined;
+  // Pending steps of a search/map jump (fade out → move → fade in → preview).
+  let jumpTimer: ReturnType<typeof setTimeout> | undefined;
+  const fade = doc.querySelector<HTMLElement>('#transition');
   let running = false;
   let diagnostics: ReturnType<typeof createWorldDiagnostics> | undefined;
   let stopWatchingInput: (() => void) | undefined;
@@ -86,6 +101,7 @@ export function mountApplication(doc: Document): () => void {
     if (enter) enter.disabled = !enabled;
     if (reset) reset.disabled = !enabled;
     if (speed) speed.disabled = !enabled;
+    if (searchInput) searchInput.disabled = !enabled;
     if (movePad) movePad.hidden = !enabled;
   };
   const showState = (state: WorldState): void => {
@@ -93,6 +109,7 @@ export function mountApplication(doc: Document): () => void {
     setControlsEnabled(state === 'running');
     running = state === 'running';
     renderPrompt();
+    hud?.setStatusVisible(state === 'context-lost' || state === 'failed');
     if (state === 'running') {
       status.dataset.state = 'ready';
       status.textContent = 'World engine ready';
@@ -111,9 +128,10 @@ export function mountApplication(doc: Document): () => void {
       detail.textContent = 'Reload this preview to try again. No project data has been lost.';
     }
   };
-  const onEnter = (): void => { controls?.focus(); };
+  // Both close the menu: the visitor wants to see the scene they are returning to.
+  const onEnter = (): void => { hud?.closeMenu(); controls?.focus(); };
   // Touch visitors keep the page's own focus; keyboard visitors land back in the scene.
-  const onReset = (): void => { controls?.resetView(); if (modality !== 'touch') controls?.focus(); };
+  const onReset = (): void => { hud?.closeMenu(); controls?.resetView(); if (modality !== 'touch') controls?.focus(); };
   const onSpeed = (): void => { if (speed) controls?.setSpeed(Number(speed.value)); };
   const onPageHide = (event: PageTransitionEvent): void => {
     if (event.persisted) world?.stop(); else unmount();
@@ -130,6 +148,11 @@ export function mountApplication(doc: Document): () => void {
     speed?.removeEventListener('change', onSpeed);
     stopWatchingInput?.();
     preview?.destroy();
+    search?.destroy();
+    minimap?.destroy();
+    hud?.destroy();
+    clearTimeout(jumpTimer);
+    if (fade) delete fade.dataset.active;
     if (prompt) prompt.hidden = true;
     try { interactions?.dispose(); controls?.dispose(); world?.destroy(); }
     finally {
@@ -160,10 +183,17 @@ export function mountApplication(doc: Document): () => void {
       onClose: () => { renderPrompt(); world?.invalidate(); },
     });
     const activePreview = preview;
+    hud = createHud(doc, { onMapChange: () => world?.invalidate() });
+    const activeHud = hud;
+    const loadingLabels = ['Preparing the plaza…', 'Laying the stone…', 'Filling the channels…', 'Lighting the storefronts…', 'Almost there…'];
     world = createWorld(canvas, {
-      ...(engineTest ? {} : { content: (context) => (district = createDistrict(context)) }),
+      ...(engineTest ? {} : {
+        content: (context) => (district = createDistrict(context, {
+          onProgress: (fraction) => activeHud.setProgress(fraction, loadingLabels[Math.min(loadingLabels.length - 1, Math.floor(fraction * loadingLabels.length))]),
+        })),
+      }),
       onStateChange: showState,
-      onContentReady: () => { if (!disposed) canvas.dataset.content = 'ready'; },
+      onContentReady: () => { if (!disposed) { canvas.dataset.content = 'ready'; activeHud.setProgress(1); activeHud.finishLoading(); } },
       ...(diagnostics ? { onFrame: diagnostics.update } : {}),
     });
     const activeWorld = world;
@@ -192,7 +222,7 @@ export function mountApplication(doc: Document): () => void {
         targets: activeDistrict.targets,
         invalidate: () => activeWorld.invalidate(),
         canInteract: () => activeWorld.snapshot().state === 'running' && !activePreview.isOpen(),
-        onFocusChange: (id) => { focusedSlot = id; activeDistrict.highlight(id); renderPrompt(); },
+        onFocusChange: (id) => { focusedSlot = id; activeDistrict.highlight(id); minimap?.setFocus(id); renderPrompt(); },
         onActivate: (id, source) => {
           const project = projectForSlot(id);
           // Keyboard visitors return to the scene; pointer visitors keep their own focus.
@@ -200,6 +230,38 @@ export function mountApplication(doc: Document): () => void {
         },
       });
       world.addSystem(interactions);
+      const activeControls = controls;
+      const reducedMotion = win.matchMedia('(prefers-reduced-motion: reduce)');
+      /**
+       * Jump to a storefront's framed viewpoint, then open its preview. A brief fade hides the
+       * move (no camera flight through trees or walls); reduced motion moves instantly.
+       */
+      const jumpTo = (slot: string): void => {
+        const target = activeDistrict.targets.find((t) => t.id === slot);
+        if (!target || !running) return;
+        activePreview.close(); activeHud.closeMenu(); clearTimeout(jumpTimer);
+        const land = (): void => { activeControls.teleport({ ...target.view, pitch: 0.06 }); activeWorld.invalidate(); };
+        const show = (): void => { const project = projectForSlot(slot); if (project && !disposed) activePreview.open(project, canvas); };
+        if (reducedMotion.matches || !fade) { land(); show(); return; }
+        fade.dataset.active = '';
+        jumpTimer = setTimeout(() => {
+          land(); delete fade.dataset.active;
+          jumpTimer = setTimeout(show, 300);
+        }, 200);
+      };
+      if (searchInput && searchList) search = createSearch(searchInput, searchList, showcase, (project) => jumpTo(project.slot));
+      if (mapSvg) minimap = createMinimap(mapSvg, jumpTo);
+      const activeMinimap = minimap;
+      // Keeps the map marker in step with the camera; never requests frames itself.
+      world.addSystem({
+        update: () => {
+          const camera = activeWorld.camera;
+          if (activeHud.isMapOpen()) activeMinimap?.update(camera.position.x, camera.position.z, camera.rotation.y);
+        },
+        needsFrame: () => false,
+        suspend: () => undefined,
+        dispose: () => undefined,
+      });
     }
     enter?.addEventListener('click', onEnter);
     reset?.addEventListener('click', onReset);
@@ -209,6 +271,8 @@ export function mountApplication(doc: Document): () => void {
     win.addEventListener('pageshow', onPageShow);
   } catch {
     unmount();
+    // Keep the loading brand visible and surface the explanation on top of it.
+    doc.querySelector('#world-status')?.setAttribute('data-visible', 'true');
     status.dataset.state = 'unavailable';
     status.textContent = 'The 3D world is unavailable on this browser.';
     detail.textContent = 'Try a WebGL 2-capable browser with graphics acceleration enabled. No projects have been loaded.';

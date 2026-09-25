@@ -10,6 +10,8 @@ export interface TargetVolume {
   x: number; z: number; halfWidth: number; halfDepth: number; angle: number;
   minY: number; maxY: number;
   apron: { x: number; z: number; yaw: number };
+  /** Where search and map jumps arrive: far enough back to frame the storefront and its sign. */
+  view: { x: number; z: number; yaw: number };
 }
 
 /** Distance along a ray (unit `dir`) to the volume, or null. Slab test in the box's frame. */

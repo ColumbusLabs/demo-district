@@ -11,8 +11,10 @@ test('production engine renders the test scene without external requests or deve
   const response = await page.goto('/');
   expect(response?.status()).toBe(200);
   await expect(page).toHaveTitle('Demo District — World preview');
-  await expect(page.getByRole('heading', { name: 'Demo District', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Demo District', exact: true, level: 1 })).toBeAttached();
   await expect(page.locator('#runtime-status')).toHaveAttribute('data-state', 'ready');
+  // The loading brand gives way to the scene once the district has loaded.
+  await expect(page.locator('#loading')).toBeHidden({ timeout: 30_000 });
   await expect(page.locator('#runtime-detail')).toContainText('Three.js r186');
   expect(await page.locator('#world-canvas').evaluate((element) => {
     const canvas = element as HTMLCanvasElement;

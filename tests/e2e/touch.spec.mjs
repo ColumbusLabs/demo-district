@@ -11,8 +11,8 @@ test('keyboard/mouse devices keep keyboard hints and never show the stick', asyn
   await ready(page);
   await expect(page.locator('html')).toHaveAttribute('data-input', 'pointer');
   await expect(page.locator('#move-pad')).toBeHidden();
-  await expect(page.locator('#navigation-hint')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Explore', exact: true })).toBeVisible();
+  await expect(page.locator('#world-prompt')).toHaveText('Use WASD to explore');
+  await expect(page.locator('#world-prompt kbd')).toHaveCount(4);
 });
 
 test.describe('touch-primary devices', () => {
@@ -23,21 +23,22 @@ test.describe('touch-primary devices', () => {
       await page.setViewportSize(size); await ready(page);
       await expect(page.locator('html')).toHaveAttribute('data-input', 'touch');
       await expect(page.locator('#move-pad')).toBeVisible();
-      await expect(page.locator('#navigation-hint')).toBeHidden();
-      await expect(page.getByRole('button', { name: 'Explore', exact: true })).toBeHidden();
-      await expect(page.getByRole('button', { name: 'Reset view', exact: true })).toBeVisible();
-      await expect(page.getByLabel('Walk speed', { exact: true })).toBeVisible();
+      await expect(page.locator('#world-prompt')).toHaveText('Tap a storefront to view it');
       await expect(page.locator('#navigation-status')).toHaveText('Drag the scene to look · Use the stick to walk.');
       const layout = await page.evaluate(() => {
         const area = (selector) => { const r = document.querySelector(selector).getBoundingClientRect(); return r.width * r.height; };
         const root = document.documentElement;
-        return { covered: (area('#move-pad') + area('.shell__footer')) / (innerWidth * innerHeight),
+        return { covered: (area('#move-pad') + area('#world-prompt') + area('.hud-search') + 3 * 44 * 44) / (innerWidth * innerHeight),
           overflow: root.scrollHeight > root.clientHeight || root.scrollWidth > root.clientWidth };
       });
       expect(layout.overflow, `${size.width}x${size.height} overflows`).toBe(false);
-      expect(layout.covered, `${size.width}x${size.height} controls cover too much`).toBeLessThan(0.3);
-      for (const control of await page.locator('#move-pad, #reset-view, #walk-speed').all()) {
-        const box = await control.boundingBox(); expect(box.height).toBeGreaterThanOrEqual(44);
+      expect(layout.covered, `${size.width}x${size.height} controls cover too much`).toBeLessThan(0.2);
+      // Keyboard-only controls hide in the touch menu; the rest stay 44 px touch targets.
+      await page.locator('#menu-toggle').tap();
+      await expect(page.locator('#menu-toggle')).toHaveAccessibleName('Explore menu');
+      await expect(page.locator('#enter-navigation')).toBeHidden();
+      for (const control of await page.locator('#move-pad, #menu-toggle, #search-input, #map-toggle, #reset-view, #walk-speed').all()) {
+        const box = await control.boundingBox(); expect(box.height, await control.getAttribute('id')).toBeGreaterThanOrEqual(44);
       }
     }
   });
@@ -93,6 +94,7 @@ test.describe('touch-primary devices', () => {
     const turned = await page.screenshot({ clip });
     expect(turned.equals(before)).toBe(false);
     expect(await page.evaluate(() => [scrollX, scrollY])).toEqual([0, 0]);
+    await page.locator('#menu-toggle').tap();
     await page.getByRole('button', { name: 'Reset view', exact: true }).tap();
     await expect(page.locator('#world-canvas')).not.toBeFocused();
     await expect.poll(async () => (await page.screenshot({ clip })).equals(before)).toBe(true);

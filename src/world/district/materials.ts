@@ -30,6 +30,8 @@ export interface DistrictMaterials {
   banner: MeshStandardMaterial;
   /** Resolves once every texture has loaded or fallen back to flat color. */
   ready: Promise<void>;
+  /** One settling promise per texture set, for progress reporting. */
+  tasks: Promise<void>[];
 }
 
 type Canvas2D = CanvasRenderingContext2D;
@@ -150,7 +152,7 @@ export function createMaterials(renderer: WebGLRenderer, resources: ResourceScop
   const lawnTexture = resources.track(canvasTexture(doc, 256, lawn));
   lawnTexture.wrapS = RepeatWrapping; lawnTexture.wrapT = RepeatWrapping;
 
-  const materials: Omit<DistrictMaterials, 'ready'> = {
+  const materials: Omit<DistrictMaterials, 'ready' | 'tasks'> = {
     // Light, cool-grey polished stone; texture tint keeps the marble's veining but not its beige cast.
     paving: standard(0xc6c3bd, 0.2, { envMapIntensity: 1.2 }),
     stone: standard(0xe6e1d8, 0.55),
@@ -177,13 +179,13 @@ export function createMaterials(renderer: WebGLRenderer, resources: ResourceScop
   };
   const load = pbrLoader(anisotropy, resources, disposed);
   const onLoad = (): void => { if (!disposed()) invalidate(); };
-  const ready = Promise.all([
+  const tasks = [
     applyPbr(load, materials.paving, 'marble_01', onLoad),
     applyPbr(load, materials.stone, 'plastered_wall_04', onLoad),
     applyPbr(load, materials.plaster, 'plastered_wall_04', onLoad),
     applyPbr(load, materials.roof, 'plastered_wall_04', onLoad),
     applyPbr(load, materials.wood, 'red_oak_veneer', onLoad),
     applyPbr(load, materials.rock, 'rock_boulder_dry', onLoad),
-  ]).then(() => undefined);
-  return { ...materials, ready };
+  ];
+  return { ...materials, ready: Promise.all(tasks).then(() => undefined), tasks };
 }

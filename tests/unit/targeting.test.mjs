@@ -41,6 +41,10 @@ test('every storefront has a target whose apron is walkable and focuses that sto
   for (const t of targets) {
     const state = { x: t.apron.x, z: t.apron.z, vx: 0, vz: 0, yaw: 0, pitch: 0 }; constrainMotion(state, config);
     near(state.x, t.apron.x); near(state.z, t.apron.z);
+    // Jump arrivals must be free standing spots that still focus and face their storefront.
+    const view = { x: t.view.x, z: t.view.z, vx: 0, vz: 0, yaw: 0, pitch: 0 }; constrainMotion(view, config);
+    near(view.x, t.view.x); near(view.z, t.view.z);
+    assert.equal(proximityTarget(t.view.x, t.view.z, t.view.yaw, targets)?.id, t.id, `${t.id} view`);
     assert.equal(proximityTarget(t.apron.x, t.apron.z, t.apron.yaw, targets)?.id, t.id, `${t.id} apron`);
     const forward = [-Math.sin(t.apron.yaw), 0, -Math.cos(t.apron.yaw)];
     assert.equal(pickTarget([t.apron.x, 1.7, t.apron.z], forward, targets)?.id, t.id, `${t.id} aim`);

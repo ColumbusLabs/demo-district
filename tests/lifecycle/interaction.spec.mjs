@@ -16,7 +16,7 @@ test('keyboard: facing a storefront offers Enter, opens an accessible preview, a
   test.skip(hasTouch, 'Keyboard prompt is the pointer layout.');
   await arrive(page);
   await expect(page.locator('#world-prompt')).toContainText('Click to view Tidepool Synth');
-  await page.getByRole('button', { name: 'Explore', exact: true }).click();
+  await page.locator('#world-canvas').focus();
   await expect(page.locator('#world-prompt')).toContainText('Enter or click to view Tidepool Synth');
   await page.keyboard.press('Enter');
   const dialog = page.getByRole('dialog', { name: 'Tidepool Synth' });

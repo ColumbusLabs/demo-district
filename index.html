@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#cbd5d6" />
+    <meta name="theme-color" content="#9fb6c8" />
     <meta name="description" content="Demo District: a walkable community showcase for AI-created projects. Currently in development." />
     <link rel="icon" href="data:," />
     <link rel="stylesheet" href="/src/ui/styles.css" />
@@ -12,9 +12,80 @@
   <body>
     <main id="app">
       <div id="world-root"><canvas id="world-canvas" tabindex="0" role="img" aria-label="Demo District plaza: a walkable preview of the exhibition district" aria-describedby="navigation-hint" data-navigation="idle"></canvas></div>
+
+      <!-- Heads-up display modelled on the approved mockup: menu, search, map, profile. -->
+      <header class="hud" aria-label="District controls">
+        <button id="menu-toggle" class="hud-bare" type="button" aria-expanded="false" aria-controls="menu-panel" aria-label="Explore menu">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+          <span class="hud-bare__label">Explore</span>
+        </button>
+        <section id="menu-panel" class="hud-panel hud-menu" aria-labelledby="menu-title" hidden>
+          <h2 id="menu-title">Demo District</h2>
+          <p class="hud-menu__intro">A walkable showcase for things people build with AI. This preview uses sample storefronts; nothing external loads unless you choose it.</p>
+          <div class="hud-menu__controls">
+            <button id="enter-navigation" class="hud-action" type="button" disabled>Explore</button>
+            <button id="reset-view" class="hud-action" type="button" disabled>Reset view</button>
+            <label for="walk-speed">Walk speed</label>
+            <select id="walk-speed" disabled>
+              <option value="2">Leisurely</option>
+              <option value="3.2" selected>Normal</option>
+              <option value="5">Brisk</option>
+            </select>
+            <label for="quality-select">Graphics</label>
+            <select id="quality-select" disabled>
+              <option value="auto" selected>Automatic</option>
+              <option value="high">High</option>
+              <option value="medium">Balanced</option>
+              <option value="low">Light</option>
+            </select>
+          </div>
+          <p id="navigation-hint" class="hud-menu__hint">Keyboard and mouse: WASD to walk, drag or arrow keys to look, Enter to open the storefront you face, M for the map. Escape releases the scene; Tab reaches these controls.</p>
+          <p id="touch-hint" class="hud-menu__hint">Touch: drag the scene to look, use the stick to walk, tap a storefront to open it.</p>
+          <p id="navigation-status" class="hud-menu__status" role="status" aria-live="polite">Navigation is starting.</p>
+          <p class="hud-menu__stage">World preview · Pass 5</p>
+        </section>
+        <div class="hud-search" role="search">
+          <svg class="hud-search__icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4.5 4.5" /></svg>
+          <input id="search-input" type="search" placeholder="Search worlds, creators, or experiences…" aria-label="Search the district" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="search-results" disabled />
+          <ul id="search-results" class="hud-search__results" role="listbox" aria-label="Search results" hidden></ul>
+        </div>
+        <div class="hud__right">
+          <button id="map-toggle" class="hud-round" type="button" aria-pressed="false" aria-controls="minimap" aria-label="Map">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4 3.5 6v14L9 18l6 2 5.5-2V4L15 6 9 4Zm0 0v14m6-12v14" /></svg>
+          </button>
+          <button id="profile-button" class="hud-round" type="button" aria-disabled="true" aria-describedby="profile-note" aria-label="Profile">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.5" /><path d="M5 20c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5" /></svg>
+          </button>
+          <span id="profile-note" class="visually-hidden">Sign-in arrives in a later release.</span>
+        </div>
+      </header>
+
+
+      <aside id="minimap" class="hud-panel minimap" aria-label="District map" hidden>
+        <svg id="minimap-svg" viewBox="-31 -67 62 92" role="img" aria-label="Map of the district with your position"></svg>
+      </aside>
+
       <!-- Touch movement stick. Keyboard and screen-reader users navigate without it. -->
       <div id="move-pad" class="move-pad" aria-hidden="true" hidden><span class="move-pad__knob"></span></div>
       <p id="world-prompt" class="world-prompt" aria-live="polite" hidden></p>
+
+      <div id="transition" class="transition" aria-hidden="true"></div>
+      <!-- Engine status: announced always, shown only when something needs attention. -->
+      <div id="world-status" class="hud-panel world-status" data-visible="false">
+        <p id="runtime-status" role="status" aria-live="polite" data-state="loading">Starting the world engine…</p>
+        <p id="runtime-detail">No creator experiences are loaded in this preview.</p>
+      </div>
+
+      <section id="loading" class="loading" aria-labelledby="district-title">
+        <div class="loading__card">
+          <h1 id="district-title" class="loading__wordmark">Demo District</h1>
+          <p class="loading__tagline">A walkable showcase for things people build with AI.</p>
+          <div id="loading-bar" class="loading__bar" role="progressbar" aria-label="Loading the district" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div>
+          <p id="loading-text" class="loading__text">Preparing the plaza…</p>
+          <noscript><p>JavaScript is disabled. Enable it to initialize the 3D world. The district has not opened yet.</p></noscript>
+        </div>
+      </section>
+
       <dialog id="project-preview" class="preview" aria-labelledby="preview-title" aria-describedby="preview-description">
         <div class="preview__card">
           <form method="dialog" class="preview__close-form"><button id="preview-close" class="preview__close" aria-label="Close preview">&times;</button></form>
@@ -33,33 +104,6 @@
           <p id="preview-note" class="preview__note">This is a sample storefront. Real projects open on their creators' own sites, only when you choose.</p>
         </div>
       </dialog>
-      <section class="shell" aria-labelledby="district-title">
-        <header class="shell__header">
-          <span class="wordmark">DEMO DISTRICT</span>
-          <span class="stage">World preview · Passes 1–3</span>
-        </header>
-        <div class="shell__intro">
-          <h1 id="district-title">Demo District</h1>
-          <p class="scope-note">An early walk through the plaza.<br />Projects, signage, and search come next.</p>
-        </div>
-        <footer class="shell__footer">
-          <div class="navigation-controls" aria-label="Preview navigation">
-            <button id="enter-navigation" type="button" disabled>Explore</button>
-            <button id="reset-view" type="button" disabled>Reset view</button>
-            <label for="walk-speed" class="walk-speed-label">Walk speed</label>
-            <select id="walk-speed" disabled>
-              <option value="2">Leisurely</option>
-              <option value="3.2" selected>Normal</option>
-              <option value="5">Brisk</option>
-            </select>
-          </div>
-          <p id="navigation-hint">Keyboard and mouse: WASD to walk, drag or arrow keys to look. Escape releases focus; Tab moves to the page controls.</p>
-          <p id="navigation-status" role="status" aria-live="polite">Navigation is starting.</p>
-          <p id="runtime-status" role="status" aria-live="polite" data-state="loading">Starting the world engine…</p>
-          <p id="runtime-detail">No creator experiences are loaded in this preview.</p>
-          <noscript><p>JavaScript is disabled. Enable it to initialize the 3D world. The district has not opened yet.</p></noscript>
-        </footer>
-      </section>
     </main>
     <script type="module" src="/src/main.ts"></script>
   </body>
