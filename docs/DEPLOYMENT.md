@@ -3,13 +3,22 @@
 ## Current boundary
 
 This repository is a portable static Vite + TypeScript + Three.js engine/navigation
-preview. It is **not yet a Sites-validated project**. There is no Site ID, saved
-version, production URL, database, storage bucket, or sign-in integration.
+preview. A private GPT Sites project and saved source version now exist, but the
+hosted runtime has not been deployed or inspected. There is no live URL, database,
+storage bucket, or sign-in integration.
 
-The current chat has GitHub read/write access, but native Sites management was not
-exposed by available tool discovery. Documentation establishes a proposed handoff,
-not acceptance of these exact artifacts. Do not replace missing evidence with a
-claim of compatibility.
+**Native Site record (2026-09-25):** project `appgprj_6ab6a5af37448191aabfb8e68c409ac3`
+(`Demo District`, slug `demo-district`); saved version 1 is
+`appgprj_6ab6a5af37448191aabfb8e68c409ac3~appgver_1b998178b3a88191bc3a98b69cb40e11`,
+from Site source commit `36aa59f14323b205717944ec2d02fd1d953a6aee`. The supported
+static archive was accepted with `dist/` as its output directory. This save does
+not prove the hosted page renders correctly.
+
+The account's built-in GPT Sites hostname includes its username. The owner requires
+a username-free public URL, so do not deploy to that hostname. Recommend a custom
+subdomain such as `demo-district.<owned-domain>`; an owner-controlled domain and
+DNS validation are needed before the public URL can meet that requirement. The
+current Site has no live URL.
 
 ## Local setup
 
@@ -69,27 +78,22 @@ The current client needs a canvas and TypeScript, not SSR, a UI framework,
 a database, or a Workers adapter. Vite's vanilla TypeScript/static build keeps the
 host adapter replaceable: https://vite.dev/guide/
 
-`.openai/hosting.json` has null storage bindings and deliberately omits a project ID.
-It conveys unprovisioned intent, not proof of a valid deployment manifest. Native
-Sites may require adapter or configuration changes after inspecting the project.
+`.openai/hosting.json` binds the real Site project and static output directory
+`dist/`, with D1 and R2 unconfigured. No secrets or runtime bindings are required.
 
-## Native Sites gate — still required
+## Native Sites gate — runtime validation still required
 
-From a Sites-capable session with this branch available, request:
+The private version above confirms that Sites accepted the source commit and static
+archive. It has not been deployed, so the following runtime checks remain pending:
 
-> Prepare ColumbusLabs/demo-district from build/demo-district-v1 for ChatGPT Sites. Inspect the current source commit, confirm the supported build/artifact shape, and make only necessary adapter changes on this branch. Save a private version for validation, but do not deploy, publish, broaden access, add D1/R2, or merge. Report the source commit, actual build result, saved version ID, and any adapter changes. Never treat a deployment URL as a private preview.
+1. Resolve a username-free URL using an owner-controlled domain.
+2. Publish only the reviewed saved version through GPT Sites and inspect the hosted
+   page on desktop and phone-sized viewports.
+3. Verify entry HTML/assets, Three.js startup, navigation, no-WebGL fallback, and
+   browser console against the deployed Site.
 
-Then:
-
-1. Record only real Site/project and saved-version identifiers returned by the host.
-2. Record the exact source commit and any necessary adapter changes.
-3. Validate entry HTML/assets, Three.js startup, navigation, no-WebGL fallback,
-   and browser console in the host's supported private validation surface.
-4. Only after observed acceptance mark the native Sites gate complete in the plan.
-5. Keep publishing, audience changes, and merge approval separate.
-
-If host validation requires deployment or expanded access, stop and ask for approval.
-No automatic GitHub-to-Sites sync or undocumented CLI command is assumed.
+The source branch remains `build/demo-district-v1`. Do not merge it. A deployment
+URL is production, even when access is private; never present one as a preview.
 
 ## Official references for the eventual host check
 
@@ -106,6 +110,6 @@ portable web client. Native Sites acceptance is a separate gate. Physical device
 Safari, and production world performance remain later QA work.
 
 There is no deploy command, auto-publishing workflow, Pages setup, or hosting token.
-When publication is explicitly authorized, select the reviewed version and audience
-through the supported host flow. Preserve the prior version for rollback; do not
-reset Git history or delete data to roll back a visual build.
+When publication proceeds, preserve the prior version for rollback; do not reset Git
+history or delete data to roll back a visual build. Public deployment was requested
+on 2026-09-25, conditioned on a username-free URL choice.

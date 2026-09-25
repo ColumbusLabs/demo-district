@@ -19,7 +19,7 @@ On 2026-09-24 the user set **desktop browser as the primary target** (mobile sec
 - **Pass 2 — architecture and landmark** (slices 7, 8, 12): parametric pavilion kit with three roof families, storefront frames, wood accents, soffit lighting, interior-mapped storefront glass; the arch-and-orb landmark over the fountain.
 - **Pass 3 — life and atmosphere** (slices 9, 11): procedural trees, shrubs, grasses, boulders, benches, planters, wind sway; shader water with Fresnel sky reflection, bank shading, LED spill, and a fountain.
 
-An early baseline of slice 20 was needed to keep software-rendered browsers (and CI) usable: automatic high/medium/low tiers. **Pass 4 (signage, targeting, preview) is also done: see [PASS_04.md](PASS_04.md).** **Pass 5 (HUD, search, map, loading) is done: see [PASS_05.md](PASS_05.md).** **Pass 6 (measurement, optimization, quality presets) is done: see [PASS_06.md](PASS_06.md) and [PERFORMANCE_BUDGET.md](PERFORMANCE_BUDGET.md).** **Pass 7 (WORLD ALPHA audit) is done: see [WORLD_ALPHA_AUDIT.md](WORLD_ALPHA_AUDIT.md). It recommends declaring WORLD ALPHA for the desktop browser preview; backend slices (23+) stay locked until the owner decides.** Native Sites acceptance and physical-device testing remain pending. No merge or deployment is authorized.
+An early baseline of slice 20 was needed to keep software-rendered browsers (and CI) usable: automatic high/medium/low tiers. **Pass 4 (signage, targeting, preview) is also done: see [PASS_04.md](PASS_04.md).** **Pass 5 (HUD, search, map, loading) is done: see [PASS_05.md](PASS_05.md).** **Pass 6 (measurement, optimization, quality presets) is done: see [PASS_06.md](PASS_06.md) and [PERFORMANCE_BUDGET.md](PERFORMANCE_BUDGET.md).** **Pass 7 (WORLD ALPHA audit) is done: see [WORLD_ALPHA_AUDIT.md](WORLD_ALPHA_AUDIT.md). It recommends declaring WORLD ALPHA for the desktop browser preview; backend slices (23+) stay locked until the owner decides.** Native Sites runtime acceptance and physical-device testing remain pending. No merge was performed. The owner authorized public Sites deployment on 2026-09-25 subject to a username-free URL; its current status is recorded below.
 <!-- /passes-01-03-status -->
 
 <!-- slice-04-status -->
@@ -1273,6 +1273,11 @@ each end with tests, a checkpoint, and a side-by-side comparison against the moc
 
 A cheap draw-call/triangle counter runs from pass 1 on (development HUD) so phones are not
 quietly overloaded before pass 6.
+
+On 2026-09-25, the owner requested publication through GPT Sites for desktop and
+mobile. Site version 1 is saved privately; no deployment has been made. The built-in
+Site hostname includes the account username, so the public deployment is waiting on
+an owner-controlled, username-free domain. See [Sites handoff](DEPLOYMENT.md).
 
 ---
 
