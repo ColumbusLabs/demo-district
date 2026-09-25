@@ -30,7 +30,7 @@ const mirror = (slot: PavilionSlot, id: string): PavilionSlot => ({
   display: (slot.display + 0.37) % 1,
 });
 const leftRow: PavilionSlot[] = [
-  { id: 'west-gate', x: -19, z: -8, facing: 0.95, width: 12, depth: 11, height: 7, roof: 'disc', accent: 'left', display: 0.78 },
+  { id: 'west-gate', x: -20.5, z: -10.5, facing: 0.95, width: 12, depth: 11, height: 7, roof: 'disc', accent: 'left', display: 0.78 },
   { id: 'west-promenade', x: -19.5, z: -22, facing: Math.PI / 2, width: 11, depth: 10, height: 5.6, roof: 'wave', accent: 'right', display: 0.62 },
   { id: 'west-grove', x: -21.5, z: -35.5, facing: Math.PI / 2 - 0.25, width: 10, depth: 9, height: 5.2, roof: 'shell', accent: 'left', display: 0.08 },
   { id: 'west-plaza', x: -21.5, z: -55, facing: 1.1, width: 12, depth: 10, height: 6, roof: 'disc', accent: 'none', display: 0.55 },
@@ -75,14 +75,25 @@ export const district = {
   planterHalf: 0.85,
   /** Trees in planters where the allee opens into the plaza. */
   plazaTrees: [{ x: -10, z: -27 }, { x: 10, z: -27 }, { x: -13.5, z: -29.5 }, { x: 13.5, z: -29.5 }],
+  /** Large trees near spawn whose canopies frame the top corners of the opening view. */
+  framingTrees: [{ x: -14.2, z: -1.8 }, { x: 14.2, z: -1.8 }],
   /** Stone benches with wood tops behind the plinths (long axis along Z). */
-  benches: [{ x: -9.4, z: 3 }, { x: 9.4, z: 3 }, { x: -9.4, z: 9.5 }, { x: 9.4, z: 9.5 }],
+  benches: [{ x: -9.4, z: 5.5 }, { x: 9.4, z: 5.5 }, { x: -9.4, z: 11.5 }, { x: 9.4, z: 11.5 }],
   banners: [{ x: -9.3, z: -15.5 }, { x: 9.3, z: -15.5 }],
   /** Lit bollards marking where the channels end and the allee begins. */
   bollards: [-6.15, 6.15].map((x) => ({ x, z: -11.95 })),
 } as const;
 
 export const eyeHeight = 1.7;
+export const plinthHeight = 0.35;
+
+/** Storefront opening dimensions for a pavilion (local frame, front = +Z). Shared by kit and targets. */
+export function storefrontSize(slot: PavilionSlot): { width: number; height: number; glassHeight: number; jamb: number; proud: number } {
+  const height = (slot.height - plinthHeight) * 0.8;
+  return { width: Math.min(slot.width * 0.46, 6.2), height, glassHeight: height * 0.74, jamb: 0.28, proud: 0.45 };
+}
+/** Distance from a pavilion's center to its storefront apron (where visitors stand). */
+export const apronReach = (slot: PavilionSlot): number => slot.depth / 2 + 1.8;
 
 /** Where each arch leg meets the ground: the main arch's two plus two per crossing wing. */
 export function landmarkFootings(): Circle[] {
@@ -108,7 +119,7 @@ export function districtBlockers(): Blocker[] {
     blockers.push({ x: p.x, z: p.z, halfWidth: p.width / 2, halfDepth: p.depth / 2 + 0.2, angle: p.facing });
   }
   for (const plinth of district.plinths) blockers.push({ x: plinth.x, z: plinth.z, halfWidth: plinth.width / 2, halfDepth: 0.45, angle: plinth.angle });
-  for (const tree of [...district.allee, ...district.plazaTrees]) blockers.push({ x: tree.x, z: tree.z, halfWidth: district.planterHalf, halfDepth: district.planterHalf });
+  for (const tree of [...district.allee, ...district.plazaTrees, ...district.framingTrees]) blockers.push({ x: tree.x, z: tree.z, halfWidth: district.planterHalf, halfDepth: district.planterHalf });
   for (const bench of district.benches) blockers.push({ x: bench.x, z: bench.z, halfWidth: 0.35, halfDepth: 1.25 });
   for (const banner of district.banners) blockers.push({ x: banner.x, z: banner.z, radius: 0.35 });
   for (const bollard of district.bollards) blockers.push({ x: bollard.x, z: bollard.z, radius: 0.25 });

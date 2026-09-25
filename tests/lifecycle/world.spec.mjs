@@ -187,7 +187,7 @@ test('repeated application re-entry retains one canvas, one HUD, and one loop', 
     await expect(page.locator('#runtime-status')).toHaveAttribute('data-state', 'ready', { timeout: 20_000 });
     await expect(page.locator('#world-canvas')).toHaveCount(1);
     await expect(page.locator('[data-world-diagnostics]')).toHaveCount(1);
-    expect(await page.evaluate(() => window.__ddPendingFrames)).toBe(1);
+    expect(await page.evaluate(() => window.__ddPendingFrames)).toBeLessThanOrEqual(1); // one loop at most; the software tier renders on demand (0)
     await expect.poll(async () => page.evaluate(() => window.__ddOldCanvas.getContext('webgl2').isContextLost())).toBe(true);
   }
   await page.evaluate(() => { window.__ddUnmount(); window.__ddUnmount(); });

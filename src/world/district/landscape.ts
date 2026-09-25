@@ -48,21 +48,22 @@ function canopy(center: Vector3, radius: Vector3, cards: number, cardSize: numbe
 
 interface TreeTemplate { trunk: BufferGeometry; leaves: BufferGeometry }
 /** Slender deciduous tree: a leaning trunk, a few rising limbs, and clustered canopies. */
-function treeTemplate(seed: number, height: number): TreeTemplate {
+function treeTemplate(seed: number, height: number, shape: { lean?: Vector3; spread?: number } = {}): TreeTemplate {
   const rand = random(seed);
   const limbs: BufferGeometry[] = []; const leaves: BufferGeometry[] = [];
-  const lean = new Vector3((rand() - 0.5) * 0.35, 0, (rand() - 0.5) * 0.35);
+  const lean = shape.lean ?? new Vector3((rand() - 0.5) * 0.35, 0, (rand() - 0.5) * 0.35);
+  const spread = shape.spread ?? 1;
   const fork = new Vector3(0, height * 0.5, 0).add(lean);
   limbs.push(limb(new Vector3(0, -0.2, 0), fork, 0.17, 0.12));
   const branches = 4 + Math.floor(rand() * 2);
   for (let b = 0; b < branches; b++) {
     const angle = (b / branches) * Math.PI * 2 + rand() * 0.8;
-    const spread = height * (0.16 + rand() * 0.1);
-    const tip = fork.clone().add(new Vector3(Math.cos(angle) * spread, height * (0.3 + rand() * 0.22), Math.sin(angle) * spread));
+    const reach = height * (0.16 + rand() * 0.1) * spread;
+    const tip = fork.clone().add(new Vector3(Math.cos(angle) * reach + lean.x * 0.6, height * (0.3 + rand() * 0.22) / Math.sqrt(spread), Math.sin(angle) * reach + lean.z * 0.6));
     limbs.push(limb(fork, tip, 0.1, 0.035));
-    leaves.push(canopy(tip, new Vector3(1.15, 1.3, 1.15).multiplyScalar(height / 8.5), 22, 1.2 * height / 8.5, rand));
+    leaves.push(canopy(tip, new Vector3(1.15 * spread, 1.3, 1.15 * spread).multiplyScalar(height / 8.5), Math.round(22 * spread), 1.2 * height / 8.5, rand));
   }
-  leaves.push(canopy(new Vector3(0, height * 0.88, 0).add(lean), new Vector3(1.4, 1.7, 1.4).multiplyScalar(height / 8.5), 30, 1.3 * height / 8.5, rand));
+  leaves.push(canopy(new Vector3(0, height * 0.88 / Math.sqrt(spread), 0).add(lean.clone().multiplyScalar(1.4)), new Vector3(1.4 * spread, 1.7, 1.4 * spread).multiplyScalar(height / 8.5), Math.round(30 * spread), 1.3 * height / 8.5, rand));
   const trunk = mergeGeometries(limbs, false); const crown = mergeGeometries(leaves, false);
   for (const part of [...limbs, ...leaves]) part.dispose();
   if (!trunk || !crown) throw new Error('Tree merge failed.');
@@ -124,25 +125,31 @@ function boulder(seed: number): BufferGeometry {
 export function buildLandscape(root: Group, m: DistrictMaterials, batch: StaticBatch, resources: ResourceScope, windTime: { value: number }, outerTrees: boolean): void {
   addWind(m.foliage, windTime);
   const rand = random(97);
-  const templates = [treeTemplate(3, 9.5), treeTemplate(8, 8.2), treeTemplate(21, 10.5)];
+  const templates = [treeTemplate(3, 9.5), treeTemplate(8, 8.2), treeTemplate(21, 10.5),
+    // Framing tree: leans over the walkway (+X local) with a wide crown, like the mockup's corners.
+    treeTemplate(55, 12.5, { lean: new Vector3(1.9, 0, 0), spread: 1.4 })];
   const trees: Matrix4[][] = templates.map(() => []);
   const plant = (x: number, z: number, scale = 1, y = 0): void => {
-    const pick = Math.floor(rand() * templates.length);
+    const pick = Math.floor(rand() * 3);
     trees[pick]?.push(place(x, y, z, rand() * Math.PI * 2, scale * (0.9 + rand() * 0.2)));
   };
 
+  const shrubs: Matrix4[] = []; const grass: Matrix4[] = []; const rocks: Matrix4[][] = [[], []];
   // Allee and plaza trees in square stone planters with a hedge collar.
   const h = district.planterHalf;
-  for (const t of [...district.allee, ...district.plazaTrees]) {
+  for (const t of [...district.allee, ...district.plazaTrees, ...district.framingTrees]) {
     for (const [dx, dz, w, d] of [[0, -h + 0.12, h * 2, 0.24], [0, h - 0.12, h * 2, 0.24], [-h + 0.12, 0, 0.24, h * 2 - 0.48], [h - 0.12, 0, 0.24, h * 2 - 0.48]] as const) {
       batch.box(m.stone, w, 0.62, d, place(t.x + dx, 0.31, t.z + dz), 1.5);
     }
-    batch.box(m.hedge, h * 2 - 0.5, 0.42, h * 2 - 0.5, place(t.x, 0.72, t.z), 1.2);
-    plant(t.x, t.z, 1.2, 0.5);
+    batch.box(m.soil, h * 2 - 0.48, 0.1, h * 2 - 0.48, place(t.x, 0.52, t.z), 1.2);
+    const framing = district.framingTrees.some((f) => f.x === t.x && f.z === t.z);
+    if (framing) trees[3]?.push(place(t.x, 0.5, t.z, t.x < 0 ? 0 : Math.PI, 1.15));
+    else plant(t.x, t.z, 1.2, 0.5);
+    // Loose shrubs spilling over the rim instead of a clipped hedge block.
+    for (let k = 0; k < 3; k++) shrubs.push(place(t.x + (rand() - 0.5) * 0.9, 0.45, t.z + (rand() - 0.5) * 0.9, rand() * 6, 0.62 + rand() * 0.25));
   }
 
   // Beds: shrubs, grass tufts, and boulders, clustered toward the back.
-  const shrubs: Matrix4[] = []; const grass: Matrix4[] = []; const rocks: Matrix4[][] = [[], []];
   const scatter = (bed: Rect, count: number, fn: (x: number, z: number) => void): void => {
     for (let i = 0; i < count; i++) fn(bed.minX + 0.6 + rand() * (bed.maxX - bed.minX - 1.2), bed.minZ + 0.6 + rand() * (bed.maxZ - bed.minZ - 1.2));
   };

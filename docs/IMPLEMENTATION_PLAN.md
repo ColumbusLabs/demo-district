@@ -19,7 +19,7 @@ On 2026-09-24 the user set **desktop browser as the primary target** (mobile sec
 - **Pass 2 — architecture and landmark** (slices 7, 8, 12): parametric pavilion kit with three roof families, storefront frames, wood accents, soffit lighting, interior-mapped storefront glass; the arch-and-orb landmark over the fountain.
 - **Pass 3 — life and atmosphere** (slices 9, 11): procedural trees, shrubs, grasses, boulders, benches, planters, wind sway; shader water with Fresnel sky reflection, bank shading, LED spill, and a fountain.
 
-An early baseline of slice 20 was needed to keep software-rendered browsers (and CI) usable: automatic high/medium/low tiers. Next: **Pass 4 — interaction** (slices 13 signage, 14 targeting, 15 preview overlay). Native Sites acceptance and physical-device testing remain pending. No merge or deployment is authorized.
+An early baseline of slice 20 was needed to keep software-rendered browsers (and CI) usable: automatic high/medium/low tiers. **Pass 4 (signage, targeting, preview) is also done: see [PASS_04.md](PASS_04.md).** Next: **Pass 5 — mockup HUD, search, map, loading.** Native Sites acceptance and physical-device testing remain pending. No merge or deployment is authorized.
 <!-- /passes-01-03-status -->
 
 <!-- slice-04-status -->
@@ -567,6 +567,7 @@ Each slice must end with:
 
 ### Slice 13 — District signage system
 **Model:** GPT-5.6 Sol
+**Status:** Implemented in world pass 4 ([PASS_04.md](PASS_04.md)).
 
 **Goal:** Turn building fronts into reusable discovery destinations.
 
@@ -586,6 +587,7 @@ Each slice must end with:
 
 ### Slice 14 — World interaction targeting
 **Model:** GPT-6 Astra Pro
+**Status:** Implemented in world pass 4.
 
 **Goal:** Make storefronts/project points interactable across desktop and touch.
 
@@ -606,6 +608,7 @@ Each slice must end with:
 
 ### Slice 15 — Project preview overlay shell
 **Model:** GPT-5.6 Sol
+**Status:** Implemented in world pass 4 (sample fixtures only).
 
 **Goal:** Connect the 3D world to a polished 2D project-information layer.
 
@@ -1257,8 +1260,8 @@ each end with tests, a checkpoint, and a side-by-side comparison against the moc
 | 1. Composition + light | 5, 6, 10 | Layout, circulation, collision, golden-hour lighting and sky | Done ([checkpoint](PASSES_01-03.md)) |
 | 2. Architecture + landmark | 7, 8, 12 | Pavilion kit, implied interiors, arch and orb | Done |
 | 3. Life + atmosphere | 9, 11 | Landscaping, water, fountain | Done |
-| 4. Interaction | 13, 14, 15 | Signage, targeting, preview overlay | Next |
-| 5. Mockup HUD | 16, 17, 21 | Search, map, loading in the mockup's frosted-pill style | Planned |
+| 4. Interaction | 13, 14, 15 | Signage, targeting, preview overlay | Done ([checkpoint](PASS_04.md)) |
+| 5. Mockup HUD | 16, 17, 21 | Search, map, loading in the mockup's frosted-pill style | Next |
 | 6. Performance + quality | 18, 19, 20 | Measurement, optimization, full presets (baseline tiers exist) | Planned |
 | 7. WORLD ALPHA audit | 22 | Mockup comparison and go/no-go | Planned |
 

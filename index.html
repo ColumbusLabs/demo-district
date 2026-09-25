@@ -14,6 +14,25 @@
       <div id="world-root"><canvas id="world-canvas" tabindex="0" role="img" aria-label="Demo District plaza: a walkable preview of the exhibition district" aria-describedby="navigation-hint" data-navigation="idle"></canvas></div>
       <!-- Touch movement stick. Keyboard and screen-reader users navigate without it. -->
       <div id="move-pad" class="move-pad" aria-hidden="true" hidden><span class="move-pad__knob"></span></div>
+      <p id="world-prompt" class="world-prompt" aria-live="polite" hidden></p>
+      <dialog id="project-preview" class="preview" aria-labelledby="preview-title" aria-describedby="preview-description">
+        <div class="preview__card">
+          <form method="dialog" class="preview__close-form"><button id="preview-close" class="preview__close" aria-label="Close preview">&times;</button></form>
+          <p class="preview__eyebrow"><span id="preview-category"></span><span id="preview-sample" class="preview__badge">Sample listing</span></p>
+          <h2 id="preview-title"></h2>
+          <p class="preview__byline">by <span id="preview-creator"></span></p>
+          <dl class="preview__meta">
+            <div><dt>Model</dt><dd id="preview-model"></dd></div>
+            <div><dt>Rating</dt><dd>Ratings arrive with sign-in</dd></div>
+          </dl>
+          <p id="preview-description"></p>
+          <div class="preview__actions">
+            <a id="preview-launch" class="preview__action preview__action--primary" target="_blank" rel="noopener noreferrer">Open project <span aria-hidden="true">↗</span></a>
+            <a id="preview-source" class="preview__action" target="_blank" rel="noopener noreferrer">Original post <span aria-hidden="true">↗</span></a>
+          </div>
+          <p id="preview-note" class="preview__note">This is a sample storefront. Real projects open on their creators' own sites, only when you choose.</p>
+        </div>
+      </dialog>
       <section class="shell" aria-labelledby="district-title">
         <header class="shell__header">
           <span class="wordmark">DEMO DISTRICT</span>

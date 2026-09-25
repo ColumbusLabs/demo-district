@@ -14,7 +14,7 @@ import { assetUrl, random } from './materials.ts';
  */
 const sunAzimuth = (0.6123 - 0.5) * Math.PI * 2;
 export const sunDirection = new Vector3(Math.cos(sunAzimuth), Math.tan(0.245), Math.sin(sunAzimuth)).normalize();
-export const hazeColor = new Color(0xcdd6dc);
+export const hazeColor = new Color(0xd9d5d2);
 /** Fraction of the full equirect height kept in the cropped upper-sky image (1152 / 2048 rows). */
 const skyCrop = 1152 / 2048;
 
@@ -88,7 +88,7 @@ export function createEnvironment(scene: Scene, renderer: WebGLRenderer, resourc
   const dome = new Mesh(
     resources.track(new SphereGeometry(900, 48, 24)),
     resources.track(new ShaderMaterial({
-      uniforms: { skyMap: { value: skyTexture }, hazeTint: { value: hazeColor }, intensity: { value: 1.12 }, saturation: { value: 1.3 } },
+      uniforms: { skyMap: { value: skyTexture }, hazeTint: { value: hazeColor }, intensity: { value: 1.12 }, saturation: { value: 1.08 }, glow: { value: new Color(0xf6d2b2) } },
       vertexShader: /* glsl */`
         varying vec3 vDirection;
         void main() {
@@ -99,12 +99,17 @@ export function createEnvironment(scene: Scene, renderer: WebGLRenderer, resourc
       fragmentShader: /* glsl */`
         uniform float intensity;
         uniform float saturation;
+        uniform vec3 glow;
         varying vec3 vDirection;
         ${skySampleGlsl}
         void main() {
           vec3 sky = sampleSky(vDirection);
           // A touch more saturation matches the mockup's clear blue without a new asset.
           sky = mix(vec3(dot(sky, vec3(0.2126, 0.7152, 0.0722))), sky, saturation);
+          // The mockup's warm peach band low on the horizon, strongest toward the landmark (−Z).
+          vec3 d = normalize(vDirection);
+          float band = smoothstep(0.32, 0.0, d.y) * smoothstep(-0.05, 0.02, d.y);
+          sky = mix(sky, glow, band * (0.35 + 0.35 * max(0.0, -d.z)));
           gl_FragColor = vec4(sky * intensity, 1.0);
           #include <tonemapping_fragment>
           #include <colorspace_fragment>

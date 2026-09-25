@@ -41,3 +41,37 @@ h1 { margin: 0 0 .6rem; font-size: clamp(1.4rem, 3vw, 2rem); line-height: 1.1; l
 @media (max-height: 500px) { [data-input="touch"] .shell { gap: .75rem; } [data-input="touch"] .scope-note { display: none; } }
 @media (min-width: 768px) { .shell { padding: 2rem 3rem; } }
 @media (max-width: 767px) { .world-diagnostics { top: 10rem; right: 1.25rem; } }
+/* World prompt: the mockup's frosted pill at bottom center ("Use WASD to explore"). */
+.world-prompt { position: fixed; left: 50%; bottom: max(1.5rem, env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 2; margin: 0; padding: .55rem 1rem; border-radius: 999px; background: #1a2a31a8; border: 1px solid #ffffff33; color: #f3f0e9; font-size: .8rem; line-height: 1.4; white-space: nowrap; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); box-shadow: 0 6px 22px #0000002e; pointer-events: none; }
+.world-prompt kbd { display: inline-block; min-width: 1.45em; margin: 0 .12em; padding: .05em .35em; border: 1px solid #ffffff5c; border-radius: .3rem; font: 600 .72rem/1.4 ui-monospace, monospace; text-align: center; color: #fff; background: #ffffff14; }
+.world-prompt strong { font-weight: 600; }
+[data-input="touch"] .world-prompt { bottom: auto; top: max(4.75rem, calc(env(safe-area-inset-top) + 4rem)); white-space: normal; max-width: calc(100vw - 2.5rem); text-align: center; }
+/* Keep the temporary status panel clear of the centered prompt on desktop. */
+@media (min-width: 768px) { [data-input="pointer"] .shell__footer { max-width: min(36rem, calc(50vw - 14rem)); } }
+#world-canvas[data-hover="target"] { cursor: pointer; }
+
+/* Project preview: frosted card; a bottom sheet on narrow screens. */
+.preview { border: 0; padding: 0; background: transparent; color: #f3efe8; max-width: min(30rem, calc(100vw - 2rem)); width: 100%; }
+.preview::backdrop { background: #0d161b66; -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+.preview__card { position: relative; padding: 1.6rem 1.6rem 1.3rem; border-radius: 1.1rem; background: #17252cdd; border: 1px solid #ffffff2e; -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); box-shadow: 0 18px 60px #00000055; }
+.preview__close-form { position: absolute; top: .7rem; right: .7rem; margin: 0; }
+.preview__close { width: 44px; height: 44px; border-radius: 50%; border: 1px solid #ffffff38; background: #ffffff10; color: inherit; font-size: 1.4rem; line-height: 1; cursor: pointer; }
+.preview__close:focus-visible, .preview__action:focus-visible { outline: 3px solid #fff0bb; outline-offset: 3px; }
+.preview__eyebrow { display: flex; gap: .6rem; align-items: center; margin: 0 3rem .5rem 0; font-size: .7rem; font-weight: 650; letter-spacing: .16em; text-transform: uppercase; color: #d9c7a8; }
+.preview__badge { padding: .15rem .5rem; border-radius: 999px; border: 1px solid #d9c7a866; letter-spacing: .08em; font-weight: 600; }
+.preview h2 { margin: 0 0 .3rem; font-size: 1.6rem; font-weight: 500; letter-spacing: -.02em; line-height: 1.15; }
+.preview__byline { margin: 0 0 1rem; color: #c9d3d6; font-size: .9rem; }
+.preview__meta { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; margin: 0 0 1rem; }
+.preview__meta div { padding: .55rem .7rem; border-radius: .6rem; background: #ffffff0d; }
+.preview__meta dt { font-size: .65rem; letter-spacing: .12em; text-transform: uppercase; color: #a9b8bd; }
+.preview__meta dd { margin: .15rem 0 0; font-size: .85rem; }
+#preview-description { margin: 0 0 1.2rem; font-size: .92rem; line-height: 1.55; color: #e6e1d8; }
+.preview__actions { display: flex; flex-wrap: wrap; gap: .6rem; }
+.preview__action { display: inline-flex; align-items: center; gap: .35rem; min-height: 44px; padding: .55rem 1rem; border-radius: 999px; border: 1px solid #ffffff40; color: inherit; text-decoration: none; font-size: .88rem; }
+.preview__action--primary { background: #f3efe8; color: #17252c; border-color: transparent; font-weight: 600; }
+.preview__action[aria-disabled="true"] { opacity: .45; cursor: not-allowed; }
+.preview__note { margin: .9rem 0 0; font-size: .78rem; color: #a9b8bd; line-height: 1.5; }
+@media (max-width: 560px) {
+  .preview { margin: auto 0 0; max-width: 100vw; }
+  .preview__card { border-radius: 1.1rem 1.1rem 0 0; padding-bottom: max(1.3rem, env(safe-area-inset-bottom)); }
+}

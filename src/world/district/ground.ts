@@ -65,7 +65,7 @@ export function buildGround(root: Group, m: DistrictMaterials, water: { channel:
 
   // Sign plinths: long stone blocks lifted on a shadow gap with an uplight (text arrives in Slice 13).
   for (const p of district.plinths) {
-    batch.box(m.stone, p.width, 1.05, 0.8, place(p.x, 0.62, p.z, p.angle), 3);
+    batch.box(m.stone, p.width, 1.45, 0.8, place(p.x, 0.82, p.z, p.angle), 3);
     batch.box(m.charcoal, p.width - 0.3, 0.1, 0.6, place(p.x, 0.05, p.z, p.angle), 3);
     lights.box(m.warmLight, p.width - 0.4, 0.03, 0.03, place(p.x + Math.sin(p.angle) * 0.42, 0.1, p.z + Math.cos(p.angle) * 0.42, p.angle));
   }

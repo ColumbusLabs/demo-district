@@ -29,7 +29,7 @@ test('a real Vite source update replaces the world and cleans up its previous co
     await expect(page.locator('#world-canvas')).toHaveCount(1);
     await expect(page.locator('[data-world-diagnostics]')).toHaveCount(1);
     expect(await page.evaluate(() => window.__ddBeforeHmr.getContext('webgl2').isContextLost())).toBe(true);
-    expect(await page.evaluate(() => window.__ddPendingFrames)).toBe(1);
+    expect(await page.evaluate(() => window.__ddPendingFrames)).toBeLessThanOrEqual(1); // one loop at most; the software tier renders on demand (0)
     expect(errors).toEqual([]);
   } finally {
     await writeFile(source, original);

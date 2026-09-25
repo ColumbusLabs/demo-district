@@ -8,6 +8,9 @@ import { buildLandscape } from './landscape.ts';
 import { district } from './layout.ts';
 import { createMaterials } from './materials.ts';
 import { buildPavilion } from './pavilions.ts';
+import { buildSignage } from './signage.ts';
+import { storefrontTargets } from './targets.ts';
+import type { TargetVolume } from '../interactions/targeting.ts';
 import { createPost } from './post.ts';
 import { chooseQuality } from './quality.ts';
 import { createFountain, waterMaterial } from './water.ts';
@@ -20,7 +23,14 @@ export { districtNavigation } from './layout.ts';
  * textures and image-based lighting stream in and trigger redraws. Shadows are static and
  * re-rendered only when content changes, not every frame.
  */
-export function createDistrict({ resources, renderer, camera, invalidate }: ContentContext): WorldContent {
+export interface District extends WorldContent {
+  /** Interaction targets for every storefront (see targets.ts). */
+  targets: readonly TargetVolume[];
+  /** Show the focus cue on one storefront, or none. */
+  highlight: (id: string | null) => void;
+}
+
+export function createDistrict({ resources, renderer, camera, invalidate }: ContentContext): District {
   const quality = chooseQuality(renderer, renderer.domElement.ownerDocument.defaultView?.location.search ?? '');
   let disposed = false;
   resources.track({ dispose: () => { disposed = true; } });
@@ -48,7 +58,8 @@ export function createDistrict({ resources, renderer, camera, invalidate }: Cont
   const batch = new StaticBatch(resources);
   const lights = new StaticBatch(resources);
   buildGround(root, m, water, resources);
-  for (const slot of district.pavilions) buildPavilion(slot, m, batch, lights, root, env.skyTexture, resources);
+  const glass = new Map(district.pavilions.map((slot) => [slot.id, buildPavilion(slot, m, batch, lights, root, env.skyTexture, resources)] as const));
+  buildSignage(root, m, batch, renderer, resources);
   const orbDrift = buildLandmark(root, m, batch, resources);
   const windTime = { value: 0 };
   buildLandscape(root, m, batch, resources, windTime, quality.outerTrees);
@@ -61,6 +72,11 @@ export function createDistrict({ resources, renderer, camera, invalidate }: Cont
 
   return {
     scene,
+    targets: storefrontTargets(),
+    highlight: (id) => {
+      for (const [slot, material] of glass) { const uniform = material.uniforms.highlight; if (uniform) uniform.value = slot === id ? 1 : 0; }
+      if (!disposed) invalidate();
+    },
     update: (_delta, elapsed) => {
       for (const material of Object.values(water)) { const time = material.uniforms.time; if (time) time.value = elapsed; }
       windTime.value = elapsed;

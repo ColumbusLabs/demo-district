@@ -36,7 +36,8 @@ Read `docs/IMPLEMENTATION_PLAN.md` (including section 8a, world passes), the lat
 - World assets are local under `public/world/`, CC0 preferred, and recorded in `public/world/LICENSES.md`. No remote assets, CDNs, or creator media without permission.
 - Suspension, blur, Escape, Tab, context loss, and teardown must clear held keys, stick, drags, and momentum. Reduced motion must remain navigable, with no idle animation loop once movement settles.
 - Do not preload creator sites, add iframes, scrape X, or load remote fonts/CDN scripts at startup.
-- Development-only `?engine-test` mounts the engine test scene for engine/controller lifecycle tests; keep it behind `import.meta.env.DEV` (the artifact check fails otherwise).
+- Interaction targets come from `src/world/district/targets.ts`; only registered volumes are pickable. Overlays that own input must gate both `canNavigate` and `canInteract`. Sample listings (`src/data/showcase.ts`) never carry URLs or real people's names.
+- Development-only `?spawn=x,z,yaw` starts elsewhere in the district; `?engine-test` mounts the engine test scene for engine/controller lifecycle tests; keep it behind `import.meta.env.DEV` (the artifact check fails otherwise).
 - D1, R2, authentication, ratings, submissions, and real project records remain later slices. No fake hosting IDs or storage bindings.
 
 ## Checks and evidence

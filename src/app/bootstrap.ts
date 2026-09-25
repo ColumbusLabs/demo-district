@@ -1,5 +1,11 @@
 import { createWorld } from '../world/World.ts';
 import { createDistrict, districtNavigation } from '../world/district/index.ts';
+import type { District } from '../world/district/index.ts';
+import { createInteractions } from '../world/interactions/InteractionManager.ts';
+import type { Interactions } from '../world/interactions/InteractionManager.ts';
+import { projectForSlot } from '../data/showcase.ts';
+import { createProjectPreview } from '../ui/project-preview.ts';
+import type { ProjectPreview } from '../ui/project-preview.ts';
 import type { World, WorldState } from '../world/World.ts';
 import { createNavigationController } from '../world/controls/NavigationController.ts';
 import type { NavigationController, NavigationMode } from '../world/controls/NavigationController.ts';
@@ -20,6 +26,7 @@ export function mountApplication(doc: Document): () => void {
   const reset = doc.querySelector<HTMLButtonElement>('#reset-view');
   const speed = doc.querySelector<HTMLSelectElement>('#walk-speed');
   const movePad = doc.querySelector<HTMLElement>('#move-pad');
+  const prompt = doc.querySelector<HTMLElement>('#world-prompt');
   const win = doc.defaultView;
   if (!placeholder || !status || !detail || !win) {
     const notice = doc.createElement('p');
@@ -39,6 +46,11 @@ export function mountApplication(doc: Document): () => void {
   let disposed = false;
   let world: World | undefined;
   let controls: NavigationController | undefined;
+  let district: District | undefined;
+  let interactions: Interactions | undefined;
+  let preview: ProjectPreview | undefined;
+  let focusedSlot: string | null = null;
+  let running = false;
   let diagnostics: ReturnType<typeof createWorldDiagnostics> | undefined;
   let stopWatchingInput: (() => void) | undefined;
   let modality: InputModality = 'pointer';
@@ -53,6 +65,23 @@ export function mountApplication(doc: Document): () => void {
       : mode === 'dragging' ? 'Looking around · Release the mouse to stop looking.'
       : 'WASD to walk · Drag or use arrow keys to look · Escape to release focus.';
   };
+  /** The bottom-center pill: how to explore, or how to open the storefront in focus. */
+  const renderPrompt = (): void => {
+    if (!prompt || disposed) return;
+    const project = focusedSlot ? projectForSlot(focusedSlot) : undefined;
+    const show = running && !preview?.isOpen();
+    prompt.hidden = !show;
+    if (!show) return;
+    const parts: Array<string | HTMLElement> = [];
+    const key = (label: string): HTMLElement => { const k = doc.createElement('kbd'); k.textContent = label; return k; };
+    const strong = (label: string): HTMLElement => { const s = doc.createElement('strong'); s.textContent = label; return s; };
+    if (modality === 'touch') parts.push(...(project ? ['Tap to view ', strong(project.title)] : ['Tap a storefront to view it']));
+    // Enter only works once the scene has keyboard focus; until then, offer the click.
+    else if (project && mode !== 'idle') parts.push(key('Enter'), ' or click to view ', strong(project.title));
+    else if (project) parts.push('Click to view ', strong(project.title));
+    else parts.push('Use ', key('W'), key('A'), key('S'), key('D'), ' to explore');
+    prompt.replaceChildren(...parts);
+  };
   const setControlsEnabled = (enabled: boolean): void => {
     if (enter) enter.disabled = !enabled;
     if (reset) reset.disabled = !enabled;
@@ -62,6 +91,8 @@ export function mountApplication(doc: Document): () => void {
   const showState = (state: WorldState): void => {
     if (disposed) return;
     setControlsEnabled(state === 'running');
+    running = state === 'running';
+    renderPrompt();
     if (state === 'running') {
       status.dataset.state = 'ready';
       status.textContent = 'World engine ready';
@@ -98,7 +129,9 @@ export function mountApplication(doc: Document): () => void {
     reset?.removeEventListener('click', onReset);
     speed?.removeEventListener('change', onSpeed);
     stopWatchingInput?.();
-    try { controls?.dispose(); world?.destroy(); }
+    preview?.destroy();
+    if (prompt) prompt.hidden = true;
+    try { interactions?.dispose(); controls?.dispose(); world?.destroy(); }
     finally {
       diagnostics?.destroy();
       movePad?.style.removeProperty('--stick-x');
@@ -111,15 +144,24 @@ export function mountApplication(doc: Document): () => void {
   setControlsEnabled(false);
   status.dataset.state = 'loading';
   status.textContent = 'Starting the world engine…';
-  stopWatchingInput = watchInputModality(doc, (next) => { modality = next; describeNavigation(); });
+  stopWatchingInput = watchInputModality(doc, (next) => { modality = next; describeNavigation(); renderPrompt(); });
   if (speed) speed.value = '3.2';
   try {
     if (import.meta.env.DEV) diagnostics = createWorldDiagnostics(doc);
     // Development-only: `?engine-test` mounts the lightweight engine scene so lifecycle tests of
     // the engine and controls do not pay for the district. Stripped from production builds.
-    const engineTest = import.meta.env.DEV && new URLSearchParams(win.location.search).has('engine-test');
+    const params = new URLSearchParams(win.location.search);
+    const engineTest = import.meta.env.DEV && params.has('engine-test');
+    // Development-only: `?spawn=x,z,yaw` starts elsewhere in the district (tests and visual audits).
+    const spawn = import.meta.env.DEV ? params.get('spawn')?.split(',').map(Number) : undefined;
+    const devSpawn = spawn?.length === 3 && spawn.every(Number.isFinite) ? { x: spawn[0] ?? 0, z: spawn[1] ?? 0, yaw: spawn[2] ?? 0, pitch: 0 } : undefined;
+    preview = createProjectPreview(doc, {
+      onOpen: () => { controls?.suspend(); renderPrompt(); world?.invalidate(); },
+      onClose: () => { renderPrompt(); world?.invalidate(); },
+    });
+    const activePreview = preview;
     world = createWorld(canvas, {
-      ...(engineTest ? {} : { content: createDistrict }),
+      ...(engineTest ? {} : { content: (context) => (district = createDistrict(context)) }),
       onStateChange: showState,
       onContentReady: () => { if (!disposed) canvas.dataset.content = 'ready'; },
       ...(diagnostics ? { onFrame: diagnostics.update } : {}),
@@ -127,13 +169,14 @@ export function mountApplication(doc: Document): () => void {
     const activeWorld = world;
     controls = createNavigationController(canvas, world.camera, {
       invalidate: () => activeWorld.invalidate(),
-      canNavigate: () => activeWorld.snapshot().state === 'running',
-      ...(engineTest ? {} : { config: districtNavigation() }),
+      canNavigate: () => activeWorld.snapshot().state === 'running' && !activePreview.isOpen(),
+      ...(engineTest ? {} : { config: { ...districtNavigation(), ...(devSpawn ? { spawn: devSpawn } : {}) } }),
       movePad,
       onModeChange: (next) => {
         mode = next;
         canvas.dataset.navigation = next;
         describeNavigation();
+        renderPrompt();
       },
       onStick: (x, y, held) => {
         if (!movePad) return;
@@ -143,6 +186,21 @@ export function mountApplication(doc: Document): () => void {
       },
     });
     world.addSystem(controls);
+    const activeDistrict = district;
+    if (activeDistrict) {
+      interactions = createInteractions(canvas, world.camera, {
+        targets: activeDistrict.targets,
+        invalidate: () => activeWorld.invalidate(),
+        canInteract: () => activeWorld.snapshot().state === 'running' && !activePreview.isOpen(),
+        onFocusChange: (id) => { focusedSlot = id; activeDistrict.highlight(id); renderPrompt(); },
+        onActivate: (id, source) => {
+          const project = projectForSlot(id);
+          // Keyboard visitors return to the scene; pointer visitors keep their own focus.
+          if (project) activePreview.open(project, source === 'keyboard' ? canvas : null);
+        },
+      });
+      world.addSystem(interactions);
+    }
     enter?.addEventListener('click', onEnter);
     reset?.addEventListener('click', onReset);
     speed?.addEventListener('change', onSpeed);

@@ -4,10 +4,10 @@ import type { ResourceScope } from '../runtime.ts';
 import { hazeColor, skySampleGlsl } from './environment.ts';
 import { place } from './geometry.ts';
 import type { StaticBatch } from './geometry.ts';
+import { plinthHeight, storefrontSize } from './layout.ts';
 import type { PavilionSlot } from './layout.ts';
 import type { DistrictMaterials } from './materials.ts';
 
-const plinthHeight = 0.35;
 
 /** Rounded-rectangle plan in the XZ plane (shape y = −z), extruded upward by `height`. */
 function roundedPlan(width: number, depth: number, radius: number, height: number, bevel = 0): ExtrudeGeometry {
@@ -40,6 +40,7 @@ function storefrontGlass(slot: PavilionSlot, width: number, height: number, skyM
     size: { value: new Vector2(width, height) },
     roomDepth: { value: Math.min(slot.depth * 0.7, 6) },
     hue: { value: slot.display },
+    highlight: { value: 0 },
     skyMap: { value: null },
     hazeTint: { value: hazeColor },
   }]);
@@ -66,6 +67,7 @@ function storefrontGlass(slot: PavilionSlot, width: number, height: number, skyM
       uniform vec2 size;
       uniform float roomDepth;
       uniform float hue;
+      uniform float highlight;
       varying vec3 vLocal;
       varying vec3 vCamLocal;
       varying vec3 vWorld;
@@ -97,7 +99,7 @@ function storefrontGlass(slot: PavilionSlot, width: number, height: number, skyM
           vec3 art = mix(hsv(hue, 0.65, 1.0), hsv(hue + 0.18, 0.8, 0.55), 0.5 + 0.5 * p.y);
           art += hsv(hue + 0.5, 0.4, 1.0) * smoothstep(0.55, 0.0, length(p - vec2(0.25, 0.2))) * 0.8;
           vec3 wall = vec3(0.07, 0.065, 0.06) * mix(0.55, 1.0, up);
-          room = mix(wall, art * 2.8, inside);
+          room = mix(wall, art * 1.7, inside);
         } else if (t == far.y) {
           // Dark ceiling with one warm light strip; a dim floor that fades toward the back.
           float strip = step(abs(hit.z + roomDepth * 0.35), 0.18);
@@ -112,7 +114,11 @@ function storefrontGlass(slot: PavilionSlot, width: number, height: number, skyM
         vec3 v = normalize(cameraPosition - vWorld);
         float fresnel = 0.1 + 0.9 * pow(1.0 - abs(dot(v, vNormal)), 5.0);
         vec3 reflection = sampleSky(reflect(-v, vNormal));
-        gl_FragColor = vec4(mix(room * 0.95, reflection, fresnel), 1.0);
+        vec3 color = mix(room * (0.95 + 0.5 * highlight), reflection, fresnel);
+        // Focus cue: a warm light line traces the glass edge when the storefront is targeted.
+        vec2 inset = halfSize - abs(vLocal.xy);
+        color += vec3(1.0, 0.78, 0.5) * 1.1 * highlight * exp(-min(inset.x, inset.y) / 0.03);
+        gl_FragColor = vec4(color, 1.0);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
         #include <fog_fragment>
@@ -121,13 +127,28 @@ function storefrontGlass(slot: PavilionSlot, width: number, height: number, skyM
   }));
 }
 
+/** Storefront dimensions shared by the kit, signage, and interaction targets (local frame: front = +Z). */
+export function storefrontFrame(slot: PavilionSlot) {
+  const frame = place(slot.x, 0, slot.z, slot.facing);
+  const { width: storeWidth, height: storeHeight, glassHeight, jamb, proud } = storefrontSize(slot);
+  return {
+    /** World matrix for a point in the pavilion's local frame. */
+    at: (x: number, y: number, z: number): Matrix4 => frame.clone().multiply(place(x, y, z)),
+    width: storeWidth, height: storeHeight, glassHeight, jamb, proud,
+    /** Facade plane and the frame's outer face. */
+    facade: slot.depth / 2, front: slot.depth / 2 + proud,
+    bandHeight: storeHeight - glassHeight,
+    bandCenterY: plinthHeight + glassHeight + (storeHeight - glassHeight) / 2,
+  };
+}
+
 /**
  * One pavilion from the kit. Static stone/plaster/wood/charcoal pieces go into the shared
  * batches (world space); the storefront glass is its own mesh because each implies a room.
  */
-export function buildPavilion(slot: PavilionSlot, m: DistrictMaterials, batch: StaticBatch, lights: StaticBatch, root: Group, skyMap: Texture, resources: ResourceScope): void {
-  const frame = place(slot.x, 0, slot.z, slot.facing);
-  const at = (x: number, y: number, z: number): Matrix4 => frame.clone().multiply(place(x, y, z));
+export function buildPavilion(slot: PavilionSlot, m: DistrictMaterials, batch: StaticBatch, lights: StaticBatch, root: Group, skyMap: Texture, resources: ResourceScope): ShaderMaterial {
+  const store = storefrontFrame(slot);
+  const at = store.at;
   const add = (target: StaticBatch, material: Parameters<StaticBatch['add']>[0], geometry: BufferGeometry, x = 0, y = 0, z = 0, uv = 3): void => target.add(material, geometry, at(x, y, z), uv);
   const { width: w, depth: d, height: h } = slot;
   const front = d / 2;
@@ -137,15 +158,13 @@ export function buildPavilion(slot: PavilionSlot, m: DistrictMaterials, batch: S
   const bodyRadius = slot.roof === 'disc' ? Math.min(w, d) * 0.42 : 1.4;
   add(batch, m.plaster, roundedPlan(w, d, bodyRadius, h - plinthHeight), 0, plinthHeight, 0, 4);
 
-  // Storefront frame, recessed glass, and a blank sign band (content arrives with signage).
-  const storeWidth = Math.min(w * 0.46, 6.2);
-  const storeHeight = (h - plinthHeight) * 0.8;
-  const glassHeight = storeHeight * 0.74;
-  const jamb = 0.28; const proud = 0.45;
+  // Storefront frame, recessed glass, and a sign band (lettering comes from signage.ts).
+  const { width: storeWidth, height: storeHeight, glassHeight, jamb, proud } = store;
   for (const side of [-1, 1]) batch.box(m.charcoal, jamb, storeHeight, proud + 0.3, at(side * (storeWidth / 2 + jamb / 2), plinthHeight + storeHeight / 2, front + proud / 2 - 0.15), 3);
   batch.box(m.charcoal, storeWidth + jamb * 2, storeHeight - glassHeight, proud + 0.3, at(0, plinthHeight + glassHeight + (storeHeight - glassHeight) / 2, front + proud / 2 - 0.15), 3);
   batch.box(m.charcoal, storeWidth, 0.12, proud + 0.3, at(0, plinthHeight + 0.06, front + proud / 2 - 0.15), 3);
-  const glass = new Mesh(resources.track(new PlaneGeometry(storeWidth, glassHeight - 0.12)), storefrontGlass(slot, storeWidth, glassHeight - 0.12, skyMap, resources));
+  const glassMaterial = storefrontGlass(slot, storeWidth, glassHeight - 0.12, skyMap, resources);
+  const glass = new Mesh(resources.track(new PlaneGeometry(storeWidth, glassHeight - 0.12)), glassMaterial);
   glass.applyMatrix4(at(0, plinthHeight + 0.12 + (glassHeight - 0.12) / 2, front + 0.12));
   glass.name = `storefront-${slot.id}`;
   root.add(glass);
@@ -189,4 +208,5 @@ export function buildPavilion(slot: PavilionSlot, m: DistrictMaterials, batch: S
   }
   // Canopy underside light over the storefront.
   lights.box(m.warmLight, storeWidth + 0.6, 0.04, 0.08, at(0, h - 0.04, front + 0.9));
+  return glassMaterial;
 }

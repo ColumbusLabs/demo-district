@@ -8,7 +8,7 @@ Demo District turns discovery into a place: a pedestrian exhibition district wit
 
 **World passes 1–3: the walkable plaza.** See [the checkpoint and side-by-side with the mockup](docs/PASSES_01-03.md).
 
-The preview is now the Demo District plaza itself: golden-hour sky and lighting, stone boulevard and water channels, eight pavilions from a reusable kit with lit storefront interiors, the arch-and-orb landmark over a fountain, trees and planting, a lake, and mountains. You walk it with WASD and mouse on desktop, or drag and the stick on a phone, and you collide with everything solid. Storefronts are not yet linked to real projects; signage, interaction, search, and the HUD come next. Desktop browsers are the primary target; phones and software-rendered browsers get lighter automatic quality tiers. Native ChatGPT Sites acceptance and physical-device testing remain pending. Nothing has been merged or deployed.
+The preview is now the Demo District plaza itself: golden-hour sky and lighting, stone boulevard and water channels, eight pavilions from a reusable kit with lit storefront interiors, the arch-and-orb landmark over a fountain, trees and planting, a lake, and mountains. You walk it with WASD and mouse on desktop, or drag and the stick on a phone, and you collide with everything solid. Storefronts carry signage and open a project preview by click, tap, or Enter; the listings are clearly marked samples until real project records exist ([pass 4](docs/PASS_04.md)). The mockup's HUD, search, and map come next. Desktop browsers are the primary target; phones and software-rendered browsers get lighter automatic quality tiers. Native ChatGPT Sites acceptance and physical-device testing remain pending. Nothing has been merged or deployed.
 
 ![Current spawn view](docs/art/pass-03-spawn.jpg)
 
@@ -54,7 +54,7 @@ Walking is optional. Search, a map, and direct navigation will provide faster wa
 
 ## Roadmap and implementation
 
-[The detailed implementation plan](docs/IMPLEMENTATION_PLAN.md) contains 48 bounded slices; world slices 5–22 now run as seven passes. Execution evidence: [Slice 1](docs/SLICE_01.md), [Slice 2](docs/SLICE_02.md), [Slice 3](docs/SLICE_03.md), [Slice 4](docs/SLICE_04.md), and [passes 1–3](docs/PASSES_01-03.md). Next: **Pass 4 — signage, interaction targeting, and the project preview overlay.**
+[The detailed implementation plan](docs/IMPLEMENTATION_PLAN.md) contains 48 bounded slices; world slices 5–22 now run as seven passes. Execution evidence: [Slice 1](docs/SLICE_01.md), [Slice 2](docs/SLICE_02.md), [Slice 3](docs/SLICE_03.md), [Slice 4](docs/SLICE_04.md), [passes 1–3](docs/PASSES_01-03.md), and [pass 4](docs/PASS_04.md). Next: **Pass 5 — the mockup HUD, search, map, and loading.**
 
 The build proceeds through engine/navigation, district construction, World Alpha, persisted project discovery, ratings/authentication, submissions/moderation, creator claims, and release checks. Work stays on `build/demo-district-v1`. Each requested slice ends at its defined boundary with checks and a checkpoint; merge and deployment require separate approval.
 
