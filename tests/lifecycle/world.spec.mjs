@@ -195,3 +195,29 @@ test('repeated application re-entry retains one canvas, one HUD, and one loop', 
   await expect(page.locator('[data-world-diagnostics]')).toHaveCount(0);
   expect(errors).toEqual([]);
 });
+
+test('content that opts out of decorative motion renders on demand and never idles a loop', async ({ page }) => {
+  await instrument(page);
+  await page.goto('/?engine-test');
+  await expect(page.locator('#runtime-status')).toHaveAttribute('data-state', 'ready');
+  const result = await page.evaluate(async () => {
+    const load = (path) => import(path);
+    (await load('/src/app/bootstrap.ts')).mountApplication(document)();
+    const old = document.querySelector('#world-canvas'); const canvas = old.cloneNode(false); old.replaceWith(canvas);
+    const { createWorld } = await load('/src/world/World.ts');
+    const { createTestScene } = await load('/src/world/test-scene.ts');
+    let updates = 0;
+    const world = createWorld(canvas, { content: (context) => ({ ...createTestScene(context), update: () => { updates++; }, animated: false }) });
+    world.start();
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const idle = { loop: world.snapshot().loopActive, frames: world.snapshot().frames, pending: window.__ddPendingFrames };
+    world.invalidate();
+    const after = world.snapshot().frames;
+    world.destroy();
+    return { idle, after, updates };
+  });
+  expect(result.idle.loop).toBe(false);
+  expect(result.idle.pending).toBe(0);
+  expect(result.after).toBe(result.idle.frames + 1);
+  expect(result.updates).toBe(0);
+});

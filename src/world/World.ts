@@ -26,6 +26,11 @@ export interface WorldContent {
   pixelBudget?: number;
   /** Rendering tier chosen by the content, reported in snapshots. */
   quality?: string;
+  /**
+   * False when decorative motion should never run (e.g. software rendering): the world then
+   * renders on demand exactly as under reduced motion. Defaults to true.
+   */
+  animated?: boolean;
 }
 export type ContentFactory = (context: ContentContext) => WorldContent;
 
@@ -164,13 +169,15 @@ export function createWorld(canvas: HTMLCanvasElement, options: WorldOptions = {
       }
     };
     const needsInteractionFrame = (): boolean => [...systems].some((system) => system.needsFrame());
+    // Decoration animates only when the visitor allows motion and the content can afford it.
+    const decorative = (): boolean => !reducedMotion.matches && fixture.animated !== false;
     const render = (time: number, advance: boolean): void => {
       if (destroyed || failed || contextLost || !drawable || doc.hidden || !requested) return;
       try {
         const tick = advance ? clock.tick(time) : { delta: 0, elapsed: elapsedSeconds };
         lastDeltaSeconds = tick.delta;
         elapsedSeconds = tick.elapsed;
-        if (advance && !reducedMotion.matches) fixture.update(tick.delta, tick.elapsed);
+        if (advance && decorative()) fixture.update(tick.delta, tick.elapsed);
         for (const system of systems) system.update(tick.delta);
         // Multi-pass content resets stats per pass; count the whole frame instead.
         activeRenderer.info.reset();
@@ -187,7 +194,7 @@ export function createWorld(canvas: HTMLCanvasElement, options: WorldOptions = {
     const frame = (time: number): void => {
       render(time, true);
       // User-directed movement still works with reduced motion; idle decoration does not animate.
-      if (reducedMotion.matches && !needsInteractionFrame()) { pauseLoop(); report(time, true); }
+      if (!decorative() && !needsInteractionFrame()) { pauseLoop(); report(time, true); }
     };
     const reconcile = (redraw = false): void => {
       if (destroyed) return;
@@ -199,7 +206,7 @@ export function createWorld(canvas: HTMLCanvasElement, options: WorldOptions = {
         return;
       }
       const resumed = state !== 'running';
-      if (reducedMotion.matches && !needsInteractionFrame()) {
+      if (!decorative() && !needsInteractionFrame()) {
         pauseLoop();
         setState('running');
         if (redraw || resumed) render(win.performance.now(), false);

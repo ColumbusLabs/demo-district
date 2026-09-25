@@ -70,6 +70,7 @@ export function createDistrict({ resources, renderer, camera, invalidate }: Cont
     ...(post ? { render: post.render, resize: post.resize } : {}),
     pixelBudget: quality.pixelBudget,
     quality: quality.tier,
+    animated: quality.animated,
     ready: Promise.all([env.ready, m.ready]).then(() => { refresh(); }),
   };
 }

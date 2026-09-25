@@ -13,15 +13,18 @@ export interface QualitySettings {
   pixelBudget: number;
   /** Trees outside the walkable district (groves, lakeside, behind spawn). */
   outerTrees: boolean;
+  /** Decorative motion (water, wind, fountain, orb). Off renders only on demand. */
+  animated: boolean;
 }
 
 const tiers: Record<QualityTier, QualitySettings> = {
-  high: { tier: 'high', shadows: true, shadowMapSize: 4096, post: true, samples: 4, pixelBudget: 3_686_400, outerTrees: true },
+  high: { tier: 'high', shadows: true, shadowMapSize: 4096, post: true, samples: 4, pixelBudget: 3_686_400, outerTrees: true, animated: true },
   // Phones and tablets: same world, smaller shadow map and buffer. Unmeasured on devices until
   // the performance slice; a starting point, not a verified budget.
-  medium: { tier: 'medium', shadows: true, shadowMapSize: 2048, post: true, samples: 0, pixelBudget: 1_600_000, outerTrees: true },
-  // Software rasterizers (SwiftShader, llvmpipe) manage single-digit FPS at full detail.
-  low: { tier: 'low', shadows: false, shadowMapSize: 1024, post: false, samples: 0, pixelBudget: 420_000, outerTrees: false },
+  medium: { tier: 'medium', shadows: true, shadowMapSize: 2048, post: true, samples: 0, pixelBudget: 1_600_000, outerTrees: true, animated: true },
+  // Software rasterizers (SwiftShader, llvmpipe) manage single-digit FPS at full detail, so the
+  // low tier also holds decoration still and renders only when the visitor moves.
+  low: { tier: 'low', shadows: false, shadowMapSize: 1024, post: false, samples: 0, pixelBudget: 420_000, outerTrees: false, animated: false },
 };
 
 /**
