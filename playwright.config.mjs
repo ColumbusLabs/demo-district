@@ -20,7 +20,9 @@ export default defineConfig({
   },
   projects: [
     { name: 'desktop-chromium', use: { browserName: 'chromium', viewport: { width: 1440, height: 900 } } },
-    { name: 'phone-viewport-chromium', use: { browserName: 'chromium', viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 3 } },
+    // Phone runs only what is phone- or touch-specific; modality-agnostic specs run on desktop.
+    // Each district load costs ~10 s under CI's software rendering and the job has 15 minutes.
+    { name: 'phone-viewport-chromium', testMatch: /(touch|scaffold)\.spec\./, use: { browserName: 'chromium', viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 3 } },
   ],
   webServer: {
     command: 'npm run build && npm run preview',

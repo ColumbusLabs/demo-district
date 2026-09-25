@@ -10,7 +10,7 @@ The user's constraint is to never run paid Actions for Demo District.
 - Read-only token; checkout does not persist credentials.
 - setup-node automatic package-manager caching is explicitly false; no explicit caches.
 - No upload-artifact, GitHub Packages publishing, image snapshots, or remote evidence storage. Playwright generates temporary files only on the ephemeral runner. Test counts remain in logs and job summaries.
-- Concurrency cancels superseded checks; timeout is 15 minutes.
+- Concurrency cancels superseded checks; timeout is 15 minutes. Browser suites must fit: under software rendering every district load costs about 10 s, so the phone project runs only phone- and touch-specific specs (see the Playwright configs). Raising the timeout is a policy change that needs the owner's approval.
 
 The workflow is authored in JSON syntax, a YAML subset, to allow a dependency-free fail-closed policy validator. Do not convert it to arbitrary YAML without preserving equivalent validation. `node scripts/check-ci-policy.mjs` checks the complete workflow inventory, job condition, fixed runner, pinned allowed actions, disabled caching, read-only permissions, and approved commands. Negative tests cover common paid-runner/storage regressions. Run this validator before pushing, not only after CI starts.
 

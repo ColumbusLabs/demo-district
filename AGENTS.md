@@ -46,6 +46,7 @@ Read `docs/IMPLEMENTATION_PLAN.md` (including section 8a, world passes), the lat
 - Use Node 26 (pinned in `.nvmrc`; Node 24 remains supported), `npm ci`, and `npm run verify`.
 - Browser checks: `npx --no-install playwright install chromium`, `npm run test:browser`, `npm run test:lifecycle`.
 - Lifecycle tests exercise real HMR and restore their temporary source edit. Run them serially.
+- The whole CI job must finish within its 15-minute limit. Keep modality-agnostic specs on the desktop project only, and keep tests that switch tiers on small viewports.
 - For visual work, compare renders against `docs/art/plaza-mockup.jpg` on a real GPU (headless Chromium with `--use-angle=metal` on macOS works) and record views in the checkpoint.
 - Phone-sized Chromium, including CDP touch emulation, is not physical iPhone/Safari testing or a performance benchmark.
 - Native Sites acceptance remains pending until a real saved version is validated. A static build is not proof.

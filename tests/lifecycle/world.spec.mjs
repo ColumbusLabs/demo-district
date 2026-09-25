@@ -175,6 +175,7 @@ test('repeated application re-entry retains one canvas, one HUD, and one loop', 
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
   // The full district under software rendering: fewer cycles, each given time to build.
+  test.skip(test.info().project.use.hasTouch, 'App re-entry is modality-agnostic; desktop covers it.');
   test.setTimeout(120_000);
   await page.goto('/');
   for (let i = 0; i < 5; i++) {
