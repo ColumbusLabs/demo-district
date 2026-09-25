@@ -8,6 +8,7 @@ Nothing here runs in CI or the app bundle.
 | Script | Output | What it makes |
 | --- | --- | --- |
 | `trees.py` | `public/world/models/trees.glb` | Three upright street trees and the leaning framing tree, each at two levels of detail, with a generated leaf-spray atlas and bark texture. |
+| `shrubs.py` | `public/world/models/shrubs.glb` | Three mounded planter shrubs (boxwood-like, glossy, and flowering) sharing a generated leaf-spray atlas. Used around the landmark's footings. |
 | `landmark.py` | `public/world/models/landmark.glb` | The landmark's sculpture: a lancet main arch with a nested inner crown and recessed web, and two crescent wings, as one mesh. The orb, fountain, and footings stay in code. |
 
 ## Setup
@@ -55,9 +56,13 @@ file fails to load, the district falls back to its procedural trees.
 
 If you change `SPAN`, `SPRING`, `LANCET`, or the `WING_*` constants (the `INNER_*` ones touch no footings), update `district.landmark` in `layout.ts` to the printed footings. The unit test fails until the two agree.
 
+### Shrubs
+
+`src/world/district/landscape.ts` loads `shrubs.glb` and expects meshes `shrub_box`, `shrub_glossy`, and `shrub_bloom` with the `shrub_leaves` material: alpha-masked, with `COLOR_0` occlusion and outward normals, base at y = 0, about 1.2 m tall at scale 1. Placements come from `landmarkPlanters()` in `layout.ts`. If the file fails, the procedural leaf-card mound stands in.
+
 ## Budgets
 
-The landmark is ~12.7k triangles in one draw call. For trees, LOD0 is used for the 28 trees in planters and on the terrace (≈1.5k triangles, 2k for the
+The landmark is ~12.7k triangles in one draw call. Shrubs are ~180–190 triangles each; 46 fill the four landmark planters. For trees, LOD0 is used for the 28 trees in planters and on the terrace (≈1.5k triangles, 2k for the
 framing tree); LOD1 for up to 100 grove and street trees (≈390 triangles). Keep spawn under
 the 150k-triangle and 120-draw budgets in `docs/PERFORMANCE_BUDGET.md`, and re-measure with
 `node scripts/measure.mjs` after any change to counts.

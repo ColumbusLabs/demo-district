@@ -27,6 +27,23 @@ test('the Blender landmark model matches the layout footings the navigation bloc
   }
 });
 
+test('the Blender shrub model provides every planter shrub kind', () => {
+  const gltf = glbJson(new URL('../../public/world/models/shrubs.glb', import.meta.url));
+  const names = new Set(gltf.nodes.map((node) => node.name));
+  for (const kind of ['shrub_box', 'shrub_glossy', 'shrub_bloom']) assert.ok(names.has(kind), kind);
+  assert.equal(gltf.materials.find((m) => m.name === 'shrub_leaves')?.alphaMode, 'MASK');
+});
+
+test('the landmark planters clear the fountain foam and the basin rim', async () => {
+  const { landmarkPlanters } = await import('../../src/world/district/layout.ts');
+  const { fountain } = district;
+  for (const p of landmarkPlanters()) {
+    const d = Math.hypot(p.x - fountain.x, p.z - fountain.z);
+    if (p.inBasin) assert.ok(d - p.radius > 2.95 && d + p.radius < fountain.radius - 0.7, `basin planter at ${p.x}, ${p.z}`);
+    else assert.ok(d - p.radius >= fountain.radius, `plaza planter at ${p.x}, ${p.z} overlaps the basin rim`);
+  }
+});
+
 test('the Blender tree models provide both levels of detail for every kind', () => {
   const gltf = glbJson(new URL('../../public/world/models/trees.glb', import.meta.url));
   const names = new Set(gltf.nodes.map((node) => node.name));

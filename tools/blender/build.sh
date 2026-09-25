@@ -7,7 +7,7 @@
 # and Node for the meshopt compression step.
 set -euo pipefail
 cd "$(dirname "$0")/../.."
-models=("$@"); [ ${#models[@]} -eq 0 ] && models=(trees landmark)
+models=("$@"); [ ${#models[@]} -eq 0 ] && models=(trees landmark shrubs)
 mkdir -p public/world/models
 for model in "${models[@]}"; do
   python3 "tools/blender/${model}.py" --out "tools/blender/build/${model}.raw.glb" ${PREVIEW:+--preview "$PREVIEW"}

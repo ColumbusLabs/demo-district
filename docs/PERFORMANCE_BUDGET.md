@@ -77,8 +77,8 @@ It renders four fixed views synchronously, forcing GPU completion with a 1-pixel
 | --- | --- | --- |
 | High tier, desktop 1440×900, reference GPU (M5), median | ≤ 6 ms (≥ 2.5× headroom under 16.7 ms) | 2.7 ms |
 | High tier, DPR 2, reference GPU, median | ≤ 8 ms | 5.0 ms |
-| Draw calls at spawn | ≤ 120 | 93 (Blender trees and landmark, bell fountain; SwiftShader count) |
-| Triangles in view | ≤ 150k | 141k at spawn (Blender trees and landmark, bell fountain; SwiftShader count) |
+| Draw calls at spawn | ≤ 120 | 96 (Blender trees, landmark, and statue shrubs; bell fountain; SwiftShader count) |
+| Triangles in view | ≤ 150k | 149.9k at spawn: at budget (Blender trees, landmark, and statue shrubs; bell fountain; SwiftShader count) |
 | Initial transfer | ≤ 5 MB | 2.27 MB |
 | Local assets ready (broadband) | ≤ 2 s | about 0.5 s |
 | JS bundle (uncompressed) | ≤ 750 kB | 717 kB main + 71 kB lazy glTF loader |
@@ -103,6 +103,8 @@ Frame time on the reference GPU is not yet re-measured.
 The GLB adds 84 kB of transfer.
 
 **Bell fountain (2026-09-25).** The ring of 14 jet meshes is replaced by one bell, inner sheet, jet, and foam (see [FOUNTAIN.md](FOUNTAIN.md)). Spawn: 104 → 93 draws, 140.1k → 140.5k triangles.
+
+**Statue shrubs (2026-09-25).** Planters with 46 Blender shrubs around the landmark footings (see [STATUE_PLANTING.md](STATUE_PLANTING.md)). Spawn: 93 → 96 draws, 140.5k → 149.9k triangles. **Spawn is at the triangle budget**: offset anything new in view.
 
 ## Quality tiers
 

@@ -15,6 +15,7 @@ project media is stored here.
 | `textures/red_oak_veneer_*.webp` | Red Oak Veneer | Jenelle van Heerden | https://polyhaven.com/a/red_oak_veneer | 1k set; roughness at half size; WebP. |
 
 | `models/landmark.glb` | Landmark sculpture (lancet arch with nested inner crown, crescent wings) | Demo District (generated) | `tools/blender/landmark.py` | Original work generated from code after the approved mockup's silhouette; built with Blender 5.0 (`bpy`) and meshopt-compressed with glTF Transform. |
+| `models/shrubs.glb` | Planter shrubs (boxwood-like, glossy, and flowering mounds; leaf-spray atlas) | Demo District (generated) | `tools/blender/shrubs.py` | Original work generated from code with fixed seeds; built with Blender 5.0 (`bpy`) and meshopt-compressed with glTF Transform. |
 | `models/trees.glb` | District trees (4 species × 2 LODs, leaf-spray atlas, bark texture) | Demo District (generated) | `tools/blender/trees.py` | Original work generated from code with fixed seeds; no external inputs. Built with Blender 5.0 (`bpy`) and meshopt-compressed with glTF Transform. |
 
 Procedural textures (leaf clusters, hedges, lawn, grass tufts, city facades) are generated in the browser

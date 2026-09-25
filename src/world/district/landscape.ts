@@ -1,13 +1,13 @@
 import {
-  BufferAttribute, BufferGeometry, CylinderGeometry, DoubleSide, IcosahedronGeometry, InstancedMesh, Matrix4,
-  MeshStandardMaterial, PlaneGeometry, Quaternion, Vector3,
+  BufferAttribute, BufferGeometry, CircleGeometry, CylinderGeometry, DoubleSide, IcosahedronGeometry, InstancedMesh, Matrix4,
+  MeshStandardMaterial, PlaneGeometry, Quaternion, RingGeometry, Vector3,
 } from 'three';
 import type { Group, Material, Mesh, Texture } from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { ResourceScope } from '../runtime.ts';
 import { place } from './geometry.ts';
 import type { StaticBatch } from './geometry.ts';
-import { district } from './layout.ts';
+import { district, landmarkPlanters } from './layout.ts';
 import type { Rect } from './layout.ts';
 import { random } from './materials.ts';
 import type { DistrictMaterials } from './materials.ts';
@@ -111,6 +111,23 @@ function loadTrees(resources: ResourceScope, disposed: () => boolean): Promise<T
       return null;
     }
     return { near, far, barkMap: resources.track(barkMap), leafMap: resources.track(leafMap) };
+  });
+}
+
+/** Planter shrubs modelled in Blender (tools/blender/shrubs.py). */
+const shrubKinds = ['shrub_box', 'shrub_glossy', 'shrub_bloom'] as const;
+
+/** Loads public/world/models/shrubs.glb as one geometry per kind plus the leaf atlas. */
+function loadShrubs(resources: ResourceScope, disposed: () => boolean): Promise<{ kinds: BufferGeometry[]; map: Texture } | null> {
+  return loadModel('shrubs.glb').then((gltf) => {
+    if (!gltf) return null;
+    const meshes = meshesOf(gltf.scene);
+    const kinds = disposed() ? [] : shrubKinds.map((kind) => meshes.find((mesh) => mesh.name === kind || mesh.parent?.name === kind));
+    const map = (meshes[0]?.material as MeshStandardMaterial | undefined)?.map ?? null;
+    const geometries = kinds.every((mesh) => mesh) ? kinds.map((mesh) => bake(mesh as Mesh)) : null;
+    disposeModel(gltf.scene, new Set([map]));
+    if (!geometries || !map || disposed()) { for (const g of geometries ?? []) g.dispose(); map?.dispose(); return null; }
+    return { kinds: geometries, map: resources.track(map) };
   });
 }
 
@@ -281,10 +298,45 @@ export function buildLandscape(root: Group, m: DistrictMaterials, batch: StaticB
   if (tuft) instanced(root, tuft, m.grass, grass, resources, 'grass', false);
   rocks.forEach((list, i) => instanced(root, boulder(31 + i * 17), m.rock, list, resources, `boulders-${i}`));
 
+  // Landmark planters: a stone drum around each footing, packed with mounded shrubs that hide
+  // where the legs meet the ground. Islands in the fountain basin; raised beds on the plaza.
+  const statueShrubs: Matrix4[][] = shrubKinds.map(() => []);
+  for (const planter of landmarkPlanters()) {
+    const floor = planter.inBasin ? -0.2 : 0;
+    const top = planter.inBasin ? 0.75 : 0.55;
+    const wall = new CylinderGeometry(planter.radius, planter.radius, top - floor, 48, 1, true);
+    batch.add(m.stone, wall, place(planter.x, (top + floor) / 2, planter.z), 1.5);
+    batch.add(m.stone, new RingGeometry(planter.radius - 0.22, planter.radius, 48).rotateX(-Math.PI / 2), place(planter.x, top, planter.z), 1.5);
+    batch.add(m.soil, new CircleGeometry(planter.radius - 0.22, 36).rotateX(-Math.PI / 2), place(planter.x, top - 0.08, planter.z), 1.2);
+    // A tight ring hugging the leg, then a lower ring spilling toward the rim.
+    const leg = planter.radius - 0.6;
+    const inner = Math.round(leg * 6); const outer = Math.round(planter.radius * 2.6);
+    for (let i = 0; i < inner + outer; i++) {
+      const ring = i < inner;
+      const a = ((ring ? i / inner : (i - inner) / outer) + (ring ? 0 : 0.5 / outer)) * Math.PI * 2 + rand() * 0.3;
+      const reach = ring ? leg + 0.15 : planter.radius - 0.45;
+      const scale = ring ? 1.05 + rand() * 0.25 : 0.7 + rand() * 0.2;
+      statueShrubs[i % 3 === 2 ? 2 : Math.floor(rand() * 2)]?.push(place(planter.x + Math.cos(a) * reach, top - 0.1, planter.z + Math.sin(a) * reach, rand() * 6, scale));
+    }
+  }
+  const plantShrubs = (models: { kinds: BufferGeometry[]; map: Texture } | null): void => {
+    if (disposed()) return;
+    if (!models) {
+      // Fallback: the procedural leaf-card mound used for the other shrubs.
+      instanced(root, canopy(new Vector3(0, 0.55, 0), new Vector3(0.75, 0.6, 0.75), 22, 0.75, random(9)), m.foliage, statueShrubs.flat(), resources, 'statue-shrubs');
+      return;
+    }
+    const leaves = resources.track(new MeshStandardMaterial({ map: models.map, vertexColors: true, roughness: 0.75, alphaTest: 0.5, side: DoubleSide }));
+    models.kinds.forEach((geometry, i) => {
+      if (statueShrubs[i]?.length) instanced(root, geometry, leaves, statueShrubs[i] ?? [], resources, `statue-shrubs-${i}`);
+      else geometry.dispose();
+    });
+  };
+
   // Benches: stone blocks with a warm wood top.
   for (const b of district.benches) {
     batch.box(m.stone, 0.62, 0.4, 2.4, place(b.x, 0.2, b.z), 1.5);
     batch.box(m.wood, 0.66, 0.07, 2.44, place(b.x, 0.435, b.z), 1);
   }
-  return loadTrees(resources, disposed).then(plantTrees);
+  return Promise.all([loadTrees(resources, disposed).then(plantTrees), loadShrubs(resources, disposed).then(plantShrubs)]).then(() => undefined);
 }

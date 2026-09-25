@@ -124,6 +124,19 @@ export function landmarkFootings(): Circle[] {
   ]);
 }
 
+/**
+ * Round stone planters around each landmark footing, planted with shrubs that bury the base of
+ * the legs (as in the mockup). The main legs stand in the fountain basin, so theirs are islands;
+ * the wing feet's stand on the plaza. Sized to clear the bell fountain's foam and the basin rim.
+ */
+export function landmarkPlanters(): (Circle & { inBasin: boolean })[] {
+  const { fountain } = district;
+  return landmarkFootings().map((f) => {
+    const inBasin = Math.hypot(f.x - fountain.x, f.z - fountain.z) < fountain.radius;
+    return { x: f.x, z: f.z, radius: f.radius + 0.6, inBasin };
+  });
+}
+
 const rectBlocker = (r: Rect): Blocker => ({
   x: (r.minX + r.maxX) / 2, z: (r.minZ + r.maxZ) / 2, halfWidth: (r.maxX - r.minX) / 2, halfDepth: (r.maxZ - r.minZ) / 2,
 });
@@ -144,7 +157,7 @@ export function districtBlockers(): Blocker[] {
   for (const banner of district.banners) blockers.push({ x: banner.x, z: banner.z, radius: 0.35 });
   for (const bollard of district.bollards) blockers.push({ x: bollard.x, z: bollard.z, radius: 0.25 });
   blockers.push({ x: district.fountain.x, z: district.fountain.z, radius: district.fountain.radius + 0.4 });
-  for (const leg of landmarkFootings()) blockers.push({ ...leg, radius: leg.radius + 0.15 });
+  for (const planter of landmarkPlanters()) blockers.push({ x: planter.x, z: planter.z, radius: planter.radius + 0.1 });
   return blockers;
 }
 
