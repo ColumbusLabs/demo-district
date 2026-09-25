@@ -57,7 +57,7 @@ Without the nested inner arch (first landmark commit), spawn was 135.9k. The inn
 | Lifecycle | 53 passed, 9 skipped by design. |
 | Browser | 23 passed. The same five container-specific specs fail as on the untouched base (see [TREES_BLENDER.md](TREES_BLENDER.md)). The HUD menu spec also failed once: loading exceeded its 5 s wait under parallel workers. Production time-to-ready (6 runs, SwiftShader) was 2.9–3.2 s against the base's 2.7–2.9 s. `models.ts` now fetches each GLB in parallel with the loader chunk, which brings the median to 3.0 s against 2.9 s. HUD and district specs then passed 18/18 with `--repeat-each=3`. |
 | Visual | Spawn and plaza views on SwiftShader at the high tier, compared with the mockup crop above (re-shot with the nested inner arch). |
-| Nested inner arch | `npm test` 68 passed; build and artifact check passed; HUD and district browser specs rerun (see the handoff). |
+| Nested inner arch | `npm run verify` passed (68 unit tests). HUD and district specs: one single-run failure on the same 5 s load wait, then 18/18 with `--repeat-each=3`. HUD spec ×6: 30/30 on this branch and 30/30 on the untouched base. |
 
 ## Not done / next
 
