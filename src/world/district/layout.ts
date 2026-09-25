@@ -125,9 +125,10 @@ export function landmarkFootings(): Circle[] {
 }
 
 /**
- * Round stone planters around each landmark footing, planted with shrubs that bury the base of
- * the legs (as in the mockup). The main legs stand in the fountain basin, so theirs are islands;
- * the wing feet's stand on the plaza. Sized to clear the bell fountain's foam and the basin rim.
+ * Round shrub beds around each landmark footing, planted so the base of the legs is buried (as in
+ * the mockup). The main legs stand in the fountain basin, so theirs are islands whose wall stays
+ * under the waterline; the wing feet's are flush with the plaza. Sized to clear the bell
+ * fountain's foam and the basin rim; shrubs overhang the bed by about half a meter.
  */
 export function landmarkPlanters(): (Circle & { inBasin: boolean })[] {
   const { fountain } = district;
@@ -157,7 +158,8 @@ export function districtBlockers(): Blocker[] {
   for (const banner of district.banners) blockers.push({ x: banner.x, z: banner.z, radius: 0.35 });
   for (const bollard of district.bollards) blockers.push({ x: bollard.x, z: bollard.z, radius: 0.25 });
   blockers.push({ x: district.fountain.x, z: district.fountain.z, radius: district.fountain.radius + 0.4 });
-  for (const planter of landmarkPlanters()) blockers.push({ x: planter.x, z: planter.z, radius: planter.radius + 0.1 });
+  // Shrubs overhang their bed by about half a meter.
+  for (const planter of landmarkPlanters()) blockers.push({ x: planter.x, z: planter.z, radius: planter.radius + 0.5 });
   return blockers;
 }
 

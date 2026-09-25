@@ -1,6 +1,6 @@
 import {
   BufferAttribute, BufferGeometry, CircleGeometry, CylinderGeometry, DoubleSide, IcosahedronGeometry, InstancedMesh, Matrix4,
-  MeshStandardMaterial, PlaneGeometry, Quaternion, RingGeometry, Vector3,
+  MeshStandardMaterial, PlaneGeometry, Quaternion, Vector3,
 } from 'three';
 import type { Group, Material, Mesh, Texture } from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -298,25 +298,27 @@ export function buildLandscape(root: Group, m: DistrictMaterials, batch: StaticB
   if (tuft) instanced(root, tuft, m.grass, grass, resources, 'grass', false);
   rocks.forEach((list, i) => instanced(root, boulder(31 + i * 17), m.rock, list, resources, `boulders-${i}`));
 
-  // Landmark planters: a stone drum around each footing, packed with mounded shrubs that hide
-  // where the legs meet the ground. Islands in the fountain basin; raised beds on the plaza.
+  // Landmark planters: soil beds around each footing, packed with mounded shrubs that hide where
+  // the legs meet the ground. No stone shows: in the fountain basin the bed's wall stops just under
+  // the waterline so the shrubs rise straight out of the water; on the plaza the bed is flush with
+  // the paving. The outer ring overhangs the bed's edge so foliage reaches all the way down.
   const statueShrubs: Matrix4[][] = shrubKinds.map(() => []);
+  const waterline = 0.36;
   for (const planter of landmarkPlanters()) {
-    const floor = planter.inBasin ? -0.2 : 0;
-    const top = planter.inBasin ? 0.75 : 0.55;
-    const wall = new CylinderGeometry(planter.radius, planter.radius, top - floor, 48, 1, true);
-    batch.add(m.stone, wall, place(planter.x, (top + floor) / 2, planter.z), 1.5);
-    batch.add(m.stone, new RingGeometry(planter.radius - 0.22, planter.radius, 48).rotateX(-Math.PI / 2), place(planter.x, top, planter.z), 1.5);
-    batch.add(m.soil, new CircleGeometry(planter.radius - 0.22, 36).rotateX(-Math.PI / 2), place(planter.x, top - 0.08, planter.z), 1.2);
-    // A tight ring hugging the leg, then a lower ring spilling toward the rim.
+    const soil = planter.inBasin ? waterline + 0.01 : 0.012;
+    if (planter.inBasin) {
+      batch.add(m.stone, new CylinderGeometry(planter.radius, planter.radius, waterline - 0.02 + 0.2, 48, 1, true), place(planter.x, (waterline - 0.02 - 0.2) / 2, planter.z), 1.5);
+    }
+    batch.add(m.soil, new CircleGeometry(planter.radius, 36).rotateX(-Math.PI / 2), place(planter.x, soil, planter.z), 1.2);
+    // A tight ring of large shrubs hugging the leg, then a ring overhanging the bed's edge.
     const leg = planter.radius - 0.6;
     const inner = Math.round(leg * 6); const outer = Math.round(planter.radius * 2.6);
     for (let i = 0; i < inner + outer; i++) {
       const ring = i < inner;
       const a = ((ring ? i / inner : (i - inner) / outer) + (ring ? 0 : 0.5 / outer)) * Math.PI * 2 + rand() * 0.3;
-      const reach = ring ? leg + 0.15 : planter.radius - 0.45;
-      const scale = ring ? 1.05 + rand() * 0.25 : 0.7 + rand() * 0.2;
-      statueShrubs[i % 3 === 2 ? 2 : Math.floor(rand() * 2)]?.push(place(planter.x + Math.cos(a) * reach, top - 0.1, planter.z + Math.sin(a) * reach, rand() * 6, scale));
+      const reach = ring ? leg + 0.15 : planter.radius - (planter.inBasin ? 0.35 : 0.2);
+      const scale = ring ? 1.1 + rand() * 0.25 : 0.9 + rand() * 0.2;
+      statueShrubs[i % 3 === 2 ? 2 : Math.floor(rand() * 2)]?.push(place(planter.x + Math.cos(a) * reach, soil - 0.05, planter.z + Math.sin(a) * reach, rand() * 6, scale));
     }
   }
   const plantShrubs = (models: { kinds: BufferGeometry[]; map: Texture } | null): void => {
