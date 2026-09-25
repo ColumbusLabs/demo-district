@@ -19,7 +19,7 @@ On 2026-09-24 the user set **desktop browser as the primary target** (mobile sec
 - **Pass 2 — architecture and landmark** (slices 7, 8, 12): parametric pavilion kit with three roof families, storefront frames, wood accents, soffit lighting, interior-mapped storefront glass; the arch-and-orb landmark over the fountain.
 - **Pass 3 — life and atmosphere** (slices 9, 11): procedural trees, shrubs, grasses, boulders, benches, planters, wind sway; shader water with Fresnel sky reflection, bank shading, LED spill, and a fountain.
 
-An early baseline of slice 20 was needed to keep software-rendered browsers (and CI) usable: automatic high/medium/low tiers. **Pass 4 (signage, targeting, preview) is also done: see [PASS_04.md](PASS_04.md).** **Pass 5 (HUD, search, map, loading) is done: see [PASS_05.md](PASS_05.md).** **Pass 6 (measurement, optimization, quality presets) is done: see [PASS_06.md](PASS_06.md) and [PERFORMANCE_BUDGET.md](PERFORMANCE_BUDGET.md).** Next: **Pass 7 — WORLD ALPHA audit.** Native Sites acceptance and physical-device testing remain pending. No merge or deployment is authorized.
+An early baseline of slice 20 was needed to keep software-rendered browsers (and CI) usable: automatic high/medium/low tiers. **Pass 4 (signage, targeting, preview) is also done: see [PASS_04.md](PASS_04.md).** **Pass 5 (HUD, search, map, loading) is done: see [PASS_05.md](PASS_05.md).** **Pass 6 (measurement, optimization, quality presets) is done: see [PASS_06.md](PASS_06.md) and [PERFORMANCE_BUDGET.md](PERFORMANCE_BUDGET.md).** **Pass 7 (WORLD ALPHA audit) is done: see [WORLD_ALPHA_AUDIT.md](WORLD_ALPHA_AUDIT.md). It recommends declaring WORLD ALPHA for the desktop browser preview; backend slices (23+) stay locked until the owner decides.** Native Sites acceptance and physical-device testing remain pending. No merge or deployment is authorized.
 <!-- /passes-01-03-status -->
 
 <!-- slice-04-status -->
@@ -747,6 +747,7 @@ Each slice must end with:
 
 ### Slice 22 — World visual audit checkpoint
 **Model:** GPT-6 Astra Pro
+**Status:** Audit complete in world pass 7 ([WORLD_ALPHA_AUDIT.md](WORLD_ALPHA_AUDIT.md)); gate items met with evidence; owner decision pending.
 
 **Goal:** Stop feature growth and decide whether the district itself is compelling enough to justify the platform around it.
 
@@ -1268,7 +1269,7 @@ each end with tests, a checkpoint, and a side-by-side comparison against the moc
 | 4. Interaction | 13, 14, 15 | Signage, targeting, preview overlay | Done ([checkpoint](PASS_04.md)) |
 | 5. Mockup HUD | 16, 17, 21 | Search, map, loading in the mockup's frosted-pill style | Done ([checkpoint](PASS_05.md)) |
 | 6. Performance + quality | 18, 19, 20 | Measurement, optimization, full presets (baseline tiers exist) | Done ([checkpoint](PASS_06.md)) |
-| 7. WORLD ALPHA audit | 22 | Mockup comparison and go/no-go | Next |
+| 7. WORLD ALPHA audit | 22 | Mockup comparison and go/no-go | Done — recommendation recorded; owner decision pending ([audit](WORLD_ALPHA_AUDIT.md)) |
 
 A cheap draw-call/triangle counter runs from pass 1 on (development HUD) so phones are not
 quietly overloaded before pass 6.

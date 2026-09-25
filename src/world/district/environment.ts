@@ -1,5 +1,5 @@
 import {
-  BackSide, BufferAttribute, DoubleSide, Color, DirectionalLight, EquirectangularReflectionMapping, FogExp2, Mesh, MeshStandardMaterial,
+  HemisphereLight, BackSide, BufferAttribute, DoubleSide, Color, DirectionalLight, EquirectangularReflectionMapping, FogExp2, Mesh, MeshStandardMaterial,
   PlaneGeometry, PMREMGenerator, RepeatWrapping, ShaderMaterial, SphereGeometry, SRGBColorSpace, TextureLoader, Vector3,
 } from 'three';
 import type { Scene, Texture, WebGLRenderer } from 'three';
@@ -82,6 +82,9 @@ export function createEnvironment(scene: Scene, renderer: WebGLRenderer, resourc
   shadow.camera.updateProjectionMatrix();
   shadow.bias = -0.00025; shadow.normalBias = 0.04;
   scene.add(sun, sun.target);
+  // Warm ground bounce: golden-hour light off the stone lifts shaded facades toward beige, as in
+  // the mockup, instead of leaving them cool grey. Cheap and present on every tier.
+  scene.add(new HemisphereLight(0x7d8ea8, 0xd8a672, 0.55));
 
   // Cropped upper-hemisphere backdrop for the dome and water reflections.
   let skySettled: () => void = () => undefined;

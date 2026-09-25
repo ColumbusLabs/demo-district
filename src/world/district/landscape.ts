@@ -149,6 +149,15 @@ export function buildLandscape(root: Group, m: DistrictMaterials, batch: StaticB
     for (let k = 0; k < 3; k++) shrubs.push(place(t.x + (rand() - 0.5) * 0.9, 0.45, t.z + (rand() - 0.5) * 0.9, rand() * 6, 0.62 + rand() * 0.25));
   }
 
+  // Low lit planters along the path edge, as in the mockup's mid-ground.
+  for (const p of district.edgePlanters) {
+    batch.box(m.stone, 1.1, 0.55, 1.1, place(p.x, 0.275, p.z), 1.2);
+    batch.box(m.soil, 0.9, 0.06, 0.9, place(p.x, 0.53, p.z), 1.2);
+    const inward = p.x < 0 ? 1 : -1;
+    batch.box(m.warmLight, 0.03, 0.03, 0.9, place(p.x + inward * 0.56, 0.08, p.z), 1);
+    for (let k = 0; k < 2; k++) shrubs.push(place(p.x + (rand() - 0.5) * 0.4, 0.5, p.z + (rand() - 0.5) * 0.4, rand() * 6, 0.7 + rand() * 0.2));
+  }
+
   // Beds: shrubs, grass tufts, and boulders, clustered toward the back.
   const scatter = (bed: Rect, count: number, fn: (x: number, z: number) => void): void => {
     for (let i = 0; i < count; i++) fn(bed.minX + 0.6 + rand() * (bed.maxX - bed.minX - 1.2), bed.minZ + 0.6 + rand() * (bed.maxZ - bed.minZ - 1.2));
@@ -174,7 +183,14 @@ export function buildLandscape(root: Group, m: DistrictMaterials, batch: StaticB
     const x = side * (29 + rand() * 26); const z = -70 + rand() * 105;
     plant(x, z, 1 + rand() * 0.35);
   }
-  for (let i = 0; i < (outerTrees ? 16 : 0); i++) plant((rand() - 0.5) * 56, 30 + rand() * 30, 1.1);
+  // A dense tree line behind the terrace closes the view back toward the entrance.
+  const { terrace } = district;
+  for (let i = 0; i < 18; i++) {
+    const a = terrace.from + ((terrace.to - terrace.from) * (i + rand() * 0.6)) / 18;
+    const r = terrace.radius + 2.5 + rand() * 2.5;
+    plant(terrace.x + Math.cos(a) * r, terrace.z + Math.sin(a) * r, 1.15 + rand() * 0.3);
+  }
+  for (let i = 0; i < (outerTrees ? 22 : 0); i++) plant((rand() - 0.5) * 60, 36 + rand() * 26, 1.2);
 
   templates.forEach((template, i) => {
     instanced(root, template.trunk, m.bark, trees[i] ?? [], resources, `tree-trunks-${i}`);

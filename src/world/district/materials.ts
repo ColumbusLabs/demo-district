@@ -85,6 +85,20 @@ function lawn(ctx: Canvas2D, size: number): void {
   }
 }
 
+/** Leaves spread edge to edge and wrapped at the borders, so hedges tile without visible blobs. */
+function leafField(ctx: Canvas2D, size: number, palette: string[], count: number, leafSize: number, seed: number): void {
+  const rand = random(seed);
+  for (let i = 0; i < count; i++) {
+    const x = rand() * size; const y = rand() * size; const angle = rand() * Math.PI * 2;
+    const l = leafSize * (0.6 + rand() * 0.7);
+    ctx.fillStyle = palette[Math.floor(rand() * palette.length)] ?? '#4a6b35';
+    for (const dx of [-size, 0, size]) for (const dy of [-size, 0, size]) {
+      if (x + dx < -l || x + dx > size + l || y + dy < -l || y + dy > size + l) continue;
+      ctx.beginPath(); ctx.ellipse(x + dx, y + dy, l, l * 0.42, angle, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+}
+
 function grassTuft(ctx: Canvas2D, size: number): void {
   const rand = random(7);
   ctx.clearRect(0, 0, size, size);
@@ -146,7 +160,7 @@ export function createMaterials(renderer: WebGLRenderer, resources: ResourceScop
     own(new MeshStandardMaterial({ color, roughness, metalness: 0, ...extra }));
 
   const leafTexture = resources.track(canvasTexture(doc, 256, (ctx, size) => leafCluster(ctx, size, ['#5f7c3e', '#7a974c', '#8fae5c', '#4b6a33', '#a0bb6a', '#6b8a45'], 480, 8, 11)));
-  const hedgeTexture = resources.track(canvasTexture(doc, 256, (ctx, size) => { ctx.fillStyle = '#3d5a2c'; ctx.fillRect(0, 0, size, size); leafCluster(ctx, size, ['#56753c', '#6b8a47', '#44622f', '#7b9850'], 1400, 7, 23); }));
+  const hedgeTexture = resources.track(canvasTexture(doc, 256, (ctx, size) => { ctx.fillStyle = '#3d5a2c'; ctx.fillRect(0, 0, size, size); leafField(ctx, size, ['#56753c', '#6b8a47', '#44622f', '#7b9850', '#35512a'], 2600, 6.5, 23); }));
   hedgeTexture.wrapS = RepeatWrapping; hedgeTexture.wrapT = RepeatWrapping;
   const grassTexture = resources.track(canvasTexture(doc, 128, grassTuft));
   const lawnTexture = resources.track(canvasTexture(doc, 256, lawn));
@@ -160,7 +174,7 @@ export function createMaterials(renderer: WebGLRenderer, resources: ResourceScop
     roof: standard(0xfbf9f5, 0.55, { envMapIntensity: 1.6 }),
     // Canopy undersides catch warm bounce light in the mockup; a faint emissive stands in for it.
     soffit: standard(0xf2e8da, 0.9, { emissive: 0xffc58a, emissiveIntensity: 0.22 }),
-    wood: standard(0x9c7b5c, 0.6),
+    wood: standard(0x7d6e60, 0.62),
     charcoal: standard(0x2a3036, 0.5, { metalness: 0.2 }),
     bronze: standard(0x3a3632, 0.35, { metalness: 0.8 }),
     rock: standard(0xb9b1a4, 0.9),

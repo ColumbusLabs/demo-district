@@ -120,6 +120,22 @@ export function buildGround(root: Group, m: DistrictMaterials, water: { channel:
   }
   batch.add(m.grassGround, new BoxGeometry(outer * 2, 0.2, 400), place(0, -0.12, front + 200), 6);
 
+  // Terrace behind spawn: a curved stone wall with an LED line and a hedge band, so the view
+  // back toward the entrance ends in architecture and planting rather than open lawn.
+  const { terrace } = district;
+  const segments = 22;
+  for (let i = 0; i < segments; i++) {
+    const a0 = terrace.from + ((terrace.to - terrace.from) * i) / segments;
+    const a1 = terrace.from + ((terrace.to - terrace.from) * (i + 1)) / segments;
+    const a = (a0 + a1) / 2; const chord = 2 * terrace.radius * Math.sin((a1 - a0) / 2) + 0.05;
+    const x = terrace.x + Math.cos(a) * terrace.radius; const z = terrace.z + Math.sin(a) * terrace.radius;
+    const yaw = Math.PI / 2 - a;
+    batch.box(m.stone, chord, 0.9, 0.55, place(x, 0.45, z, yaw), 2);
+    batch.box(m.hedge, chord, 2.3, 1.1, place(x + Math.cos(a) * 0.9, 1.15, z + Math.sin(a) * 0.9, yaw), 1.2);
+    lights.box(m.warmLight, chord, 0.03, 0.03, place(x - Math.cos(a) * 0.29, 0.12, z - Math.sin(a) * 0.29, yaw));
+  }
+  batch.box(m.paving, terrace.radius * 2 + 4, slab, terrace.radius + 3, place(terrace.x, -slab / 2, terrace.z + terrace.radius / 2 - 0.5), paveUv);
+
   batch.build(root);
   lights.build(root, { castShadow: false, receiveShadow: false });
 }

@@ -10,7 +10,7 @@ Demo District turns discovery into a place: a pedestrian exhibition district wit
 
 The preview is now the Demo District plaza itself: golden-hour sky and lighting, stone boulevard and water channels, eight pavilions from a reusable kit with lit storefront interiors, the arch-and-orb landmark over a fountain, trees and planting, a lake, and mountains. You walk it with WASD and mouse on desktop, or drag and the stick on a phone, and you collide with everything solid. Storefronts carry signage and open a project preview by click, tap, or Enter; the listings are clearly marked samples until real project records exist ([pass 4](docs/PASS_04.md)). The mockup's HUD is in place with search, a map, and a loading screen ([pass 5](docs/PASS_05.md)). Desktop browsers are the primary target; phones and software-rendered browsers get lighter automatic quality tiers. Native ChatGPT Sites acceptance and physical-device testing remain pending. Nothing has been merged or deployed.
 
-![Current spawn view with HUD](docs/art/pass-05-hud.jpg)
+![Current spawn view with HUD](docs/art/alpha-spawn.jpg)
 
 ## Try the preview locally
 
@@ -54,7 +54,7 @@ Walking is optional. Search, a map, and direct navigation will provide faster wa
 
 ## Roadmap and implementation
 
-[The detailed implementation plan](docs/IMPLEMENTATION_PLAN.md) contains 48 bounded slices; world slices 5–22 now run as seven passes. Execution evidence: [Slice 1](docs/SLICE_01.md), [Slice 2](docs/SLICE_02.md), [Slice 3](docs/SLICE_03.md), [Slice 4](docs/SLICE_04.md), [passes 1–3](docs/PASSES_01-03.md), [pass 4](docs/PASS_04.md), [pass 5](docs/PASS_05.md), and [pass 6](docs/PASS_06.md) ([performance budget](docs/PERFORMANCE_BUDGET.md)). Next: **Pass 7 — the WORLD ALPHA audit.**
+[The detailed implementation plan](docs/IMPLEMENTATION_PLAN.md) contains 48 bounded slices; world slices 5–22 now run as seven passes. Execution evidence: [Slice 1](docs/SLICE_01.md), [Slice 2](docs/SLICE_02.md), [Slice 3](docs/SLICE_03.md), [Slice 4](docs/SLICE_04.md), [passes 1–3](docs/PASSES_01-03.md), [pass 4](docs/PASS_04.md), [pass 5](docs/PASS_05.md), and [pass 6](docs/PASS_06.md) ([performance budget](docs/PERFORMANCE_BUDGET.md)). The [WORLD ALPHA audit](docs/WORLD_ALPHA_AUDIT.md) is complete and recommends declaring WORLD ALPHA for the desktop preview; backend work waits for the owner's decision.
 
 The build proceeds through engine/navigation, district construction, World Alpha, persisted project discovery, ratings/authentication, submissions/moderation, creator claims, and release checks. Work stays on `build/demo-district-v1`. Each requested slice ends at its defined boundary with checks and a checkpoint; merge and deployment require separate approval.
 

@@ -77,6 +77,10 @@ export const district = {
   plazaTrees: [{ x: -10, z: -27 }, { x: 10, z: -27 }, { x: -13.5, z: -29.5 }, { x: 13.5, z: -29.5 }],
   /** Large trees near spawn whose canopies frame the top corners of the opening view. */
   framingTrees: [{ x: -14.2, z: -1.8 }, { x: 14.2, z: -1.8 }],
+  /** Low lit planters lining the path between the channels and the plaza (mockup mid-ground). */
+  edgePlanters: [-13.8, -19, -24.2].flatMap((z) => [{ x: -4.45, z }, { x: 4.45, z }]),
+  /** Curved stone terrace closing the view behind spawn: center, radius, and arc (radians). */
+  terrace: { x: 0, z: 23, radius: 11, from: 0.18, to: Math.PI - 0.18 },
   /** Stone benches with wood tops behind the plinths (long axis along Z). */
   benches: [{ x: -9.4, z: 5.5 }, { x: 9.4, z: 5.5 }, { x: -9.4, z: 11.5 }, { x: 9.4, z: 11.5 }],
   banners: [{ x: -9.3, z: -15.5 }, { x: 9.3, z: -15.5 }],
@@ -120,6 +124,7 @@ export function districtBlockers(): Blocker[] {
   }
   for (const plinth of district.plinths) blockers.push({ x: plinth.x, z: plinth.z, halfWidth: plinth.width / 2, halfDepth: 0.45, angle: plinth.angle });
   for (const tree of [...district.allee, ...district.plazaTrees, ...district.framingTrees]) blockers.push({ x: tree.x, z: tree.z, halfWidth: district.planterHalf, halfDepth: district.planterHalf });
+  for (const planter of district.edgePlanters) blockers.push({ x: planter.x, z: planter.z, halfWidth: 0.55, halfDepth: 0.55 });
   for (const bench of district.benches) blockers.push({ x: bench.x, z: bench.z, halfWidth: 0.35, halfDepth: 1.25 });
   for (const banner of district.banners) blockers.push({ x: banner.x, z: banner.z, radius: 0.35 });
   for (const bollard of district.bollards) blockers.push({ x: bollard.x, z: bollard.z, radius: 0.25 });
