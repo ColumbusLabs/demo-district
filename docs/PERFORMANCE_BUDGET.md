@@ -78,7 +78,7 @@ It renders four fixed views synchronously, forcing GPU completion with a 1-pixel
 | High tier, desktop 1440×900, reference GPU (M5), median | ≤ 6 ms (≥ 2.5× headroom under 16.7 ms) | 2.7 ms |
 | High tier, DPR 2, reference GPU, median | ≤ 8 ms | 5.0 ms |
 | Draw calls at spawn | ≤ 120 | 104 (Blender trees and landmark, SwiftShader count) |
-| Triangles in view | ≤ 150k | 136k at spawn (Blender trees and landmark, SwiftShader count) |
+| Triangles in view | ≤ 150k | 140k at spawn (Blender trees and landmark, SwiftShader count) |
 | Initial transfer | ≤ 5 MB | 2.27 MB |
 | Local assets ready (broadband) | ≤ 2 s | about 0.5 s |
 | JS bundle (uncompressed) | ≤ 750 kB | 717 kB main + 71 kB lazy glTF loader |
@@ -95,12 +95,12 @@ It renders four fixed views synchronously, forcing GPU completion with a 1-pixel
 
 Frame time on the reference GPU is not yet re-measured.
 
-**Blender landmark (2026-09-25).** The arch sculpture comes from `public/world/models/landmark.glb` as one ~8.5k-triangle mesh, replacing three procedural ribbons (see [LANDMARK_BLENDER.md](LANDMARK_BLENDER.md)). SwiftShader counts, high tier:
+**Blender landmark (2026-09-25).** The arch sculpture comes from `public/world/models/landmark.glb` as one ~12.7k-triangle mesh (with the nested inner arch), replacing three procedural ribbons (see [LANDMARK_BLENDER.md](LANDMARK_BLENDER.md)). SwiftShader counts, high tier:
 
-- Spawn: 106 → 104 draws, 139.1k → 135.9k triangles.
-- Plaza: 121.4k triangles.
+- Spawn: 106 → 104 draws, 139.1k → 140.1k triangles.
+- Plaza: 125.6k triangles.
 
-The GLB adds 56 kB of transfer.
+The GLB adds 84 kB of transfer.
 
 ## Quality tiers
 

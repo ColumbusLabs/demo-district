@@ -8,7 +8,7 @@ Nothing here runs in CI or the app bundle.
 | Script | Output | What it makes |
 | --- | --- | --- |
 | `trees.py` | `public/world/models/trees.glb` | Three upright street trees and the leaning framing tree, each at two levels of detail, with a generated leaf-spray atlas and bark texture. |
-| `landmark.py` | `public/world/models/landmark.glb` | The landmark's sculpture: a lancet main arch and two crescent wings, as one mesh. The orb, fountain, and footings stay in code. |
+| `landmark.py` | `public/world/models/landmark.glb` | The landmark's sculpture: a lancet main arch with a nested inner crown and recessed web, and two crescent wings, as one mesh. The orb, fountain, and footings stay in code. |
 
 ## Setup
 
@@ -53,11 +53,11 @@ file fails to load, the district falls back to its procedural trees.
 - Its material is replaced by the district's satin `arch` material. Until the file loads, and if it fails, a procedural lancet stands in.
 - Mesh extras `height`, `span`, and `footings` (ground contacts in the model frame). `tests/unit/landmark-model.test.mjs` checks the footings against `landmarkFootings()` in `layout.ts`, which drives the navigation blockers and stone footing geometry.
 
-If you change `SPAN`, `SPRING`, `LANCET`, or the `WING_*` constants, update `district.landmark` in `layout.ts` to the printed footings. The unit test fails until the two agree.
+If you change `SPAN`, `SPRING`, `LANCET`, or the `WING_*` constants (the `INNER_*` ones touch no footings), update `district.landmark` in `layout.ts` to the printed footings. The unit test fails until the two agree.
 
 ## Budgets
 
-The landmark is ~8.5k triangles in one draw call. For trees, LOD0 is used for the 28 trees in planters and on the terrace (≈1.5k triangles, 2k for the
+The landmark is ~12.7k triangles in one draw call. For trees, LOD0 is used for the 28 trees in planters and on the terrace (≈1.5k triangles, 2k for the
 framing tree); LOD1 for up to 100 grove and street trees (≈390 triangles). Keep spawn under
 the 150k-triangle and 120-draw budgets in `docs/PERFORMANCE_BUDGET.md`, and re-measure with
 `node scripts/measure.mjs` after any change to counts.

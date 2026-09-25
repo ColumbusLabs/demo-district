@@ -25,9 +25,10 @@ In-app views are headless Chromium with SwiftShader at the high tier. Judge the 
 
 ## Delivered
 
-- **`tools/blender/landmark.py`.** Builds the whole sculpture as one mesh: 8.5k triangles, 56 kB meshopt-compressed.
+- **`tools/blender/landmark.py`.** Builds the whole sculpture as one mesh: 12.7k triangles, 84 kB meshopt-compressed.
   - **Main arch:** 10 m between leg centers. The legs rise straight to 19 m, then a lancet crown (arc radius 1.4 × half-span, apex softened) peaks at 25.7 m.
   - **Band section:** a rounded rectangle, 1.5 × 2.0 m at the base tapering to 1.1 × 1.6 m at the crown.
+  - **Nested inner arch:** a second, lower lancet crown (apex ≈ 22 m) springs from the inner faces of the legs at 16.5 m. It is set 0.6 m back into the band's depth. A recessed web fills the space between the two crowns, so from the boulevard the crown shows the mockup's double outline with a lit band between. It adds no ground contacts.
   - **Wings:** crescent blades up to 2.5 m wide. Each rises from the ground outside a leg and joins it at 0.62 of the height, set 0.5 m behind the leg and yawed 20° back for depth.
   - **Footings:** the model records its ground contacts as mesh extras.
 - **World integration.**
@@ -42,10 +43,11 @@ In-app views are headless Chromium with SwiftShader at the high tier. Judge the 
 
 | View | Draws (trees → + landmark) | Triangles (trees → + landmark) |
 | --- | --- | --- |
-| high · spawn | 106 → 104 | 139.1k → 135.9k |
-| high · plaza | 75 → 73 | 124.6k → 121.4k |
-| high · storefront | 50 → 50 | — → 102.1k |
-| low · spawn | 84 → 82 | 98.3k → 95.0k |
+| high · spawn | 106 → 104 | 139.1k → 140.1k |
+| high · plaza | 75 → 73 | 124.6k → 125.6k |
+| low · spawn | 84 → 82 | 98.3k → 99.3k |
+
+Without the nested inner arch (first landmark commit), spawn was 135.9k. The inner arch and web add 4.2k triangles and no draw calls.
 
 ## Verified execution (local, Node 26.10.0)
 
@@ -54,9 +56,10 @@ In-app views are headless Chromium with SwiftShader at the high tier. Judge the 
 | `npm run verify` | 68 unit tests passed, including the new landmark and tree model checks; build and artifact check passed. The dist check requires both GLBs. |
 | Lifecycle | 53 passed, 9 skipped by design. |
 | Browser | 23 passed. The same five container-specific specs fail as on the untouched base (see [TREES_BLENDER.md](TREES_BLENDER.md)). The HUD menu spec also failed once: loading exceeded its 5 s wait under parallel workers. Production time-to-ready (6 runs, SwiftShader) was 2.9–3.2 s against the base's 2.7–2.9 s. `models.ts` now fetches each GLB in parallel with the loader chunk, which brings the median to 3.0 s against 2.9 s. HUD and district specs then passed 18/18 with `--repeat-each=3`. |
-| Visual | Spawn and plaza views on SwiftShader at the high tier, compared with the mockup crop above. |
+| Visual | Spawn and plaza views on SwiftShader at the high tier, compared with the mockup crop above (re-shot with the nested inner arch). |
+| Nested inner arch | `npm test` 68 passed; build and artifact check passed; HUD and district browser specs rerun (see the handoff). |
 
 ## Not done / next
 
 - Real-GPU comparison. Under the golden-hour backlight, bloom and haze wash the arch toward white. That comes from the existing lighting and material, which this change leaves untouched.
-- The mockup's crown shows a faint second inner outline, which may be a nested inner arch. The depth band gives a similar read; a true nested arch could be added if wanted.
+- The web between the crowns is a flat plate. A curved soffit would catch light more like the mockup's, at a few hundred more triangles.

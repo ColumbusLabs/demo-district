@@ -35,23 +35,29 @@ SPAN = 10.0  # distance between main leg centers
 SPRING = 19.0  # where the legs turn into the crown
 LANCET = 1.4  # crown arc radius as a multiple of the half-span (1 = round, 2 = equilateral)
 HEIGHT = SPRING + math.sqrt((LANCET * SPAN / 2) ** 2 - ((LANCET - 1) * SPAN / 2) ** 2)  # apex, ≈ 25.7
+# Nested inner arch: a lower lancet crown springing from the inner side of the main legs, set
+# back into the band's depth, with a recessed web filling the space between the two crowns.
+INNER_HALF = SPAN / 2 - 0.3  # inner crown ends, buried in the main legs
+INNER_SPRING = 16.5
+INNER_LANCET = 1.2
+INNER_BACK = 0.6  # inner crown plane behind the main arch's center plane
+WEB_BACK = 0.45  # web front face, behind the main band's front face (at -1.0 at the crown)
 WING_FOOT = 11.2  # wing foot distance from the center, before yaw
 WING_JOIN = 0.62  # wing joins the leg at this fraction of HEIGHT
 WING_BACK = 0.5  # wing plane offset behind the main arch
 WING_YAW = math.radians(20)  # wing feet swing back by this much about the join
 
 
-def lancet_crown(steps: int) -> list[Vector]:
+def lancet_crown(steps: int, a: float = SPAN / 2, spring: float = SPRING, lancet: float = LANCET, y: float = 0.0) -> list[Vector]:
     """Two circular arcs, each centered level with the opposite side's spring, meeting at a point."""
-    a = SPAN / 2
-    radius = LANCET * a
+    radius = lancet * a
     top = math.acos((radius - a) / radius)
     half = steps // 2
     right = []
     for i in range(half + 1):
         phi = top * i / half  # 0 at the right spring, top at the apex
-        right.append(Vector((a - radius + radius * math.cos(phi), 0.0, SPRING + radius * math.sin(phi))))
-    left = [Vector((-p.x, 0.0, p.z)) for p in right]
+        right.append(Vector((a - radius + radius * math.cos(phi), y, spring + radius * math.sin(phi))))
+    left = [Vector((-p.x, y, p.z)) for p in right]
     pts = left + right[::-1][1:]
     # Soften the apex: the mockup's crown is gently pointed, not a gothic cusp.
     apex = len(pts) // 2
@@ -65,6 +71,40 @@ def main_path() -> list[Vector]:
     left = [Vector((-a, 0, z)) for z in (-0.4, SPRING * 0.5)]
     right = [Vector((a, 0, z)) for z in (SPRING * 0.5, -0.4)]
     return left + lancet_crown(96) + right
+
+
+def inner_crown() -> list[Vector]:
+    return lancet_crown(96, INNER_HALF, INNER_SPRING, INNER_LANCET, INNER_BACK)
+
+
+def web(outer: list[Vector], inner: list[Vector], front: float, thickness: float, name: str) -> bpy.types.Object:
+    """A thin plate lofted between two crown curves (equal point counts), facing the boulevard."""
+    verts, faces = [], []
+    n = len(outer)
+    for y in (front, front + thickness):
+        for o, i in zip(outer, inner):
+            verts.append((o.x, y, o.z))
+            verts.append((i.x, y, i.z))
+    back = 2 * n
+    for k in range(n - 1):
+        a, b, c, d = 2 * k, 2 * k + 1, 2 * k + 3, 2 * k + 2
+        faces.append((a, b, c, d))  # front face (toward -Y, the boulevard)
+        faces.append((back + a, back + d, back + c, back + b))
+    mesh = bpy.data.meshes.new(name)
+    mesh.from_pydata(verts, [], faces)
+    mesh.update()
+    # Flat plate: make the front face point at the boulevard whatever the loft winding produced.
+    for k, poly in enumerate(mesh.polygons):
+        if (poly.normal.y > 0) == (k % 2 == 0):
+            poly.flip()
+    uv = mesh.uv_layers.new(name='UVMap')
+    for loop in mesh.loops:
+        co = mesh.vertices[loop.vertex_index].co
+        uv.data[loop.index].uv = (co.x / 4.0, co.z / 4.0)
+    mesh.update()
+    obj = bpy.data.objects.new(name, mesh)
+    bpy.context.scene.collection.objects.link(obj)
+    return obj
 
 
 def bezier(p0: Vector, p1: Vector, p2: Vector, p3: Vector, steps: int) -> list[Vector]:
@@ -163,6 +203,10 @@ def build() -> tuple[bpy.types.Object, dict]:
         main, lambda i: Vector((0, 1, 0)),
         lambda f: 1.5 - 0.4 * _crownness(f), lambda f: 2.0 - 0.4 * _crownness(f), 0.32, 'arch_main',
     ))
+    # Inner arch: 0.9 m across, 1.2 m deep, springing from the legs' inner faces.
+    objects.append(sweep(inner_crown(), lambda i: Vector((0, 1, 0)), lambda f: 0.9, lambda f: 1.2, 0.25, 'arch_inner'))
+    # Web between the crowns, recessed so the double outline reads with a lit soffit between.
+    objects.append(web(lancet_crown(96), inner_crown(), -1.0 + WEB_BACK, 0.25, 'arch_web'))
     for side in (-1, 1):
         path = wing_path(side)
         yaw = WING_YAW * side
