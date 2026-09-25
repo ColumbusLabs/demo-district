@@ -61,5 +61,5 @@ Without the nested inner arch (first landmark commit), spawn was 135.9k. The inn
 
 ## Not done / next
 
-- Real-GPU comparison. Under the golden-hour backlight, bloom and haze wash the arch toward white. That comes from the existing lighting and material, which this change leaves untouched.
+- Real-GPU comparison. The washed-out, haloed arch this checkpoint noted is fixed in the [lighting pass](LIGHTING_PASS.md).
 - The web between the crowns is a flat plate. A curved soffit would catch light more like the mockup's, at a few hundred more triangles.

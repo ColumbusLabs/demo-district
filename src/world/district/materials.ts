@@ -236,11 +236,12 @@ export function createMaterials(renderer: WebGLRenderer, resources: ResourceScop
     hedge: standard(0xffffff, 0.9, { map: hedgeTexture }),
     foliage: standard(0xffffff, 0.8, { map: leafTexture, alphaTest: 0.5, side: DoubleSide }),
     grass: standard(0xffffff, 0.9, { map: grassTexture, alphaTest: 0.45, side: DoubleSide }),
-    // Soft white stone with a light satin coat, not chrome: it should match the pavilion roofs.
-    arch: own(new MeshPhysicalMaterial({ color: 0xfbf9f5, roughness: 0.48, clearcoat: 0.25, clearcoatRoughness: 0.35, envMapIntensity: 1.6 })),
+    // Warm cream stone with a light satin coat: bright enough to read as white in sun, dark enough
+    // to keep its form and stay under the bloom threshold (see LIGHTING_PASS.md).
+    arch: own(new MeshPhysicalMaterial({ color: 0xefe8dd, roughness: 0.55, clearcoat: 0.15, clearcoatRoughness: 0.4, envMapIntensity: 1.0 })),
     chrome: own(new MeshPhysicalMaterial({ color: 0xffffff, metalness: 1, roughness: 0.04, envMapIntensity: 1.2 })),
-    // Values above 1 feed the bloom pass: warm LED strips set into stone.
-    warmLight: own(new MeshBasicMaterial({ color: new Color(0xffc987).multiplyScalar(2.4), toneMapped: true })),
+    // Luminance above the bloom threshold (1.5 in post.ts): warm LED strips set into stone.
+    warmLight: own(new MeshBasicMaterial({ color: new Color(0xffc987).multiplyScalar(3), toneMapped: true })),
     banner: standard(0x2b374a, 0.75, { side: DoubleSide }),
     facadeGlass: facade('glass', 71),
     facadeStone: facade('stone', 73),
