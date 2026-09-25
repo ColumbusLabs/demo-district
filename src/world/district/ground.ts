@@ -1,10 +1,11 @@
-import { BoxGeometry, CircleGeometry, CylinderGeometry, Mesh, PlaneGeometry, RingGeometry, Shape, ShapeGeometry } from 'three';
+import { BoxGeometry, CircleGeometry, CylinderGeometry, LatheGeometry, Mesh, PlaneGeometry, RingGeometry, Shape, ShapeGeometry, Vector2 } from 'three';
 import type { Group, Material, ShaderMaterial } from 'three';
 import type { ResourceScope } from '../runtime.ts';
 import { place, StaticBatch } from './geometry.ts';
 import { district } from './layout.ts';
 import type { Rect } from './layout.ts';
 import type { DistrictMaterials } from './materials.ts';
+import { fountainBell } from './water.ts';
 
 const paveUv = 4; // meters of paving per texture repeat
 const slab = 0.3; // paving thickness below y = 0
@@ -102,6 +103,13 @@ export function buildGround(root: Group, m: DistrictMaterials, water: { channel:
   batch.add(m.stone, new CylinderGeometry(fountain.radius - 0.7, fountain.radius - 0.7, 0.55, 96, 1, true), place(fountain.x, 0.275, fountain.z), 2);
   lights.add(m.warmLight, new CylinderGeometry(fountain.radius + 0.01, fountain.radius + 0.01, 0.035, 96, 1, true), place(fountain.x, 0.08, fountain.z));
   batch.add(m.stone, new CircleGeometry(fountain.radius - 0.7, 64).rotateX(-Math.PI / 2), place(fountain.x, -0.2, fountain.z), 2);
+  // Bell-fountain pedestal: a slender stem flaring into a shallow cup that throws the water sheet.
+  const { nozzle, stem } = fountainBell;
+  const pedestal = new LatheGeometry([
+    [0.001, -0.56], [stem * 1.9, -0.56], [stem * 1.9, -0.2], [stem * 1.15, 0.05], [stem, 0.4],
+    [stem, nozzle - 0.45], [stem * 1.25, nozzle - 0.2], [stem * 1.75, nozzle - 0.04], [stem * 1.75, nozzle], [0.001, nozzle],
+  ].map(([r, y]) => new Vector2(r, y)), 32);
+  batch.add(m.stone, pedestal, place(fountain.x, 0.36, fountain.z), 1.5);
   const basin = new Mesh(resources.track(new CircleGeometry(fountain.radius - 0.7, 64).rotateX(-Math.PI / 2)), water.basin);
   basin.position.set(fountain.x, 0.36, fountain.z); basin.name = 'fountain-water';
   root.add(basin);
