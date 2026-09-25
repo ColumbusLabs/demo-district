@@ -15,9 +15,14 @@ test('package has runnable local/build/check commands and cannot accidentally pu
   assert.deepEqual(Object.keys(pkg.dependencies), ['three']);
 });
 
-test('hosting intent contains no provisioned ID, storage, or secrets', async () => {
+test('Sites hosts the built output without storage bindings or secrets', async () => {
   const hosting = await json('.openai/hosting.json');
-  assert.deepEqual(hosting, { d1: null, r2: null });
+  assert.equal(hosting.d1, null);
+  assert.equal(hosting.r2, null);
+  assert.equal(typeof hosting.project_id, 'string');
+  assert.ok(hosting.project_id.length > 0);
+  assert.equal(hosting.static.directory, 'dist');
+  assert.deepEqual(Object.keys(hosting).sort(), ['d1', 'project_id', 'r2', 'static']);
 });
 
 test('production HTML offers a readable no-JavaScript fallback and no external project loads', async () => {
