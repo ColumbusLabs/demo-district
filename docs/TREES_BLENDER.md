@@ -54,9 +54,10 @@ look on a real GPU.
 | Check | Result |
 | --- | --- |
 | `npm run verify` | 66 unit tests passed; build and artifact check passed. The dist check now requires `world/models/trees.glb`. |
-| Browser (`npm run test:browser`) | See the handoff summary for this change. |
-| Lifecycle (`npm run test:lifecycle`) | See the handoff summary for this change. |
+| Lifecycle (`npm run test:lifecycle`) | 53 passed, 9 skipped by design. |
+| Browser (`npm run test:browser`) | The asset-count test was updated for the new GLB (14 → 15 local world assets) and now passes. Five specs time out in this container on both this branch and the untouched base `02c5d48`: canvas resize ×2, touch stick ×2, and reduced-motion walk. The base also failed a sixth. The container runs Playwright 1.63 against a shimmed older Chromium on 4 CPUs, so these are not attributed to the trees. CI is the clean record. |
 | Visual | Spawn, plaza, lookback, and grove views on SwiftShader at the high tier; fallback at the low tier. |
+| Reproducibility | Re-running `tools/blender/build-trees.sh` produces a byte-identical `trees.glb`. |
 
 ## Not done / next
 
