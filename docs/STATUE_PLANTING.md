@@ -38,6 +38,11 @@ Mockup, before, after (same crop from spawn):
 
 Spawn is now at the 150k-triangle budget. The first build (120 cards per shrub and a denser outer ring) measured 153.1k and was trimmed to fit. Any further additions in view of spawn need an offset, for example a lighter LOD for the outer groves.
 
-## Checks
+## Checks (local, Node 26.10.0)
 
-See the table below.
+| Check | Result |
+| --- | --- |
+| `npm run verify` | 70 unit tests passed: the new shrub-model and planter-clearance tests, the layout reachability tests with the planters as blockers, and the landmark footing test. Build and artifact check passed; the dist check now requires `shrubs.glb`. |
+| Browser | 24 passed, including the asset spec updated to 17 local world assets. The 5 failures are the known container set (canvas resize desktop/phone, touch stick ×2, reduced-motion walk), which the untouched base also shows here. |
+| Lifecycle | 53 passed, 9 skipped by design. |
+| Visual | Spawn, plaza, and wing-foot views on SwiftShader at the high tier. |
