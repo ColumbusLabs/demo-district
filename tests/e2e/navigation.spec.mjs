@@ -30,7 +30,7 @@ test('menu controls focus the canvas, allow escape, and expose speed/reset witho
 test('reduced-motion production scene actually changes when walking, not just when focusing', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
-  await expect(page.locator('#world-canvas')).toHaveAttribute('data-content', 'ready');
+  await expect(page.locator('#world-canvas')).toHaveAttribute('data-content', 'ready', { timeout: 30_000 });
   // Click open sky: storefronts are interactive and would open their preview.
   await page.locator('#world-canvas').click({ position: { x: Math.floor(page.viewportSize().width / 2), y: 150 } });
   await expect(page.locator('#world-canvas')).toBeFocused();

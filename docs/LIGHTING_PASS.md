@@ -40,7 +40,9 @@ Mockup, before, after:
 | Check | Result |
 | --- | --- |
 | `npm run verify` | 68 unit tests passed; build and artifact check passed. |
-| Browser | 25 passed. Four failures: canvas resize (desktop), touch stick ×2, and the HUD menu spec's 5 s load wait. The first three are the container-specific failures that also occur on the untouched base. See the handoff for the base comparison of the HUD spec. |
+| Browser (before the test fix) | 25 passed. Four failures: canvas resize (desktop), touch stick ×2, and the HUD menu spec's 5 s load wait. In a full-suite run on the untouched base, only the first three fail. The HUD menu spec failed in 2 of 3 full runs on this branch, because the model loads (median +0.1 s time-to-ready) pushed a 5 s wait over the edge under two parallel SwiftShader workers. |
+| Test fix | `hud.spec.mjs` and `navigation.spec.mjs` now wait up to 30 s for world content, matching `district.spec.mjs` and the lifecycle specs (30–60 s). Nothing else in those tests changed. |
+| Browser (after) | Three full runs: 24–25 passed each. The HUD spec passed every time. The remaining failures are the known container set (canvas resize desktop/phone, touch stick ×2, reduced-motion walk), which the base also shows in this container. |
 
 ## Not done
 

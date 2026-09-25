@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 const ready = async (page, path = '/') => {
   await page.goto(path);
-  await expect(page.locator('#world-canvas')).toHaveAttribute('data-content', 'ready');
+  await expect(page.locator('#world-canvas')).toHaveAttribute('data-content', 'ready', { timeout: 30_000 });
   await expect(page.locator('#runtime-status')).toHaveAttribute('data-state', 'ready');
 };
 const previewOpen = (page) => page.locator('#project-preview').evaluate((dialog) => dialog.open);
@@ -11,7 +11,7 @@ test('loading shows brand and progress, then gives way to the scene', async ({ p
   await page.goto('/');
   await expect(page.locator('#loading-bar')).toHaveAttribute('role', 'progressbar');
   await expect(page.locator('#loading-bar')).toHaveAttribute('aria-label', 'Loading the district');
-  await expect(page.locator('#world-canvas')).toHaveAttribute('data-content', 'ready');
+  await expect(page.locator('#world-canvas')).toHaveAttribute('data-content', 'ready', { timeout: 30_000 });
   await expect(page.locator('#loading')).toBeHidden();
   await expect(page.locator('#loading-bar')).toHaveAttribute('aria-valuenow', '100');
   // Healthy engine status is announced but not shown.
