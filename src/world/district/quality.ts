@@ -24,7 +24,7 @@ const tiers: Record<QualityTier, QualitySettings> = {
   medium: { tier: 'medium', shadows: true, shadowMapSize: 2048, post: true, samples: 0, pixelBudget: 1_600_000, outerTrees: true, animated: true },
   // Software rasterizers (SwiftShader, llvmpipe) manage single-digit FPS at full detail, so the
   // low tier also holds decoration still and renders only when the visitor moves.
-  low: { tier: 'low', shadows: false, shadowMapSize: 1024, post: false, samples: 0, pixelBudget: 420_000, outerTrees: false, animated: false },
+  low: { tier: 'low', shadows: false, shadowMapSize: 1024, post: false, samples: 0, pixelBudget: 300_000, outerTrees: false, animated: false },
 };
 
 /**

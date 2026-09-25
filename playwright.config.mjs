@@ -6,7 +6,11 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: 0,
-  workers: 2,
+  // CI renders with SwiftShader on a small shared runner: one browser at a time, and timeouts
+  // sized for software-rendered frames. Local runs keep the fast defaults.
+  workers: process.env.CI ? 1 : 2,
+  timeout: process.env.CI ? 120_000 : 30_000,
+  expect: { timeout: process.env.CI ? 25_000 : 5_000 },
   reporter: [['list'], ['json', { outputFile: 'test-results/production-results.json' }]],
   use: {
     baseURL: 'http://127.0.0.1:4173',
