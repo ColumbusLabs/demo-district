@@ -52,7 +52,8 @@ In-app views are headless Chromium with SwiftShader at the high tier. Judge the 
 | Check | Result |
 | --- | --- |
 | `npm run verify` | 68 unit tests passed, including the new landmark and tree model checks; build and artifact check passed. The dist check requires both GLBs. |
-| Browser and lifecycle | Running at commit time; results are added in the follow-up commit. |
+| Lifecycle | 53 passed, 9 skipped by design. |
+| Browser | 23 passed. The same five container-specific specs fail as on the untouched base (see [TREES_BLENDER.md](TREES_BLENDER.md)). The HUD menu spec also failed once: loading exceeded its 5 s wait under parallel workers. Production time-to-ready (6 runs, SwiftShader) was 2.9–3.2 s against the base's 2.7–2.9 s. `models.ts` now fetches each GLB in parallel with the loader chunk, which brings the median to 3.0 s against 2.9 s. HUD and district specs then passed 18/18 with `--repeat-each=3`. |
 | Visual | Spawn and plaza views on SwiftShader at the high tier, compared with the mockup crop above. |
 
 ## Not done / next

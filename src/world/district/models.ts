@@ -4,13 +4,15 @@ import type { GLTF } from 'three/addons/loaders/GLTFLoader.js';
 import { assetUrl } from './materials.ts';
 
 /**
- * Loads a Blender-authored model from public/world/models (see tools/blender/). The glTF loader
- * and meshopt decoder are a separate chunk, fetched while the loading screen is up. Resolves
- * null on failure so callers keep their procedural fallback.
+ * Loads a Blender-authored model from public/world/models (see tools/blender/). The file and the
+ * glTF loader chunk (with the meshopt decoder) download in parallel while the loading screen is
+ * up. Resolves null on failure so callers keep their procedural fallback.
  */
 export function loadModel(file: string): Promise<GLTF | null> {
-  return Promise.all([import('three/addons/loaders/GLTFLoader.js'), import('three/addons/libs/meshopt_decoder.module.js')])
-    .then(([{ GLTFLoader }, { MeshoptDecoder }]) => new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync(assetUrl(`models/${file}`)))
+  const url = assetUrl(`models/${file}`);
+  const data = fetch(url).then((response) => { if (!response.ok) throw new Error(`${response.status} ${url}`); return response.arrayBuffer(); });
+  return Promise.all([import('three/addons/loaders/GLTFLoader.js'), import('three/addons/libs/meshopt_decoder.module.js'), data])
+    .then(([{ GLTFLoader }, { MeshoptDecoder }, buffer]) => new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).parseAsync(buffer, ''))
     .then((gltf) => { gltf.scene.updateMatrixWorld(true); return gltf; })
     .catch(() => null);
 }
