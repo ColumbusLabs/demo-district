@@ -41,7 +41,7 @@ file fails to load, the district falls back to its procedural trees.
 ## Budgets
 
 LOD0 is used for the 28 trees in planters and on the terrace (≈1.5k triangles, 2k for the
-framing tree); LOD1 for up to 100 grove and street trees (≈430 triangles). Keep spawn under
+framing tree); LOD1 for up to 100 grove and street trees (≈390 triangles). Keep spawn under
 the 150k-triangle and 120-draw budgets in `docs/PERFORMANCE_BUDGET.md`, and re-measure with
 `node scripts/measure.mjs` after any change to counts.
 

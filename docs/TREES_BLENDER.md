@@ -14,6 +14,21 @@ pavilions, ground, water, collision, and signage stay procedural and data-driven
 | --- | --- |
 | ![Before](art/alpha-spawn.jpg) | ![After](art/trees-spawn.jpg) |
 
+### Mockup comparison
+
+Mockup (left) and this branch (right), same crop:
+
+![Mockup vs trees](art/trees-vs-mockup.jpg)
+
+The first revision's crowns were too wide and solid: round balls with dark interiors. The mockup shows slim, upright young trees with clumped, airy crowns and trunks visible up into the crown. The revision:
+
+- narrows the street-tree crowns to about 0.2 × height and raises them;
+- slims the trunks;
+- places leaf sprays in clumps around the primary limbs, with sky between them;
+- uses a lighter green with less baked occlusion.
+
+Remaining gap: the mockup's photoreal, warmly backlit foliage. The real-time render is a stylized likeness, as the WORLD ALPHA audit notes.
+
 Looking back toward the terrace: ![Lookback](art/trees-lookback.jpg)
 
 Cycles preview of the models (LOD0 front, LOD1 behind): ![Models](art/trees-blender.jpg)
@@ -24,7 +39,7 @@ look on a real GPU.
 ## Delivered
 
 - **`tools/blender/trees.py`.** Generates four trees: three upright street trees matching the mockup allee, and the leaning framing tree. Each gets two levels of detail, a trunk-and-branch skeleton clamped to a crown envelope, and leaf-spray cards with crown-outward normals and baked crown occlusion. A 1024² leaf-spray atlas and a tiling bark texture are painted in code, so there are no external inputs and the output is reproducible and license-clean. See [tools/blender/README.md](../tools/blender/README.md).
-- **`public/world/models/trees.glb`.** 263 KB, meshopt-compressed with WebP textures.
+- **`public/world/models/trees.glb`.** 257 KB, meshopt-compressed with WebP textures.
 - **World integration (`landscape.ts`).**
   - The trees load while the loading screen is up.
   - Planter, plaza, framing, and terrace trees use LOD0. Groves and street trees outside the district use LOD1.
@@ -38,16 +53,17 @@ look on a real GPU.
 
 | View | Draws before → after | Triangles before → after |
 | --- | --- | --- |
-| high · spawn | 100 → 106 | 121.6k → 144.3k |
-| high · plaza | 71 → 75 | 120.3k → 129.3k |
+| high · spawn | 100 → 106 | 121.6k → 139.1k |
+| high · plaza | 71 → 75 | 120.3k → 124.6k |
 | high · promenade | 70 → 74 | 120.1k → 129.1k |
 | high · storefront | 47 → 50 | 98.6k → 106.9k |
 | high · looking back (HUD) | — | 133.0k |
-| low · spawn | 83 → 85 | 81.1k → 104.5k |
+| low · spawn | 83 → 84 | 81.1k → 98.3k |
 
 - All views stay within the ≤ 120 draws and ≤ 150k triangles budgets.
 - Main JS bundle: 687 → 717 kB. The lazy loader chunks add 71 kB (20 kB gzipped).
-- Transfer: +263 kB for the GLB.
+- Transfer: +257 kB for the GLB.
+- The promenade, storefront, and lookback rows are from the first revision, before the crowns were thinned; they have since dropped slightly.
 
 ## Verified execution (local, Node 26.10.0)
 

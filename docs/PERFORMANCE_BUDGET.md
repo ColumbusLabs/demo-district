@@ -78,7 +78,7 @@ It renders four fixed views synchronously, forcing GPU completion with a 1-pixel
 | High tier, desktop 1440×900, reference GPU (M5), median | ≤ 6 ms (≥ 2.5× headroom under 16.7 ms) | 2.7 ms |
 | High tier, DPR 2, reference GPU, median | ≤ 8 ms | 5.0 ms |
 | Draw calls at spawn | ≤ 120 | 106 (Blender trees, SwiftShader count) |
-| Triangles in view | ≤ 150k | 144k at spawn (Blender trees, SwiftShader count) |
+| Triangles in view | ≤ 150k | 139k at spawn (Blender trees, SwiftShader count) |
 | Initial transfer | ≤ 5 MB | 2.27 MB |
 | Local assets ready (broadband) | ≤ 2 s | about 0.5 s |
 | JS bundle (uncompressed) | ≤ 750 kB | 717 kB main + 71 kB lazy glTF loader |
@@ -89,9 +89,9 @@ It renders four fixed views synchronously, forcing GPU completion with a 1-pixel
 
 **Blender trees (2026-09-25).** Trees now come from `public/world/models/trees.glb` (see [TREES_BLENDER.md](TREES_BLENDER.md)). Planter and terrace trees use ~1.5k-triangle models; groves and street trees use a ~430-triangle LOD. Measured with SwiftShader at 1440×900 (counts only; SwiftShader frame times are not meaningful):
 
-- High spawn: 100 → 106 draws, 121.6k → 144.3k triangles. Plaza and promenade: 129k.
-- Low spawn: 104.5k triangles.
-- Main bundle: 687 → 717 kB, plus a 71 kB lazy loader chunk. The GLB adds 263 kB of transfer.
+- High spawn: 100 → 106 draws, 121.6k → 139.1k triangles. Plaza: 124.6k.
+- Low spawn: 98.3k triangles.
+- Main bundle: 687 → 717 kB, plus a 71 kB lazy loader chunk. The GLB adds 257 kB of transfer.
 
 Frame time on the reference GPU is not yet re-measured.
 

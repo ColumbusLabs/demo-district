@@ -41,8 +41,8 @@ UP = Vector((0.0, 0.0, 1.0))
 # --------------------------------------------------------------------------------------------
 
 LEAF_PALETTE = np.array([
-    (0.37, 0.49, 0.24), (0.48, 0.59, 0.30), (0.56, 0.68, 0.36), (0.29, 0.42, 0.20),
-    (0.63, 0.73, 0.42), (0.42, 0.54, 0.27), (0.33, 0.46, 0.22),
+    (0.40, 0.53, 0.25), (0.51, 0.63, 0.31), (0.60, 0.71, 0.37), (0.33, 0.46, 0.21),
+    (0.68, 0.76, 0.42), (0.46, 0.58, 0.28), (0.37, 0.50, 0.23),
 ])
 TILE = 512
 ATLAS = 1024  # 2 x 2 tiles: three spray variants and a sparse edge spray.
@@ -314,7 +314,7 @@ def grow(rng: random.Random, start: Vector, direction: Vector, length: float, r0
 def build_skeleton(spec: Spec, rng: random.Random, detail: int) -> list[Branch]:
     """Trunk, primaries, and (at detail 0) secondaries, clamped to the crown envelope."""
     h = spec.height
-    trunk_r = h * 0.021
+    trunk_r = h * 0.018
     top = Vector((spec.lean.x, spec.lean.y, h * 0.93))
     trunk_dir = (top - Vector((0, 0, -0.2))).normalized()
     trunk = grow(rng, Vector((0, 0, -0.2)), trunk_dir, (top - Vector((0, 0, -0.2))).length,
@@ -407,7 +407,7 @@ def add_card(geo: Geo, spec: Spec, rng: random.Random, center: Vector, size: flo
     shade_n = (outward * 0.75 + facing * 0.25 + UP * 0.3).normalized()
     depth = crown.depth(center)
     height_f = min(max((center.z - (crown.center.z - crown.radius.z)) / (2 * crown.radius.z), 0), 1)
-    ao = (0.5 + 0.5 * min(depth, 1.0) ** 1.5) * (0.8 + 0.2 * height_f)
+    ao = (0.62 + 0.38 * min(depth, 1.0) ** 1.5) * (0.85 + 0.15 * height_f)
     jitter = rng.uniform(0.9, 1.08)
     warm = rng.uniform(-0.04, 0.04)
     col = (ao * jitter * (1 + warm), ao * jitter, ao * jitter * (1 - warm))
@@ -446,21 +446,23 @@ def build_tree(spec: Spec, detail: int) -> tuple[Geo, dict]:
         fill = spec.fill
     else:
         fill = round(spec.fill * 0.5) + len(branches) * 10
+    # Fill clumps around the outer half of each primary limb, so the crown reads as separate
+    # leaf masses with sky between them (as in the mockup) rather than one solid ball.
+    limbs = [b for b in branches if b.level == 1]
+    spread = size * (0.55 if detail == 0 else 0.45)
     for _ in range(fill):
-        # Shell-biased points keep the silhouette full and the interior shadowed.
-        while True:
-            q = Vector((rng.uniform(-1, 1), rng.uniform(-1, 1), rng.uniform(-1, 1)))
-            if q.length <= 1:
-                break
-        q = q.normalized() * (0.55 + 0.45 * rng.random() ** 0.5)
-        p = Vector((crown.center.x + q.x * crown.radius.x, crown.center.y + q.y * crown.radius.y, crown.center.z + q.z * crown.radius.z))
-        tile = 3 if q.length > 0.92 else rng.randrange(3)
+        anchor, _, _ = limbs[rng.randrange(len(limbs))].at(rng.uniform(0.5, 1.0))
+        p = anchor + Vector((rng.gauss(0, spread), rng.gauss(0, spread), rng.gauss(0, spread * 0.8)))
+        depth = crown.depth(p)
+        if depth > 1.0:
+            p = crown.center.lerp(p, 1.0 / depth)
+        tile = 3 if crown.depth(p) > 0.9 else rng.randrange(3)
         add_card(geo, spec, rng, p, size * rng.uniform(0.8, 1.25), tile)
     extras = {
         'height': round(max(c.z for c in geo.co), 3),
         'crownCenter': [round(crown.center.x, 3), round(crown.center.z, 3), round(-crown.center.y, 3)],
         'crownRadius': [round(crown.radius.x, 3), round(crown.radius.z, 3), round(crown.radius.y, 3)],
-        'trunkRadius': round(spec.height * 0.021, 3),
+        'trunkRadius': round(spec.height * 0.018, 3),
         'triangles': geo.triangles(),
     }
     return geo, extras
@@ -471,15 +473,15 @@ def specs() -> list[Spec]:
     def street(name: str, seed: int, h: float, width: float) -> Spec:
         return Spec(
             name=name, seed=seed, height=h, clear=0.3,
-            crown=Crown(Vector((0, 0, h * 0.6)), Vector((h * width, h * width, h * 0.36))),
+            crown=Crown(Vector((0, 0, h * 0.64)), Vector((h * width, h * width, h * 0.34))),
             lean=Vector((0, 0, 0)), primaries=14, angle=(28, 48), secondaries=4, sprays=3,
-            fill=110, spray_size=h * 0.13,
+            fill=70, spray_size=h * 0.12,
         )
     framing_h = 12.5
     return [
-        street('street_a', 3, 9.5, 0.25),
-        street('street_b', 8, 8.2, 0.27),
-        street('street_c', 21, 10.5, 0.23),
+        street('street_a', 3, 9.5, 0.2),
+        street('street_b', 8, 8.2, 0.22),
+        street('street_c', 21, 10.5, 0.19),
         # Leans over the walkway (+X) with a broad crown, framing the top corners of the view.
         Spec(
             name='framing', seed=55, height=framing_h, clear=0.28,
