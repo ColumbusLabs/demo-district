@@ -128,10 +128,14 @@ export function buildGround(root: Group, m: DistrictMaterials, water: { channel:
     const a0 = terrace.from + ((terrace.to - terrace.from) * i) / segments;
     const a1 = terrace.from + ((terrace.to - terrace.from) * (i + 1)) / segments;
     const a = (a0 + a1) / 2; const chord = 2 * terrace.radius * Math.sin((a1 - a0) / 2) + 0.05;
+    // The entrance portal stands on the axis: leave the wall open there.
+    if (Math.abs(a - Math.PI / 2) < district.gate.opening) continue;
     const x = terrace.x + Math.cos(a) * terrace.radius; const z = terrace.z + Math.sin(a) * terrace.radius;
     const yaw = Math.PI / 2 - a;
     batch.box(m.stone, chord, 0.9, 0.55, place(x, 0.45, z, yaw), 2);
-    batch.box(m.hedge, chord, 2.3, 1.1, place(x + Math.cos(a) * 0.9, 1.15, z + Math.sin(a) * 0.9, yaw), 1.2);
+    // Planting behind the colonnade; the portal keeps its view through to the entry court.
+    const back = district.gate.radius + district.gate.depth / 2 + 1.2;
+    batch.box(m.hedge, chord * (back / terrace.radius), 1.7, 1.2, place(terrace.x + Math.cos(a) * back, 0.85, terrace.z + Math.sin(a) * back, yaw), 1.2);
     lights.box(m.warmLight, chord, 0.03, 0.03, place(x - Math.cos(a) * 0.29, 0.12, z - Math.sin(a) * 0.29, yaw));
   }
   batch.box(m.paving, terrace.radius * 2 + 4, slab, terrace.radius + 3, place(terrace.x, -slab / 2, terrace.z + terrace.radius / 2 - 0.5), paveUv);

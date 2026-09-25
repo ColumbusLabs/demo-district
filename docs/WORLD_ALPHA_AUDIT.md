@@ -10,6 +10,8 @@
 | --- | --- | --- | --- | --- |
 | ![](art/alpha-midway.jpg) | ![](art/alpha-plaza.jpg) | ![](art/alpha-lookback.jpg) | ![](art/alpha-terrace.jpg) | ![](art/alpha-phone.jpg) |
 
+City ring beyond the pavilions: ![Side view](art/city-side.jpg)
+
 ## Gate (implementation plan, section 11)
 
 | Gate item | Status | Evidence |
@@ -48,7 +50,13 @@ Each was found by reviewing renders against the mockup, and each is fixed only w
 2. **No people.** The mockup shows pedestrians. Crowds and NPCs are explicitly outside V1, so the plaza feels emptier than the render.
 3. **Placeholder copy.** Sign, banner, and wall wording is modelled on the mockup and expected to be rewritten (`signage-copy.ts`).
 4. **Storefront interiors are generic at close range** until real projects supply media.
-5. **Distant edges.** A sliver of flat lawn shows between the side groves at the horizon, and the lake edge is plain from the waterfront.
+5. **Distant edges (resolved after the audit, at the owner's request).** The open lawn around the district is gone:
+   - An entrance colonnade with a central portal frames a civic tower on the axis.
+   - A city ring of rounded glass and cream-stone blocks stands behind the side groves and past the entrance, lower toward the lake, on paved streets.
+   - Planted hills rise behind it, and a faint, haze-toned skyline sits beside the mountains.
+   - The lake side stays open.
+   - A/B measurement shows no frame-time cost; triangles at spawn are 121k of the 150k budget.
+   - Only the lake's far shoreline remains plain.
 6. **Not yet validated:** physical iPhone and Android, Safari and Firefox, mid-range GPUs, native ChatGPT Sites hosting, and the full accessibility pass (slice 41).
 
 ## Recommendation

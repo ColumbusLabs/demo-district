@@ -14,7 +14,7 @@ project media is stored here.
 | `textures/rock_boulder_dry_*.webp` | Rock Boulder Dry | Dimitrios Savva (photography), Rico Cilliers (processing) | https://polyhaven.com/a/rock_boulder_dry | 1k set; diffuse brightened and desaturated to 35%; roughness at half size; WebP. |
 | `textures/red_oak_veneer_*.webp` | Red Oak Veneer | Jenelle van Heerden | https://polyhaven.com/a/red_oak_veneer | 1k set; roughness at half size; WebP. |
 
-Procedural textures (leaf clusters, hedges, lawn, grass tufts) are generated in the browser
+Procedural textures (leaf clusters, hedges, lawn, grass tufts, city facades) are generated in the browser
 by `src/world/district/materials.ts` and have no external source.
 
 When adding an asset: keep it local, record it in this table with its license and changes,

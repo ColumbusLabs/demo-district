@@ -28,6 +28,9 @@ export interface DistrictMaterials {
   chrome: MeshPhysicalMaterial;
   warmLight: MeshBasicMaterial;
   banner: MeshStandardMaterial;
+  /** City facades in two families (see facadeTextures). */
+  facadeGlass: MeshStandardMaterial;
+  facadeStone: MeshStandardMaterial;
   /** Resolves once every texture has loaded or fallen back to flat color. */
   ready: Promise<void>;
   /** One settling promise per texture set, for progress reporting. */
@@ -83,6 +86,49 @@ function lawn(ctx: Canvas2D, size: number): void {
     ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + (rand() - 0.5) * 3, y - 2 - rand() * 3); ctx.stroke();
   }
+}
+
+/**
+ * Two storeys of city facade (7.2 m square at the geometry's UV scale), in two families that
+ * match the district's architecture. `glass`: floor-to-ceiling glazing between slim white slab
+ * edges, glass toned toward the haze so distant blocks recede. `stone`: warm cream stone with
+ * tall punched windows. A few warm-lit panes suggest golden-hour interiors. Returns [color, glow].
+ */
+function facadeTextures(doc: Document, size: number, style: 'glass' | 'stone', seed: number): [HTMLCanvasElement, HTMLCanvasElement] {
+  const color = doc.createElement('canvas'); const glow = doc.createElement('canvas');
+  color.width = color.height = glow.width = glow.height = size;
+  const c = color.getContext('2d'); const g = glow.getContext('2d');
+  if (!c || !g) return [color, glow];
+  const rand = random(seed); const floor = size / 2;
+  g.fillStyle = '#000'; g.fillRect(0, 0, size, size);
+  const pane = (x: number, y: number, w: number, h: number, base: string): void => {
+    const lit = rand() < 0.1;
+    c.fillStyle = lit ? '#6b5c4b' : base;
+    c.fillRect(x, y, w, h);
+    const sheen = c.createLinearGradient(0, y, 0, y + h);
+    sheen.addColorStop(0, 'rgba(214, 224, 232, 0.35)'); sheen.addColorStop(0.55, 'rgba(214, 224, 232, 0.05)'); sheen.addColorStop(1, 'rgba(214, 224, 232, 0.12)');
+    c.fillStyle = sheen; c.fillRect(x, y, w, h);
+    if (lit) { g.fillStyle = `rgb(${210 + Math.floor(rand() * 45)}, ${150 + Math.floor(rand() * 35)}, ${80 + Math.floor(rand() * 25)})`; g.fillRect(x, y + h * 0.15, w, h * 0.75); }
+  };
+  if (style === 'glass') {
+    c.fillStyle = '#f3efe8'; c.fillRect(0, 0, size, size);
+    for (let f = 0; f < 2; f++) {
+      const top = f * floor + floor * 0.1; const height = floor * 0.86;
+      const bays = 4; const bay = size / bays;
+      for (let b = 0; b < bays; b++) pane(b * bay + 1, top, bay - 2, height, rand() < 0.5 ? '#7d8d9a' : '#8898a4');
+    }
+  } else {
+    c.fillStyle = '#e4d8c6'; c.fillRect(0, 0, size, size);
+    // Faint stone coursing so the wall is not a flat fill.
+    c.fillStyle = 'rgba(120, 100, 80, 0.06)';
+    for (let y = 0; y < size; y += size / 12) c.fillRect(0, y, size, 1);
+    for (let f = 0; f < 2; f++) {
+      const top = f * floor + floor * 0.2; const height = floor * 0.62;
+      const columns = 3; const bay = size / columns;
+      for (let b = 0; b < columns; b++) pane(b * bay + bay * 0.3, top, bay * 0.4, height, '#6f7c86');
+    }
+  }
+  return [color, glow];
 }
 
 /** Leaves spread edge to edge and wrapped at the borders, so hedges tile without visible blobs. */
@@ -164,6 +210,12 @@ export function createMaterials(renderer: WebGLRenderer, resources: ResourceScop
   hedgeTexture.wrapS = RepeatWrapping; hedgeTexture.wrapT = RepeatWrapping;
   const grassTexture = resources.track(canvasTexture(doc, 128, grassTuft));
   const lawnTexture = resources.track(canvasTexture(doc, 256, lawn));
+  const facade = (style: 'glass' | 'stone', seed: number): MeshStandardMaterial => {
+    const [colorCanvas, glowCanvas] = facadeTextures(doc, 256, style, seed);
+    const map = resources.track(new CanvasTexture(colorCanvas)); const glow = resources.track(new CanvasTexture(glowCanvas));
+    for (const t of [map, glow]) { t.colorSpace = SRGBColorSpace; t.wrapS = RepeatWrapping; t.wrapT = RepeatWrapping; t.anisotropy = anisotropy; }
+    return standard(0xffffff, style === 'glass' ? 0.35 : 0.8, { map, emissive: 0xffffff, emissiveMap: glow, emissiveIntensity: 0.8, envMapIntensity: style === 'glass' ? 1.3 : 1 });
+  };
   lawnTexture.wrapS = RepeatWrapping; lawnTexture.wrapT = RepeatWrapping;
 
   const materials: Omit<DistrictMaterials, 'ready' | 'tasks'> = {
@@ -190,6 +242,8 @@ export function createMaterials(renderer: WebGLRenderer, resources: ResourceScop
     // Values above 1 feed the bloom pass: warm LED strips set into stone.
     warmLight: own(new MeshBasicMaterial({ color: new Color(0xffc987).multiplyScalar(2.4), toneMapped: true })),
     banner: standard(0x2b374a, 0.75, { side: DoubleSide }),
+    facadeGlass: facade('glass', 71),
+    facadeStone: facade('stone', 73),
   };
   const load = pbrLoader(anisotropy, resources, disposed);
   const onLoad = (): void => { if (!disposed()) invalidate(); };

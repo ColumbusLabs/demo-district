@@ -81,6 +81,17 @@ export const district = {
   edgePlanters: [-13.8, -19, -24.2].flatMap((z) => [{ x: -4.45, z }, { x: 4.45, z }]),
   /** Curved stone terrace closing the view behind spawn: center, radius, and arc (radians). */
   terrace: { x: 0, z: 23, radius: 11, from: 0.18, to: Math.PI - 0.18 },
+  /** Entrance colonnade on the terrace: a curved canopy on slender columns with a central portal. */
+  gate: { radius: 12.6, height: 5.8, depth: 3.2, opening: 0.2 },
+  /**
+   * The city beyond the district, outside the walkable area: blocks sit behind the side groves
+   * and past the entrance; the lake side stays open. Heights rise with distance.
+   */
+  city: {
+    sides: { innerX: 47, outerX: 98, minZ: -58, maxZ: 70 },
+    back: { minZ: 62, maxZ: 118, halfWidth: 98 },
+    street: 7,
+  },
   /** Stone benches with wood tops behind the plinths (long axis along Z). */
   benches: [{ x: -9.4, z: 5.5 }, { x: 9.4, z: 5.5 }, { x: -9.4, z: 11.5 }, { x: 9.4, z: 11.5 }],
   banners: [{ x: -9.3, z: -15.5 }, { x: 9.3, z: -15.5 }],

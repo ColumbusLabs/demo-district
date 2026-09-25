@@ -9,6 +9,7 @@ import { district } from './layout.ts';
 import { createMaterials } from './materials.ts';
 import { buildPavilion } from './pavilions.ts';
 import { buildSignage } from './signage.ts';
+import { buildSurroundings } from './surroundings.ts';
 import { storefrontTargets } from './targets.ts';
 import type { TargetVolume } from '../interactions/targeting.ts';
 import { createPost } from './post.ts';
@@ -71,6 +72,7 @@ export function createDistrict({ resources, renderer, camera, invalidate }: Cont
   const orbDrift = buildLandmark(root, m, batch, resources);
   const windTime = { value: 0 };
   buildLandscape(root, m, batch, resources, windTime, quality.outerTrees);
+  buildSurroundings(root, m, batch, lights, resources, quality.outerTrees);
   batch.build(root);
   lights.build(root, { castShadow: false, receiveShadow: false });
   const { fountain } = district;

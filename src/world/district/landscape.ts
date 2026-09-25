@@ -180,17 +180,22 @@ export function buildLandscape(root: Group, m: DistrictMaterials, batch: StaticB
   // Groves outside the paved district: behind the pavilions, and along the lakefront sides.
   for (let i = 0; i < (outerTrees ? 70 : 0); i++) {
     const side = i % 2 ? 1 : -1;
-    const x = side * (29 + rand() * 26); const z = -70 + rand() * 105;
+    const x = side * (29 + rand() * 14); const z = -70 + rand() * 120;
     plant(x, z, 1 + rand() * 0.35);
   }
   // A dense tree line behind the terrace closes the view back toward the entrance.
   const { terrace } = district;
   for (let i = 0; i < 18; i++) {
     const a = terrace.from + ((terrace.to - terrace.from) * (i + rand() * 0.6)) / 18;
-    const r = terrace.radius + 2.5 + rand() * 2.5;
+    const r = district.gate.radius + district.gate.depth / 2 + 3.5 + rand() * 3.5;
+    if (Math.abs(a - Math.PI / 2) < district.gate.opening + 0.05) continue;
     plant(terrace.x + Math.cos(a) * r, terrace.z + Math.sin(a) * r, 1.15 + rand() * 0.3);
   }
-  for (let i = 0; i < (outerTrees ? 22 : 0); i++) plant((rand() - 0.5) * 60, 36 + rand() * 26, 1.2);
+  // Street trees along the city edges soften the block faces.
+  for (let i = 0; i < (outerTrees ? 30 : 0); i++) {
+    const side = i % 2 ? 1 : -1;
+    plant(side * (44 + rand() * 2), -52 + rand() * 118, 1.1 + rand() * 0.3);
+  }
 
   templates.forEach((template, i) => {
     instanced(root, template.trunk, m.bark, trees[i] ?? [], resources, `tree-trunks-${i}`);

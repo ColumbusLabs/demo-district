@@ -31,7 +31,7 @@ export function waterMaterial(skyMap: Texture, resources: ResourceScope, options
     skyMap: { value: null },
     hazeTint: { value: hazeColor },
     sunDir: { value: sunDirection.clone() },
-    sunColor: { value: new Color(0xffe2b8).multiplyScalar(6) },
+    sunColor: { value: new Color(0xffe2b8).multiplyScalar(3.2) },
     deep: { value: new Color(options.deep) },
     shallow: { value: new Color(options.shallow) },
     rippleScale: { value: options.scale },

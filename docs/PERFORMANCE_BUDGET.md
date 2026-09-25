@@ -85,6 +85,8 @@ It renders four fixed views synchronously, forcing GPU completion with a 1-pixel
 
 **Adaptive safety net.** In automatic mode, if the smoothed frame interval stays above 26 ms (about 38 fps) for 4 s after a 3 s warmup, the world steps down one tier in place. Judging starts only once content has loaded. A visitor's explicit graphics choice is never overridden. The governor's logic is unit-tested and exercised end to end on SwiftShader.
 
+**City ring (2026-09-25).** The entrance colonnade, city blocks, hills, and skyline add about 24k triangles and 5 draw calls (spawn: 121k triangles, 100 draws). An A/B run under identical conditions shows no measurable frame-time change: all city geometry merges into existing per-material batches. The low tier drops the skyline and roof light accents.
+
 ## Quality tiers
 
 | Tier | Chosen for | Shadows | Post | MSAA | Buffer budget | Groves | Decorative motion |
