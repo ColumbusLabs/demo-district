@@ -16,7 +16,7 @@ Against the mockup, the landmark read as a flat, over-bright white shape with a 
 | --- | --- |
 | `environment.ts` | `skyYaw = 1.39` turns the whole sky, so the sun comes from behind the visitor's left, about 30° off the boulevard axis: the dome and all `sampleSky` reflections (water, storefront glass), the image-based light (the HDR's columns are rotated before PMREM), and the shadow-casting sun. They stay consistent with each other. |
 | `post.ts` | Bloom threshold 1.05 → 1.5, strength 0.38 → 0.42. Now only emissive light blooms. |
-| `materials.ts` | `warmLight` 2.4 → 3.0× so LED strips stay above the new threshold. The arch is warm cream stone (0xefe8dd), roughness 0.55, clearcoat 0.15, environment 1.0×. |
+| `materials.ts` | `warmLight` 2.4 → 3.0× so LED strips stay above the new threshold. The arch is warm cream stone (0xefe8dd), roughness 0.55, clearcoat 0.15. The arch and orb were later graded against the mockup: see [COLOR_GRADING.md](COLOR_GRADING.md). |
 
 No geometry changes: draws and triangles are unchanged (spawn 104 draws, 140.1k triangles).
 

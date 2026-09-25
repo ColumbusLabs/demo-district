@@ -201,10 +201,10 @@ def build() -> tuple[bpy.types.Object, dict]:
     main = main_path()
     objects.append(sweep(
         main, lambda i: Vector((0, 1, 0)),
-        lambda f: 1.5 - 0.4 * _crownness(f), lambda f: 2.0 - 0.4 * _crownness(f), 0.32, 'arch_main',
+        lambda f: 1.5 - 0.4 * _crownness(f), lambda f: 2.0 - 0.4 * _crownness(f), 0.62, 'arch_main',
     ))
     # Inner arch: 0.9 m across, 1.2 m deep, springing from the legs' inner faces.
-    objects.append(sweep(inner_crown(), lambda i: Vector((0, 1, 0)), lambda f: 0.9, lambda f: 1.2, 0.25, 'arch_inner'))
+    objects.append(sweep(inner_crown(), lambda i: Vector((0, 1, 0)), lambda f: 0.9, lambda f: 1.2, 0.4, 'arch_inner'))
     # Web between the crowns, recessed so the double outline reads with a lit soffit between.
     objects.append(web(lancet_crown(96), inner_crown(), -1.0 + WEB_BACK, 0.25, 'arch_web'))
     for side in (-1, 1):

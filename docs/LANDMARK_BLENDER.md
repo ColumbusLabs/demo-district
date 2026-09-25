@@ -27,7 +27,7 @@ In-app views are headless Chromium with SwiftShader at the high tier. Judge the 
 
 - **`tools/blender/landmark.py`.** Builds the whole sculpture as one mesh: 12.7k triangles, 84 kB meshopt-compressed.
   - **Main arch:** 10 m between leg centers. The legs rise straight to 19 m, then a lancet crown (arc radius 1.4 × half-span, apex softened) peaks at 25.7 m.
-  - **Band section:** a rounded rectangle, 1.5 × 2.0 m at the base tapering to 1.1 × 1.6 m at the crown.
+  - **Band section:** a rounded rectangle, 1.5 × 2.0 m at the base tapering to 1.1 × 1.6 m at the crown, with 0.62 m corners so the legs read as rounded (see [COLOR_GRADING.md](COLOR_GRADING.md)).
   - **Nested inner arch:** a second, lower lancet crown (apex ≈ 22 m) springs from the inner faces of the legs at 16.5 m. It is set 0.6 m back into the band's depth. A recessed web fills the space between the two crowns, so from the boulevard the crown shows the mockup's double outline with a lit band between. It adds no ground contacts.
   - **Wings:** crescent blades up to 2.5 m wide. Each rises from the ground outside a leg and joins it at 0.62 of the height, set 0.5 m behind the leg and yawed 20° back for depth.
   - **Footings:** the model records its ground contacts as mesh extras.
