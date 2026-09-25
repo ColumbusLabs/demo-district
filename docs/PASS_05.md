@@ -15,7 +15,7 @@ Also: [search](art/pass-05-search.jpg), [loading](art/pass-05-loading.jpg) (the 
 - **Jumps.** Each storefront has a verified free viewpoint 3–6.5 m out that frames the storefront and its sign. The move is a 0.2 s fade to haze, then a 0.3 s fade in; under reduced motion it is instant. An arcing fly-over was built first and rejected in review: every workable height either flew through tree canopies or exposed the world's edge.
 - **Map (slice 17).** A precomputed SVG schematic drawn from the layout data (not a second renderer), with the landmark at the top. It shows water, the plaza, the landmark footings, pavilions with their lit storefront edges, and a heading arrow for the visitor. Toggle it with the map button or M (never while typing or in a dialog). Storefronts on the map are keyboard-operable buttons that jump there; the focused storefront highlights.
 - **Loading (slice 21).** A brand card with a real progress bar (texture sets, sky, lighting HDR) and staged messages; it dismisses when assets settle. The scene geometry is interactive immediately; textures stream in. If WebGL is unavailable, the brand stays and the explanation card appears over it. Healthy engine status is announced but not shown; the card appears only for graphics loss or failure.
-- **Controller.** A new `teleport()` (constrained to walkable space; clears held input) replaces nothing.
+- **Controller.** A new `teleport()` moves the visitor instantly, constrained to walkable space, and clears held input.
 
 ## Bugs caught in this pass's own review
 

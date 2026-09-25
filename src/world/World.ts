@@ -55,6 +55,8 @@ export interface WorldSnapshot {
   textures: number;
   contentReady: boolean;
   quality: string;
+  /** Smoothed real interval between animation frames (ms); 0 when not looping. */
+  frameMs: number;
 }
 export interface World {
   readonly scene: Scene;
@@ -76,6 +78,8 @@ export interface WorldOptions {
   content?: ContentFactory;
   /** Called once when the content's essential assets have settled. */
   onContentReady?: () => void;
+  /** Real interval between consecutive animation-loop frames (unclamped), for adaptive quality. */
+  onFrameInterval?: (intervalMs: number, nowMs: number) => void;
 }
 const owners = new WeakMap<HTMLCanvasElement, World>();
 
@@ -105,6 +109,8 @@ export function createWorld(canvas: HTMLCanvasElement, options: WorldOptions = {
   let lastDeltaSeconds = 0;
   let lastReport = -Infinity;
   let contentReady = false;
+  let lastFrameTime: number | undefined;
+  let frameMs = 0;
   let invalidateLater: () => void = () => undefined;
   const setState = (next: WorldState): void => {
     if (next === state) return;
@@ -114,6 +120,8 @@ export function createWorld(canvas: HTMLCanvasElement, options: WorldOptions = {
   const pauseLoop = (): void => {
     if (loopActive) renderer?.setAnimationLoop(null);
     loopActive = false;
+    lastFrameTime = undefined;
+    frameMs = 0;
     clock.reset();
     lastDeltaSeconds = 0;
   };
@@ -160,7 +168,7 @@ export function createWorld(canvas: HTMLCanvasElement, options: WorldOptions = {
       viewport: viewport ? { ...viewport } : null, cameraAspect: camera.aspect,
       drawCalls: activeRenderer.info.render.calls, triangles: activeRenderer.info.render.triangles,
       geometries: activeRenderer.info.memory.geometries, textures: activeRenderer.info.memory.textures,
-      contentReady, quality: fixture.quality ?? 'default',
+      contentReady, quality: fixture.quality ?? 'default', frameMs,
     });
     const report = (time: number, force = false): void => {
       if (options.onFrame && (force || time - lastReport >= 250)) {
@@ -192,6 +200,12 @@ export function createWorld(canvas: HTMLCanvasElement, options: WorldOptions = {
       }
     };
     const frame = (time: number): void => {
+      if (lastFrameTime !== undefined) {
+        const interval = time - lastFrameTime;
+        frameMs = frameMs === 0 ? interval : frameMs * 0.9 + interval * 0.1;
+        options.onFrameInterval?.(interval, time);
+      }
+      lastFrameTime = time;
       render(time, true);
       // User-directed movement still works with reduced motion; idle decoration does not animate.
       if (!decorative() && !needsInteractionFrame()) { pauseLoop(); report(time, true); }

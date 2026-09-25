@@ -27,11 +27,14 @@ const tiers: Record<QualityTier, QualitySettings> = {
   low: { tier: 'low', shadows: false, shadowMapSize: 1024, post: false, samples: 0, pixelBudget: 300_000, outerTrees: false, animated: false },
 };
 
+export const qualityTiers: readonly QualityTier[] = ['high', 'medium', 'low'];
+
 /**
  * Baseline tiers ahead of the full preset work (Slice 20): high on desktop GPUs, medium on
  * touch-primary devices, low on software renderers. `?quality=high|low` overrides detection for testing and comparison.
  */
-export function chooseQuality(renderer: WebGLRenderer, search: string): QualitySettings {
+export function chooseQuality(renderer: WebGLRenderer, search: string, forced?: QualityTier): QualitySettings {
+  if (forced) return tiers[forced];
   const requested = new URLSearchParams(search).get('quality');
   if (requested === 'high' || requested === 'medium' || requested === 'low') return tiers[requested];
   const gl = renderer.getContext();

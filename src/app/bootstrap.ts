@@ -18,12 +18,40 @@ import type { NavigationController, NavigationMode } from '../world/controls/Nav
 import { watchInputModality } from '../ui/input-modality.ts';
 import type { InputModality } from '../ui/input-modality.ts';
 import { createWorldDiagnostics } from '../ui/world-diagnostics.ts';
+import { qualityTiers } from '../world/district/quality.ts';
+import type { QualityTier } from '../world/district/quality.ts';
+import { createGovernor } from '../world/performance/governor.ts';
 
 const mounts = new WeakMap<Document, () => void>();
+type QualityChoice = 'auto' | QualityTier;
+export interface MountOptions {
+  /** Graphics choice; defaults to the visitor's saved preference, else automatic. */
+  quality?: QualityChoice;
+  /** Session-only starting tier for automatic mode after the governor steps down. */
+  autoTier?: QualityTier;
+  /** Resume here instead of the spawn (graphics changes keep the visitor in place). */
+  resumeAt?: { x: number; z: number; yaw: number; pitch: number };
+  /** Brief message to show once the world is running. */
+  notice?: string;
+}
+const preferenceKey = 'demo-district.graphics';
+// Saved preference is a per-visitor convenience: storage may be unavailable, so never rely on it.
+const readPreference = (win: Window): QualityChoice | undefined => {
+  try { const value = win.localStorage.getItem(preferenceKey); return value === 'auto' || qualityTiers.includes(value as QualityTier) ? value as QualityChoice : undefined; }
+  catch { return undefined; }
+};
+const writePreference = (win: Window, value: QualityChoice): void => {
+  try { win.localStorage.setItem(preferenceKey, value); } catch { /* Private mode or blocked storage. */ }
+};
 
-/** Mount one world; repeat calls retire the old canvas, inputs, and renderer together. */
-export function mountApplication(doc: Document): () => void {
+/**
+ * Mount one world; repeat calls retire the old canvas, inputs, and renderer together. The
+ * returned function unmounts whichever application is currently mounted on the document, so it
+ * stays valid after internal remounts (graphics changes).
+ */
+export function mountApplication(doc: Document, options: MountOptions = {}): () => void {
   mounts.get(doc)?.();
+  const current = (): void => { mounts.get(doc)?.(); };
   const placeholder = doc.querySelector<HTMLCanvasElement>('#world-canvas');
   const status = doc.querySelector<HTMLElement>('#runtime-status');
   const detail = doc.querySelector<HTMLElement>('#runtime-detail');
@@ -36,6 +64,8 @@ export function mountApplication(doc: Document): () => void {
   const searchInput = doc.querySelector<HTMLInputElement>('#search-input');
   const searchList = doc.querySelector<HTMLUListElement>('#search-results');
   const mapSvg = doc.querySelector<SVGSVGElement>('#minimap-svg');
+  const qualitySelect = doc.querySelector<HTMLSelectElement>('#quality-select');
+  const worldNotice = doc.querySelector<HTMLElement>('#world-notice');
   const win = doc.defaultView;
   if (!placeholder || !status || !detail || !win) {
     const notice = doc.createElement('p');
@@ -44,7 +74,7 @@ export function mountApplication(doc: Document): () => void {
     doc.body.append(notice);
     const unmount = (): void => { notice.remove(); if (mounts.get(doc) === unmount) mounts.delete(doc); };
     mounts.set(doc, unmount);
-    return unmount;
+    return current;
   }
   const canvas = placeholder.cloneNode(false) as HTMLCanvasElement;
   canvas.removeAttribute('width');
@@ -102,6 +132,7 @@ export function mountApplication(doc: Document): () => void {
     if (reset) reset.disabled = !enabled;
     if (speed) speed.disabled = !enabled;
     if (searchInput) searchInput.disabled = !enabled;
+    if (qualitySelect) qualitySelect.disabled = !enabled;
     if (movePad) movePad.hidden = !enabled;
   };
   const showState = (state: WorldState): void => {
@@ -133,6 +164,29 @@ export function mountApplication(doc: Document): () => void {
   // Touch visitors keep the page's own focus; keyboard visitors land back in the scene.
   const onReset = (): void => { hud?.closeMenu(); controls?.resetView(); if (modality !== 'touch') controls?.focus(); };
   const onSpeed = (): void => { if (speed) controls?.setSpeed(Number(speed.value)); };
+  const pose = (): MountOptions['resumeAt'] => {
+    const s = controls?.snapshot();
+    return s ? { x: s.x, z: s.z, yaw: s.yaw, pitch: s.pitch } : undefined;
+  };
+  /** Rebuild the world with other graphics settings, in place, without reloading the page. */
+  const remount = (next: MountOptions): void => {
+    const at = pose();
+    const speedValue = speed?.value;
+    mountApplication(doc, { ...next, ...(at ? { resumeAt: at } : {}) });
+    if (speed && speedValue) { speed.value = speedValue; speed.dispatchEvent(new Event('change')); }
+  };
+  const onQuality = (): void => {
+    const value = qualitySelect?.value as QualityChoice | undefined;
+    if (!value || (value !== 'auto' && !qualityTiers.includes(value))) return;
+    writePreference(win, value);
+    remount({ quality: value, notice: value === 'auto' ? 'Graphics set to automatic.' : 'Graphics updated.' });
+  };
+  let noticeTimer: ReturnType<typeof setTimeout> | undefined;
+  const showNotice = (text: string): void => {
+    if (!worldNotice) return;
+    worldNotice.textContent = text; worldNotice.hidden = false;
+    clearTimeout(noticeTimer); noticeTimer = setTimeout(() => { worldNotice.hidden = true; }, 4000);
+  };
   const onPageHide = (event: PageTransitionEvent): void => {
     if (event.persisted) world?.stop(); else unmount();
   };
@@ -146,6 +200,9 @@ export function mountApplication(doc: Document): () => void {
     enter?.removeEventListener('click', onEnter);
     reset?.removeEventListener('click', onReset);
     speed?.removeEventListener('change', onSpeed);
+    qualitySelect?.removeEventListener('change', onQuality);
+    clearTimeout(noticeTimer);
+    if (worldNotice) worldNotice.hidden = true;
     stopWatchingInput?.();
     preview?.destroy();
     search?.destroy();
@@ -169,11 +226,15 @@ export function mountApplication(doc: Document): () => void {
   status.textContent = 'Starting the world engine…';
   stopWatchingInput = watchInputModality(doc, (next) => { modality = next; describeNavigation(); renderPrompt(); });
   if (speed) speed.value = '3.2';
+  const choice: QualityChoice = options.quality ?? readPreference(win) ?? 'auto';
+  if (qualitySelect) qualitySelect.value = choice;
   try {
     if (import.meta.env.DEV) diagnostics = createWorldDiagnostics(doc);
     // Development-only: `?engine-test` mounts the lightweight engine scene so lifecycle tests of
     // the engine and controls do not pay for the district. Stripped from production builds.
     const params = new URLSearchParams(win.location.search);
+    const governor = createGovernor({ slowFrameMs: 26, sustainMs: 4000, warmupMs: 3000 });
+    let governorArmed = false;
     const engineTest = import.meta.env.DEV && params.has('engine-test');
     // Development-only: `?spawn=x,z,yaw` starts elsewhere in the district (tests and visual audits).
     const spawn = import.meta.env.DEV ? params.get('spawn')?.split(',').map(Number) : undefined;
@@ -185,15 +246,34 @@ export function mountApplication(doc: Document): () => void {
     const activePreview = preview;
     hud = createHud(doc, { onMapChange: () => world?.invalidate() });
     const activeHud = hud;
-    const loadingLabels = ['Preparing the plaza…', 'Laying the stone…', 'Filling the channels…', 'Lighting the storefronts…', 'Almost there…'];
+    // Development-only `?auto-start=high|medium|low` starts automatic mode at a tier (tests the governor).
+    const autoStart = import.meta.env.DEV ? params.get('auto-start') as QualityTier | null : null;
+    const autoTier = options.autoTier ?? (autoStart && qualityTiers.includes(autoStart) ? autoStart : undefined);
+    const forcedTier = choice === 'auto' ? autoTier : choice;
+    if (options.resumeAt) activeHud.setProgress(0, 'Applying graphics settings…');
+    const loadingLabels = options.resumeAt ? ['Applying graphics settings…'] : ['Preparing the plaza…', 'Laying the stone…', 'Filling the channels…', 'Lighting the storefronts…', 'Almost there…'];
     world = createWorld(canvas, {
       ...(engineTest ? {} : {
         content: (context) => (district = createDistrict(context, {
+          ...(forcedTier ? { quality: forcedTier } : {}),
           onProgress: (fraction) => activeHud.setProgress(fraction, loadingLabels[Math.min(loadingLabels.length - 1, Math.floor(fraction * loadingLabels.length))]),
         })),
       }),
       onStateChange: showState,
-      onContentReady: () => { if (!disposed) { canvas.dataset.content = 'ready'; activeHud.setProgress(1); activeHud.finishLoading(); } },
+      onContentReady: () => {
+        if (disposed) return;
+        canvas.dataset.content = 'ready'; activeHud.setProgress(1); activeHud.finishLoading();
+        // Judge performance only from steady state, not from loading-time compiles and uploads.
+        governor.reset(win.performance.now()); governorArmed = true;
+        if (options.notice) showNotice(options.notice);
+      },
+      onFrameInterval: (interval, now) => {
+        // Automatic mode only: a visitor's explicit choice is never overridden.
+        if (choice !== 'auto' || disposed || !governorArmed || !governor.sample(interval, now)) return;
+        const tier = world?.snapshot().quality;
+        const next = tier === 'high' ? 'medium' : tier === 'medium' ? 'low' : undefined;
+        if (next) setTimeout(() => { if (!disposed) remount({ quality: 'auto', autoTier: next, notice: 'Graphics adjusted for smoother movement.' }); }, 0);
+      },
       ...(diagnostics ? { onFrame: diagnostics.update } : {}),
     });
     const activeWorld = world;
@@ -201,6 +281,7 @@ export function mountApplication(doc: Document): () => void {
       invalidate: () => activeWorld.invalidate(),
       canNavigate: () => activeWorld.snapshot().state === 'running' && !activePreview.isOpen(),
       ...(engineTest ? {} : { config: { ...districtNavigation(), ...(devSpawn ? { spawn: devSpawn } : {}) } }),
+      ...(options.resumeAt ? { start: options.resumeAt } : {}),
       movePad,
       onModeChange: (next) => {
         mode = next;
@@ -266,6 +347,8 @@ export function mountApplication(doc: Document): () => void {
     enter?.addEventListener('click', onEnter);
     reset?.addEventListener('click', onReset);
     speed?.addEventListener('change', onSpeed);
+    qualitySelect?.addEventListener('change', onQuality);
+    canvas.dataset.quality = world.snapshot().quality;
     world.start();
     win.addEventListener('pagehide', onPageHide);
     win.addEventListener('pageshow', onPageShow);
@@ -278,5 +361,5 @@ export function mountApplication(doc: Document): () => void {
     detail.textContent = 'Try a WebGL 2-capable browser with graphics acceleration enabled. No projects have been loaded.';
     if (navigationStatus) navigationStatus.textContent = 'Navigation is unavailable until graphics recover.';
   }
-  return unmount;
+  return current;
 }

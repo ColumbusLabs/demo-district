@@ -54,7 +54,7 @@ Walking is optional. Search, a map, and direct navigation will provide faster wa
 
 ## Roadmap and implementation
 
-[The detailed implementation plan](docs/IMPLEMENTATION_PLAN.md) contains 48 bounded slices; world slices 5–22 now run as seven passes. Execution evidence: [Slice 1](docs/SLICE_01.md), [Slice 2](docs/SLICE_02.md), [Slice 3](docs/SLICE_03.md), [Slice 4](docs/SLICE_04.md), [passes 1–3](docs/PASSES_01-03.md), [pass 4](docs/PASS_04.md), and [pass 5](docs/PASS_05.md). Next: **Pass 6 — performance measurement, optimization, and quality presets.**
+[The detailed implementation plan](docs/IMPLEMENTATION_PLAN.md) contains 48 bounded slices; world slices 5–22 now run as seven passes. Execution evidence: [Slice 1](docs/SLICE_01.md), [Slice 2](docs/SLICE_02.md), [Slice 3](docs/SLICE_03.md), [Slice 4](docs/SLICE_04.md), [passes 1–3](docs/PASSES_01-03.md), [pass 4](docs/PASS_04.md), [pass 5](docs/PASS_05.md), and [pass 6](docs/PASS_06.md) ([performance budget](docs/PERFORMANCE_BUDGET.md)). Next: **Pass 7 — the WORLD ALPHA audit.**
 
 The build proceeds through engine/navigation, district construction, World Alpha, persisted project discovery, ratings/authentication, submissions/moderation, creator claims, and release checks. Work stays on `build/demo-district-v1`. Each requested slice ends at its defined boundary with checks and a checkpoint; merge and deployment require separate approval.
 

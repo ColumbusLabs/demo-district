@@ -19,7 +19,7 @@ On 2026-09-24 the user set **desktop browser as the primary target** (mobile sec
 - **Pass 2 — architecture and landmark** (slices 7, 8, 12): parametric pavilion kit with three roof families, storefront frames, wood accents, soffit lighting, interior-mapped storefront glass; the arch-and-orb landmark over the fountain.
 - **Pass 3 — life and atmosphere** (slices 9, 11): procedural trees, shrubs, grasses, boulders, benches, planters, wind sway; shader water with Fresnel sky reflection, bank shading, LED spill, and a fountain.
 
-An early baseline of slice 20 was needed to keep software-rendered browsers (and CI) usable: automatic high/medium/low tiers. **Pass 4 (signage, targeting, preview) is also done: see [PASS_04.md](PASS_04.md).** **Pass 5 (HUD, search, map, loading) is done: see [PASS_05.md](PASS_05.md).** Next: **Pass 6 — performance and quality presets.** Native Sites acceptance and physical-device testing remain pending. No merge or deployment is authorized.
+An early baseline of slice 20 was needed to keep software-rendered browsers (and CI) usable: automatic high/medium/low tiers. **Pass 4 (signage, targeting, preview) is also done: see [PASS_04.md](PASS_04.md).** **Pass 5 (HUD, search, map, loading) is done: see [PASS_05.md](PASS_05.md).** **Pass 6 (measurement, optimization, quality presets) is done: see [PASS_06.md](PASS_06.md) and [PERFORMANCE_BUDGET.md](PERFORMANCE_BUDGET.md).** Next: **Pass 7 — WORLD ALPHA audit.** Native Sites acceptance and physical-device testing remain pending. No merge or deployment is authorized.
 <!-- /passes-01-03-status -->
 
 <!-- slice-04-status -->
@@ -667,6 +667,7 @@ Each slice must end with:
 
 ### Slice 18 — Performance instrumentation
 **Model:** GPT-6 Astra Pro
+**Status:** Implemented in world pass 6 ([PERFORMANCE_BUDGET.md](PERFORMANCE_BUDGET.md)).
 
 **Goal:** Measure the world before optimizing it.
 
@@ -687,6 +688,7 @@ Each slice must end with:
 
 ### Slice 19 — Geometry and material optimization
 **Model:** GPT-6 Astra Pro
+**Status:** Implemented in world pass 6 (evidence-driven: DPR-aware MSAA; other candidates documented).
 
 **Goal:** Reduce scene cost without damaging the visual direction.
 
@@ -706,7 +708,7 @@ Each slice must end with:
 
 ### Slice 20 — Adaptive quality presets
 **Model:** GPT-6 Astra Pro
-**Status:** Baseline automatic tiers (high/medium/low) added early in pass 3; full presets and user override UI remain.
+**Status:** Implemented in world pass 6: automatic tiers, adaptive step-down, and a live user override ([PASS_06.md](PASS_06.md)).
 
 **Goal:** Scale the same district across high-end desktops and phones.
 
@@ -1265,8 +1267,8 @@ each end with tests, a checkpoint, and a side-by-side comparison against the moc
 | 3. Life + atmosphere | 9, 11 | Landscaping, water, fountain | Done |
 | 4. Interaction | 13, 14, 15 | Signage, targeting, preview overlay | Done ([checkpoint](PASS_04.md)) |
 | 5. Mockup HUD | 16, 17, 21 | Search, map, loading in the mockup's frosted-pill style | Done ([checkpoint](PASS_05.md)) |
-| 6. Performance + quality | 18, 19, 20 | Measurement, optimization, full presets (baseline tiers exist) | Next |
-| 7. WORLD ALPHA audit | 22 | Mockup comparison and go/no-go | Planned |
+| 6. Performance + quality | 18, 19, 20 | Measurement, optimization, full presets (baseline tiers exist) | Done ([checkpoint](PASS_06.md)) |
+| 7. WORLD ALPHA audit | 22 | Mockup comparison and go/no-go | Next |
 
 A cheap draw-call/triangle counter runs from pass 1 on (development HUD) so phones are not
 quietly overloaded before pass 6.

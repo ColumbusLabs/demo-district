@@ -16,6 +16,8 @@ interface ControllerOptions {
   invalidate: () => void;
   canNavigate: () => boolean;
   config?: Partial<MovementConfig>;
+  /** Where to begin (e.g. resuming after a graphics change); Reset view still uses the spawn. */
+  start?: { x: number; z: number; yaw: number; pitch: number };
   /** Optional on-screen movement stick. Touch look works on the canvas without it. */
   movePad?: HTMLElement | null;
   onModeChange?: (mode: NavigationMode) => void;
@@ -39,6 +41,11 @@ export function createNavigationController(canvas: HTMLCanvasElement, camera: Pe
   const pad = options.movePad ?? undefined;
   const config = movementConfig(options.config);
   let motion = initialMotion(config);
+  if (options.start) {
+    motion = { ...options.start, vx: 0, vz: 0 };
+    rotateView(motion, 0, 0, config);
+    constrainMotion(motion, config);
+  }
   const keys = new Set<string>();
   const removers: Array<() => void> = [];
   let disposed = false;

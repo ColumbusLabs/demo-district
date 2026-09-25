@@ -75,6 +75,9 @@ button, input, select { font: inherit; color: inherit; }
 #runtime-status[data-state="unavailable"] { color: #f5d8b0; }
 #runtime-detail { font-size: .85rem; color: var(--ink-soft); line-height: 1.5; }
 
+/* Brief notices (e.g. graphics adjusted) under the search pill. */
+.world-notice { position: fixed; top: calc(max(1rem, env(safe-area-inset-top)) + 3.9rem); left: 50%; transform: translateX(-50%); z-index: 3; margin: 0; padding: .45rem .9rem; border-radius: 999px; background: var(--glass-strong); border: 1px solid var(--line); font-size: .78rem; white-space: nowrap; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); pointer-events: none; }
+
 /* Jump fade: hides the move between storefronts instead of flying through the scene. */
 .transition { position: fixed; inset: 0; z-index: 4; background: #dfe3e3; opacity: 0; pointer-events: none; transition: opacity .2s ease; }
 .transition[data-active] { opacity: 1; }

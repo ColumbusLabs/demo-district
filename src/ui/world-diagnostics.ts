@@ -13,7 +13,7 @@ export function createWorldDiagnostics(doc: Document): { update: (snapshot: Worl
       const size = snapshot.viewport;
       panel.textContent = [
         'DEVELOPMENT · WORLD ENGINE',
-        `${snapshot.state} · ${snapshot.loopActive ? 'continuous' : 'on demand / paused'}`,
+        `${snapshot.state} · ${snapshot.quality} tier · ${snapshot.loopActive ? `continuous · ${snapshot.frameMs.toFixed(1)} ms/frame` : 'on demand / paused'}`,
         `Frames ${snapshot.frames} · Draws ${snapshot.drawCalls} · Triangles ${snapshot.triangles}`,
         `Geometries ${snapshot.geometries} · Textures ${snapshot.textures}`,
         size ? `${size.bufferWidth} × ${size.bufferHeight} · DPR ${size.pixelRatio.toFixed(2)}` : 'Waiting for a visible canvas',

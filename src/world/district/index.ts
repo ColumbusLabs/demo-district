@@ -13,6 +13,7 @@ import { storefrontTargets } from './targets.ts';
 import type { TargetVolume } from '../interactions/targeting.ts';
 import { createPost } from './post.ts';
 import { chooseQuality } from './quality.ts';
+import type { QualityTier } from './quality.ts';
 import { createFountain, waterMaterial } from './water.ts';
 
 
@@ -33,10 +34,12 @@ export interface District extends WorldContent {
 export interface DistrictOptions {
   /** Asset loading progress, 0–1, for the loading screen. */
   onProgress?: (fraction: number) => void;
+  /** Visitor's graphics choice; omitted means automatic detection. */
+  quality?: QualityTier;
 }
 
 export function createDistrict({ resources, renderer, camera, invalidate }: ContentContext, options: DistrictOptions = {}): District {
-  const quality = chooseQuality(renderer, renderer.domElement.ownerDocument.defaultView?.location.search ?? '');
+  const quality = chooseQuality(renderer, renderer.domElement.ownerDocument.defaultView?.location.search ?? '', options.quality);
   let disposed = false;
   resources.track({ dispose: () => { disposed = true; } });
   const isDisposed = (): boolean => disposed;
@@ -72,7 +75,11 @@ export function createDistrict({ resources, renderer, camera, invalidate }: Cont
   lights.build(root, { castShadow: false, receiveShadow: false });
   const { fountain } = district;
   const jets = createFountain(root, resources, new Vector3(fountain.x, 0.36, fountain.z), fountain.radius - 0.7);
-  const post = quality.post ? createPost(renderer, scene, camera, resources, quality.samples) : undefined;
+  // Measured (docs/PERFORMANCE_BUDGET.md): at DPR ≥ 1.5, 2× MSAA costs ~21% less than 4× and
+  // dense pixels hide the difference.
+  const dpr = renderer.domElement.ownerDocument.defaultView?.devicePixelRatio ?? 1;
+  const samples = dpr >= 1.5 ? Math.min(2, quality.samples) : quality.samples;
+  const post = quality.post ? createPost(renderer, scene, camera, resources, samples) : undefined;
   refresh();
 
   return {
