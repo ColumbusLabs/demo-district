@@ -8,6 +8,73 @@
 **Build style:** Small, chat-friendly slices with a hard checkpoint after every slice.  
 **Model options used in this plan:** GPT-5.6 Sol and GPT-6 Astra Pro.
 
+<!-- passes-01-03-status -->
+## Current implementation checkpoint — World passes 1–3 (slices 5–12)
+
+**The walkable plaza now exists.** See [pass checkpoint and evidence](PASSES_01-03.md) and [art direction](WORLD_ART_DIRECTION.md).
+
+On 2026-09-24 the user set **desktop browser as the primary target** (mobile secondary but supported), approved CC0 third-party assets, and approved regrouping slices 5–22 into seven passes aimed directly at the mockup (below). Passes 1–3 ran back to back:
+
+- **Pass 1 — composition and light** (slices 5, 6, 10): layout-driven plaza, boulevard, water channels with coping and LED lines, beds, plinths, banners, collision against every solid, golden-hour sun, HDR sky and image-based lighting, haze, lake, and mountains.
+- **Pass 2 — architecture and landmark** (slices 7, 8, 12): parametric pavilion kit with three roof families, storefront frames, wood accents, soffit lighting, interior-mapped storefront glass; the arch-and-orb landmark over the fountain.
+- **Pass 3 — life and atmosphere** (slices 9, 11): procedural trees, shrubs, grasses, boulders, benches, planters, wind sway; shader water with Fresnel sky reflection, bank shading, LED spill, and a fountain.
+
+An early baseline of slice 20 was needed to keep software-rendered browsers (and CI) usable: automatic high/medium/low tiers. **Pass 4 (signage, targeting, preview) is also done: see [PASS_04.md](PASS_04.md).** **Pass 5 (HUD, search, map, loading) is done: see [PASS_05.md](PASS_05.md).** **Pass 6 (measurement, optimization, quality presets) is done: see [PASS_06.md](PASS_06.md) and [PERFORMANCE_BUDGET.md](PERFORMANCE_BUDGET.md).** **Pass 7 (WORLD ALPHA audit) is done: see [WORLD_ALPHA_AUDIT.md](WORLD_ALPHA_AUDIT.md). It recommends declaring WORLD ALPHA for the desktop browser preview; backend slices (23+) stay locked until the owner decides.** **Blender trees (first Blender-authored asset, slice 9 follow-up) are on `claude/blender-environment-support-darnhc`: see [TREES_BLENDER.md](TREES_BLENDER.md). The landmark sculpture followed: see [LANDMARK_BLENDER.md](LANDMARK_BLENDER.md), then a lighting pass: see [LIGHTING_PASS.md](LIGHTING_PASS.md), landmark color grading: see [COLOR_GRADING.md](COLOR_GRADING.md), the bell fountain: see [FOUNTAIN.md](FOUNTAIN.md), and statue planting: see [STATUE_PLANTING.md](STATUE_PLANTING.md).** Native Sites acceptance and physical-device testing remain pending. No merge or deployment is authorized.
+<!-- /passes-01-03-status -->
+
+<!-- slice-04-status -->
+## Historical implementation checkpoint — Slice 4
+
+**Slice 4 mobile/touch navigation implemented.** See [Slice 4 evidence](SLICE_04.md) and the [navigation contract](NAVIGATION.md).
+
+A one-finger scene drag looks around, and an analog movement stick walks; both work together. Touch never takes keyboard focus, pinch zoom is kept, and the page does not scroll during world interaction. Touch-primary devices hide keyboard-only hints and use a compact layout that covers less than 30% of a phone screen. Keyboard, mouse, and touch share one controller, one motion state, and the engine's single scheduler.
+
+The approved plaza mockup is now in the repository: [art direction](WORLD_ART_DIRECTION.md). The toolchain is on Node 26 (Node 24 also supported).
+
+Native Sites acceptance and physical iPhone/Android testing remain pending. No merge or deployment is authorized. **Milestone 1 (engine boots) is reached in emulation.** Next planned code slice at that checkpoint: **5 — District graybox (6 Astra Pro).**
+<!-- /slice-04-status -->
+
+<!-- slice-03-status -->
+## Historical implementation checkpoint — Slice 3
+
+**Slice 3 desktop navigation implemented.** See [Slice 3 acceptance and exact CI evidence](SLICE_03.md) for verification status.
+
+Focus-scoped WASD walking, drag/arrow-key look, configurable speeds, human eye height, coarse perimeter bounds, and safe input cleanup now share the engine's single scheduler. Reduced motion supports deliberate navigation without idle decorative animation. No pointer lock is required.
+
+The user's no-paid-Actions requirement is recorded in [CI cost policy](CI_COST_POLICY.md) and AGENTS.md. Only public-repository standard Ubuntu execution is approved; caches and artifact uploads are disabled.
+
+Native Sites acceptance remains pending. No merge or deployment is authorized. Next planned code slice at that checkpoint: **4 — Mobile/touch navigation baseline (5.6 Sol).**
+<!-- /slice-03-status -->
+
+<!-- slice-02-status -->
+## Historical implementation checkpoint — Slice 2
+
+**Slice 2 implemented and verified as a portable Three.js engine.**
+
+Clean locked installation, repository/runtime unit tests, strict typecheck,
+production build/static checks, production-browser tests, development lifecycle
+and real HMR tests, and runtime dependency audit passed in CI.
+
+Evidence: https://github.com/ColumbusLabs/demo-district/actions/runs/36054505223 (tested source `84da0e26c6061825b74d756f3f32b1969b881244`).
+See [Slice 2 evidence](SLICE_02.md) and [engine contract](WORLD_ENGINE.md).
+
+Native Sites acceptance from Slice 1 remains pending; this is not a claim of Sites
+validation or physical mobile performance. No merge or deployment was performed.
+Next code slice at that checkpoint: **3 — First-person camera and desktop movement (6 Astra Pro).**
+<!-- /slice-02-status -->
+
+<!-- slice-01-status -->
+## Historical Slice 1 checkpoint — September 24, 2026
+
+**Slice 1: scaffold verified; native Sites acceptance pending.**
+
+Clean npm ci, 4 repository checks, strict TypeScript check, production build, static artifact check, 12 Chromium smoke cases, and runtime dependency audit passed. Browser cases cover desktop and phone-sized Chromium, not physical iPhone/Safari.
+
+CI evidence: https://github.com/ColumbusLabs/demo-district/actions/runs/36051654434 (source commit `fcc14ad08d8b119a4d1b841d6c8791e0fc67d551`). See [Slice 1 evidence](SLICE_01.md) and [Sites handoff](DEPLOYMENT.md).
+
+No Site was provisioned, saved, deployed, or published. No merge was performed. The final Slice 1 acceptance item requires the native Sites save-only workflow; a green Vite build is not a substitute. At that checkpoint, the next planned implementation was Slice 2. See the current checkpoint above for subsequent work; the host-verification gate remains explicit.
+<!-- /slice-01-status -->
+
 ---
 
 ## 1. Product vision
@@ -120,7 +187,7 @@ demo-district/
 ├─ AGENTS.md
 ├─ docs/
 │  ├─ IMPLEMENTATION_PLAN.md
-│  ├─ WORLD_ART_DIRECTION.md
+│  ├─ WORLD_ART_DIRECTION.md   (with art/plaza-mockup.jpg)
 │  ├─ PERFORMANCE_BUDGET.md
 │  ├─ DATA_MODEL.md
 │  └─ DEPLOYMENT.md
@@ -234,6 +301,7 @@ Each slice must end with:
 
 ### Slice 1 — Repository contract and Sites-compatible scaffold
 **Model:** GPT-6 Astra Pro
+**Status:** Scaffold verified; native Sites compatibility check pending. See the implementation status above.
 
 **Goal:** Establish a repository that ChatGPT Sites can actually build before adding product code.
 
@@ -259,6 +327,7 @@ Each slice must end with:
 
 ### Slice 2 — Three.js engine shell
 **Model:** GPT-6 Astra Pro
+**Status:** Implemented and verified. See [Slice 2 evidence](SLICE_02.md); native Sites validation remains pending.
 
 **Goal:** Create the reusable world lifecycle without building the district yet.
 
@@ -282,6 +351,7 @@ Each slice must end with:
 
 ### Slice 3 — First-person camera and desktop movement
 **Model:** GPT-6 Astra Pro
+**Status:** Implemented. Current acceptance status and exact-source CI results are recorded in [Slice 3 evidence](SLICE_03.md).
 
 **Goal:** Make the empty world feel deliberately navigable rather than like a Three.js debug scene.
 
@@ -305,6 +375,7 @@ Each slice must end with:
 
 ### Slice 4 — Mobile/touch navigation baseline
 **Model:** GPT-5.6 Sol
+**Status:** Implemented. See [Slice 4 evidence](SLICE_04.md); physical-device and native Sites validation remain pending.
 
 **Goal:** Prove the project is mobile-capable before the environment becomes expensive.
 
@@ -324,6 +395,7 @@ Each slice must end with:
 
 ### Slice 5 — District graybox
 **Model:** GPT-6 Astra Pro
+**Status:** Implemented in world pass 1. See [passes 1–3](PASSES_01-03.md).
 
 **Goal:** Recreate the selected Demo District mockup composition using primitives only.
 
@@ -347,6 +419,7 @@ Each slice must end with:
 
 ### Slice 6 — Ground, curbs, and water-channel geometry
 **Model:** GPT-5.6 Sol
+**Status:** Implemented in world pass 1.
 
 **Goal:** Replace the graybox floor with a readable plaza circulation system.
 
@@ -366,6 +439,7 @@ Each slice must end with:
 
 ### Slice 7 — Reusable pavilion architecture kit
 **Model:** GPT-6 Astra Pro
+**Status:** Implemented in world pass 2.
 
 **Goal:** Create a coherent architecture language that does not look like copied boxes.
 
@@ -388,6 +462,7 @@ Each slice must end with:
 
 ### Slice 8 — Hero arch and orb landmark
 **Model:** GPT-6 Astra Pro
+**Status:** Implemented in world pass 2. Sculpture remodelled in Blender after the mockup ([LANDMARK_BLENDER.md](LANDMARK_BLENDER.md)).
 
 **Goal:** Build the central signature landmark that anchors Demo District visually.
 
@@ -409,6 +484,7 @@ Each slice must end with:
 
 ### Slice 9 — Landscaping kit
 **Model:** GPT-5.6 Sol
+**Status:** Implemented in world pass 3. Trees replaced by Blender-generated models ([TREES_BLENDER.md](TREES_BLENDER.md)).
 
 **Goal:** Break up hard architecture and establish the premium outdoor atmosphere.
 
@@ -427,6 +503,7 @@ Each slice must end with:
 
 ### Slice 10 — Golden-hour lighting and sky
 **Model:** GPT-6 Astra Pro
+**Status:** Implemented in world pass 1 (baseline; tuned against the mockup).
 
 **Goal:** Establish the visual identity closest to the selected mockup.
 
@@ -449,6 +526,7 @@ Each slice must end with:
 
 ### Slice 11 — Water look and fountain motion
 **Model:** GPT-6 Astra Pro
+**Status:** Implemented in world pass 3. Fountain rebuilt as the mockup's bell fountain ([FOUNTAIN.md](FOUNTAIN.md)).
 
 **Goal:** Make the water channels feel alive without using expensive fluid simulation.
 
@@ -469,6 +547,7 @@ Each slice must end with:
 
 ### Slice 12 — Storefront windows and implied interiors
 **Model:** GPT-5.6 Sol
+**Status:** Implemented in world pass 2 (interior-mapped storefront glass).
 
 **Goal:** Make pavilions feel occupied without modeling full interiors.
 
@@ -488,6 +567,7 @@ Each slice must end with:
 
 ### Slice 13 — District signage system
 **Model:** GPT-5.6 Sol
+**Status:** Implemented in world pass 4 ([PASS_04.md](PASS_04.md)).
 
 **Goal:** Turn building fronts into reusable discovery destinations.
 
@@ -507,6 +587,7 @@ Each slice must end with:
 
 ### Slice 14 — World interaction targeting
 **Model:** GPT-6 Astra Pro
+**Status:** Implemented in world pass 4.
 
 **Goal:** Make storefronts/project points interactable across desktop and touch.
 
@@ -527,6 +608,7 @@ Each slice must end with:
 
 ### Slice 15 — Project preview overlay shell
 **Model:** GPT-5.6 Sol
+**Status:** Implemented in world pass 4 (sample fixtures only).
 
 **Goal:** Connect the 3D world to a polished 2D project-information layer.
 
@@ -546,6 +628,7 @@ Each slice must end with:
 
 ### Slice 16 — Search and jump-to-location
 **Model:** GPT-5.6 Sol
+**Status:** Implemented in world pass 5 ([PASS_05.md](PASS_05.md)).
 
 **Goal:** Ensure walking is a delight, not mandatory friction.
 
@@ -565,6 +648,7 @@ Each slice must end with:
 
 ### Slice 17 — District minimap baseline
 **Model:** GPT-5.6 Sol
+**Status:** Implemented in world pass 5.
 
 **Goal:** Give users spatial orientation without running a second full 3D renderer.
 
@@ -583,6 +667,7 @@ Each slice must end with:
 
 ### Slice 18 — Performance instrumentation
 **Model:** GPT-6 Astra Pro
+**Status:** Implemented in world pass 6 ([PERFORMANCE_BUDGET.md](PERFORMANCE_BUDGET.md)).
 
 **Goal:** Measure the world before optimizing it.
 
@@ -603,6 +688,7 @@ Each slice must end with:
 
 ### Slice 19 — Geometry and material optimization
 **Model:** GPT-6 Astra Pro
+**Status:** Implemented in world pass 6 (evidence-driven: DPR-aware MSAA; other candidates documented).
 
 **Goal:** Reduce scene cost without damaging the visual direction.
 
@@ -622,6 +708,7 @@ Each slice must end with:
 
 ### Slice 20 — Adaptive quality presets
 **Model:** GPT-6 Astra Pro
+**Status:** Implemented in world pass 6: automatic tiers, adaptive step-down, and a live user override ([PASS_06.md](PASS_06.md)).
 
 **Goal:** Scale the same district across high-end desktops and phones.
 
@@ -641,6 +728,7 @@ Each slice must end with:
 
 ### Slice 21 — Loading experience and progressive assets
 **Model:** GPT-5.6 Sol
+**Status:** Implemented in world pass 5.
 
 **Goal:** Replace blank-canvas waiting with a polished Demo District entry.
 
@@ -659,6 +747,7 @@ Each slice must end with:
 
 ### Slice 22 — World visual audit checkpoint
 **Model:** GPT-6 Astra Pro
+**Status:** Audit complete in world pass 7 ([WORLD_ALPHA_AUDIT.md](WORLD_ALPHA_AUDIT.md)); gate items met with evidence; owner decision pending.
 
 **Goal:** Stop feature growth and decide whether the district itself is compelling enough to justify the platform around it.
 
@@ -1164,6 +1253,26 @@ Each slice must end with:
 - Public deployment remains a deliberate separate action.
 
 **Milestone:** DEMO DISTRICT V1 RELEASE CANDIDATE
+
+---
+
+## 8a. World passes (approved regrouping of slices 5–22)
+
+The slices above remain the definition of done. Execution groups them into passes that
+each end with tests, a checkpoint, and a side-by-side comparison against the mockup:
+
+| Pass | Slices | Outcome | Status |
+| --- | --- | --- | --- |
+| 1. Composition + light | 5, 6, 10 | Layout, circulation, collision, golden-hour lighting and sky | Done ([checkpoint](PASSES_01-03.md)) |
+| 2. Architecture + landmark | 7, 8, 12 | Pavilion kit, implied interiors, arch and orb | Done |
+| 3. Life + atmosphere | 9, 11 | Landscaping, water, fountain | Done |
+| 4. Interaction | 13, 14, 15 | Signage, targeting, preview overlay | Done ([checkpoint](PASS_04.md)) |
+| 5. Mockup HUD | 16, 17, 21 | Search, map, loading in the mockup's frosted-pill style | Done ([checkpoint](PASS_05.md)) |
+| 6. Performance + quality | 18, 19, 20 | Measurement, optimization, full presets (baseline tiers exist) | Done ([checkpoint](PASS_06.md)) |
+| 7. WORLD ALPHA audit | 22 | Mockup comparison and go/no-go | Done — recommendation recorded; owner decision pending ([audit](WORLD_ALPHA_AUDIT.md)) |
+
+A cheap draw-call/triangle counter runs from pass 1 on (development HUD) so phones are not
+quietly overloaded before pass 6.
 
 ---
 

@@ -1,176 +1,65 @@
 # Demo District
 
-Demo District is a walkable 3D community showcase for the best things people build with new AI models.
+A walkable 3D community showcase for things people build with AI models.
 
-Instead of presenting projects as another grid of links, Demo District turns discovery into a place. Visitors enter a polished Three.js district, walk past creator storefronts and exhibits, search by creator/model/category, inspect project previews, rate what they find, and deliberately open the original creator-hosted experience.
+Demo District turns discovery into a place: a pedestrian exhibition district with creator storefronts, project previews, model attribution, and deliberate links to the original experiences. Creator projects remain externally hosted by default; entering the district never preloads everyone's demos. Media or builds are hosted only with explicit permission.
 
-The district is the product surface.
+## Current build
 
-## Vision
+**World passes 1–3: the walkable plaza.** See [the checkpoint and side-by-side with the mockup](docs/PASSES_01-03.md).
 
-When a new model launches, creators quickly post games, 3D worlds, interactive experiments, buildings, prototypes, simulations, and other demos across X and the web. Those projects are impressive, but they are scattered across timelines and disappear quickly.
+The preview is now the Demo District plaza itself: golden-hour sky and lighting, stone boulevard and water channels, eight pavilions from a reusable kit with lit storefront interiors, the arch-and-orb landmark over a fountain, trees and planting, an entrance colonnade, a surrounding city, a lake, and mountains. You walk it with WASD and mouse on desktop, or drag and the stick on a phone, and you collide with everything solid. Storefronts carry signage and open a project preview by click, tap, or Enter; the listings are clearly marked samples until real project records exist ([pass 4](docs/PASS_04.md)). The mockup's HUD is in place with search, a map, and a loading screen ([pass 5](docs/PASS_05.md)). Desktop browsers are the primary target; phones and software-rendered browsers get lighter automatic quality tiers. Native ChatGPT Sites acceptance and physical-device testing remain pending. Nothing has been merged or deployed.
 
-Demo District is intended to give them a persistent, explorable home.
+![Current spawn view with HUD](docs/art/alpha-spawn.jpg)
 
-A project in Demo District can include:
+## Try the preview locally
 
-- project title and description
-- creator name and profile
-- original source/X post
-- model and model version used
-- category
-- preview media
-- community rating
-- an intentional link to the original experience
+Use Node 26 (Node 24 is also supported) and the committed npm lockfile. No credentials are required.
 
-Creator projects remain externally hosted by default. Demo District does **not** preload every linked project when a visitor enters the world.
+```sh
+nvm install
+nvm use
+npm ci
+npm run dev
+```
 
-If a creator explicitly provides media or a demo for Demo District to host, that is handled as a separate permissioned submission.
+Development runs at `http://127.0.0.1:5173` (add `?quality=high|medium|low` to force a rendering tier). On a phone, drag the scene to look and use the stick at the bottom left to walk. On a computer, choose **Explore** or click the scene, then use WASD to walk. Drag to look, or use arrow keys. Escape releases focus and Tab moves through the page controls. Reset view returns to the spawn. No pointer lock, head bob, jumping, or automatic camera movement is required.
 
-## The world
+```sh
+node scripts/check-ci-policy.mjs
+npm run verify
+npx --no-install playwright install chromium
+npm run test:browser
+npm run test:lifecycle
+npm run preview
+```
 
-The first Demo District environment is being designed as a premium pedestrian exhibition district rather than a generic metaverse lobby.
+Production preview uses `http://127.0.0.1:4173`. Browser tests start their own servers; ports 4173 and 5173 must be free. Lifecycle tests run serially and restore the source edit used to exercise actual hot reload.
 
-The visual direction includes:
+[Deployment/Sites handoff](docs/DEPLOYMENT.md) · [Agent contract](AGENTS.md) · [Navigation](docs/NAVIGATION.md) · [Art direction](docs/WORLD_ART_DIRECTION.md) · [World engine](docs/WORLD_ENGINE.md)
 
-- a strong central pedestrian boulevard
-- contemporary light-stone pavilions and storefronts
-- landscaped planters, trees, benches, and path lighting
-- shallow linear water features
-- a large sculptural arch/orb landmark
-- warm golden-hour lighting
-- subtle project signage
-- lightweight implied interiors
-- minimal UI layered over the 3D environment
+## No paid GitHub Actions
 
-The target is a visually memorable environment that is still realistic to build and run well in Three.js on the web.
+CI uses only the standard `ubuntu-latest` runner and a job-level public-repository condition. It skips non-public repositories rather than consuming a paid private-repository allowance. Caches and artifact uploads are disabled; results stay in logs/job summaries. A dependency-free policy check rejects unapproved runners, extra jobs, paid services, and storage-related workflow changes. Run it before any workflow push.
 
-## Core principles
+This is a repository configuration/agent rule, not an account-wide billing lock. See [the cost policy and its boundaries](docs/CI_COST_POLICY.md).
 
-### World first
+## The destination
 
-The 3D district comes before the full community backend. If the world itself is not worth entering, the rest of the product does not matter.
+![Selected Demo District plaza mockup](docs/art/plaza-mockup.jpg)
 
-### Walking is optional
+The approved visual direction ([details](docs/WORLD_ART_DIRECTION.md)) is a contemporary light-stone plaza with a strong central boulevard, landscaped pavilions, shallow water channels, warm golden-hour lighting, and a sculptural arch/orb landmark. The world must be attractive and usable before the full community platform is added.
 
-Exploration should be enjoyable, not friction. Search, direct navigation, and a district map will let users quickly reach projects without walking the entire world.
+Walking is optional. Search, a map, and direct navigation will provide faster ways to find projects. Listings will show the creator, source X post, model/version, description, permitted media, ratings, and a deliberate external launch action. Creators should have accessible claim, edit, and removal paths.
 
-### Link out by default
+## Roadmap and implementation
 
-Projects normally remain on the creator's own site. Demo District stores lightweight metadata and links rather than loading every external experience into the district.
+[The detailed implementation plan](docs/IMPLEMENTATION_PLAN.md) contains 48 bounded slices; world slices 5–22 now run as seven passes. Execution evidence: [Slice 1](docs/SLICE_01.md), [Slice 2](docs/SLICE_02.md), [Slice 3](docs/SLICE_03.md), [Slice 4](docs/SLICE_04.md), [passes 1–3](docs/PASSES_01-03.md), [pass 4](docs/PASS_04.md), [pass 5](docs/PASS_05.md), and [pass 6](docs/PASS_06.md) ([performance budget](docs/PERFORMANCE_BUDGET.md)). The [WORLD ALPHA audit](docs/WORLD_ALPHA_AUDIT.md) is complete and recommends declaring WORLD ALPHA for the desktop preview; backend work waits for the owner's decision.
 
-### Creator-friendly by design
+The build proceeds through engine/navigation, district construction, World Alpha, persisted project discovery, ratings/authentication, submissions/moderation, creator claims, and release checks. Work stays on `build/demo-district-v1`. Each requested slice ends at its defined boundary with checks and a checkpoint; merge and deployment require separate approval.
 
-Listings should preserve attribution and the original source. Creators should have clear claim, edit, and removal paths. Hosted creator media or demos require permission.
+Current stack: portable TypeScript, direct Three.js, and Vite. ChatGPT Sites is the intended host, subject to native validation. Planned later storage/authentication choices must be validated against the eventual host before provisioning anything. No D1/R2/authentication or real creator records are active now.
 
-### Mobile matters
+V1 deliberately excludes multiplayer avatars, vehicles, voice chat, complex physics, fully modeled interiors for every property, a building editor, free-form comments, arbitrary project embeds, large-scale X scraping, infinite-city generation, and crypto/property ownership.
 
-The same district should work across desktop and mobile, with adaptive rendering quality and touch-friendly navigation.
-
-### Portable Three.js architecture
-
-ChatGPT Sites is the initial hosting target, but the Three.js world should remain portable rather than being tightly coupled to a single hosting environment.
-
-## Planned technology
-
-The exact application scaffold will be verified against the current ChatGPT Sites runtime before implementation begins.
-
-Current direction:
-
-- **Three.js** — 3D world and interaction
-- **TypeScript** — application/world code
-- **ChatGPT Sites** — initial hosting target
-- **D1** — structured project/community data
-- **R2** — permissioned uploaded images, video, and files
-- **Sites-supported authentication** — protected community actions such as ratings and creator claims
-
-The project intentionally avoids a heavyweight physics system for V1 unless later requirements prove one is necessary.
-
-## Build strategy
-
-Demo District is being built in small, checkpointed slices so that most implementation can be managed directly through ChatGPT rather than relying on long autonomous coding sessions.
-
-Every slice should:
-
-1. stay inside its defined scope,
-2. make a small cohesive set of changes,
-3. run the smallest meaningful build/test checks,
-4. update the implementation plan,
-5. checkpoint the work,
-6. avoid merging or deploying unless explicitly requested.
-
-The first major gate is **WORLD ALPHA**.
-
-Backend/community work should not outrun the visual and interaction quality of the district.
-
-## Roadmap
-
-The current plan contains 48 implementation slices across these major stages:
-
-1. repository and Three.js foundation
-2. Demo District world construction
-3. navigation, interaction, performance, and WORLD ALPHA
-4. real project data and external linking
-5. ratings and authentication
-6. creator/community submissions and moderation
-7. creator claims and profiles
-8. discovery and analytics
-9. accessibility, security, QA, performance, and release
-
-The detailed implementation plan is here:
-
-**[docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md)**
-
-## V1 visitor flow
-
-A successful first-version visit should look like this:
-
-1. Enter Demo District.
-2. Spawn facing the main landmark.
-3. Walk, search, or use the map.
-4. Discover a creator/project storefront.
-5. Open its Demo District preview.
-6. See the creator, model used, project description, source, and rating.
-7. Optionally rate the project after signing in.
-8. Open the original creator-hosted project or source post.
-9. Return to the district and continue exploring.
-
-## What V1 is not
-
-Demo District V1 is intentionally not trying to become everything at once.
-
-Out of scope for the initial build:
-
-- multiplayer avatars
-- voice chat
-- vehicles
-- complex physics
-- platforming
-- fully modeled interiors for every property
-- real-time crowds
-- user-created building editors
-- arbitrary third-party site embedding
-- free-form public comments
-- automatic large-scale X scraping
-- procedural infinite cities
-- crypto/NFT/property ownership
-
-These can be reconsidered only after the core discovery experience proves itself.
-
-## Current status
-
-**Status:** Planning complete; implementation has not started.
-
-The detailed implementation plan is the first committed project document.
-
-The next implementation task is:
-
-**Slice 1 — Repository contract and Sites-compatible scaffold**
-
-Model assignment: **GPT-6 Astra Pro**
-
-No production deployment should occur until explicitly approved.
-
----
-
-Demo District is intended to be a community place for discovering what people are actually making with the newest AI models — not just reading benchmark numbers or watching model announcements.
+Demo District is an independent community exhibition project. Its goal is to help people discover what others are making, while sending attention and credit back to the original creators.
