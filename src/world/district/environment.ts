@@ -8,11 +8,14 @@ import type { ResourceScope } from '../runtime.ts';
 import { assetUrl, random } from './materials.ts';
 
 /**
- * Sky: Poly Haven "Kloppenheim 06 (Pure Sky)". Its sun sits at u = 0.612, 4.7° up, which in
- * Three.js equirect convention is behind and right of the spawn view. The shadow-casting sun
- * uses the same azimuth, raised to ~14° so shadows stay readable.
+ * Sky: Poly Haven "Kloppenheim 06 (Pure Sky)". Its sun sits at u = 0.612, 4.7° up. The whole
+ * sky (dome, reflections, and image-based light) is turned by `skyYaw` so that sun lands behind
+ * the visitor's left at spawn: as in the mockup, light rakes across the landmark from the left,
+ * lighting its left faces and the left wing and leaving the right wing in soft shade. The
+ * shadow-casting sun uses the same azimuth, raised to ~14° so shadows stay readable.
  */
-const sunAzimuth = (0.6123 - 0.5) * Math.PI * 2;
+const skyYaw = 1.39;
+const sunAzimuth = (0.6123 - 0.5) * Math.PI * 2 + skyYaw;
 export const sunDirection = new Vector3(Math.cos(sunAzimuth), Math.tan(0.245), Math.sin(sunAzimuth)).normalize();
 export const hazeColor = new Color(0xd9d5d2);
 /** Fraction of the full equirect height kept in the cropped upper-sky image (1152 / 2048 rows). */
@@ -24,7 +27,8 @@ uniform sampler2D skyMap;
 uniform vec3 hazeTint;
 vec3 sampleSky(vec3 d) {
   d = normalize(d);
-  float u = atan(d.z, d.x) * 0.15915494 + 0.5;
+  // Repeat-wrapped texture: the offset needs no fract(), which would add a visible seam.
+  float u = (atan(d.z, d.x) - ${skyYaw.toFixed(4)}) * 0.15915494 + 0.5;
   float fromTop = (1.5707963 - asin(clamp(d.y, -1.0, 1.0))) * 0.31830989;
   vec3 sky = texture2D(skyMap, vec2(u, 1.0 - min(fromTop / ${skyCrop.toFixed(6)}, 0.999))).rgb;
   // Atmospheric haze thickens toward the horizon and replaces everything below it.
@@ -66,6 +70,23 @@ function mountainGeometry(): PlaneGeometry {
   geometry.setAttribute('color', new BufferAttribute(colors, 3));
   geometry.computeVertexNormals();
   return geometry;
+}
+
+/** Turn an equirect image about +Y by `yaw` (same convention as sampleSky) by shifting columns. */
+function rotateEquirect(texture: Texture, yaw: number): void {
+  const image = texture.image as { data?: Uint16Array | Float32Array; width: number; height: number };
+  const { data, width, height } = image;
+  if (!data) return;
+  const channels = data.length / (width * height);
+  const shift = ((Math.round((yaw / (Math.PI * 2)) * width) % width) + width) % width;
+  const source = data.slice();
+  for (let y = 0; y < height; y++) {
+    const row = y * width * channels;
+    // Column x takes source column x − shift: the right part of the row, then the left.
+    data.set(source.subarray(row + (width - shift) * channels, row + width * channels), row);
+    data.set(source.subarray(row, row + (width - shift) * channels), row + shift * channels);
+  }
+  texture.needsUpdate = true;
 }
 
 export function createEnvironment(scene: Scene, renderer: WebGLRenderer, resources: ResourceScope, invalidate: () => void, disposed: () => boolean, shadowMapSize: number): Environment {
@@ -142,6 +163,7 @@ export function createEnvironment(scene: Scene, renderer: WebGLRenderer, resourc
     new HDRLoader().load(assetUrl('sky/kloppenheim_06_1k.hdr'), (hdr) => {
       if (disposed()) { hdr.dispose(); resolve(); return; }
       hdr.mapping = EquirectangularReflectionMapping;
+      rotateEquirect(hdr, skyYaw);
       const pmrem = new PMREMGenerator(renderer);
       const target = resources.track(pmrem.fromEquirectangular(hdr));
       pmrem.dispose(); hdr.dispose();

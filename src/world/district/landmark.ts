@@ -1,10 +1,9 @@
-import { BufferAttribute, BufferGeometry, CylinderGeometry, Mesh, SphereGeometry, Vector3 } from 'three';
+import { BufferAttribute, BufferGeometry, Mesh, SphereGeometry, Vector3 } from 'three';
 import type { Group } from 'three';
 import type { ResourceScope } from '../runtime.ts';
-import { place } from './geometry.ts';
-import type { StaticBatch } from './geometry.ts';
-import { district, landmarkFootings } from './layout.ts';
+import { district } from './layout.ts';
 import type { DistrictMaterials } from './materials.ts';
+import { bake, disposeModel, loadModel, meshesOf } from './models.ts';
 
 /**
  * Sweep an elliptical cross-section along a planar arch y = H(1 − |s|^p), s ∈ [−1, 1].
@@ -44,24 +43,37 @@ function archRibbon(span: number, height: number, sharpness: number, baseWidth: 
   return geometry;
 }
 
-/** The arch-and-orb landmark over the fountain. Returns an updater for the orb's gentle drift. */
-export function buildLandmark(root: Group, m: DistrictMaterials, batch: StaticBatch, resources: ResourceScope): (time: number) => void {
-  const { x, z, span, height, orbHeight, orbRadius, wingScale, wingYaw } = district.landmark;
-  const base = 0.55;
-  // Main arch faces the boulevard; two lower arches cross it at ±52° for the layered silhouette.
-  const main = new Mesh(resources.track(archRibbon(span, height, 1.75, 2.9, 1.35, 1.5)), m.arch);
-  main.position.set(x, base, z);
-  const wings = [-1, 1].map((side) => {
-    const wing = new Mesh(resources.track(archRibbon(span * wingScale, height * 0.78, 2.1, 2.1, 1.05, 1.1)), m.arch);
-    wing.position.set(x, base, z); wing.rotation.y = side * wingYaw;
-    return wing;
+/**
+ * The arch-and-orb landmark over the fountain. The sculpture (lancet arch and crescent wings) is
+ * the Blender model public/world/models/landmark.glb (tools/blender/landmark.py); until it loads,
+ * and if it fails, a procedural lancet stands in. The orb and fountain stay in code.
+ * Returns the orb's drift updater and a task that settles once the sculpture is in place.
+ */
+export function buildLandmark(root: Group, m: DistrictMaterials, resources: ResourceScope, disposed: () => boolean): { drift: (time: number) => void; ready: Promise<void> } {
+  const { x, z, span, height, orbHeight, orbRadius } = district.landmark;
+  // The model extends 0.4 m below its origin: set it at paving level so its legs
+  // enter the pond and paving directly, with the open ends hidden below both surfaces.
+  const base = 0;
+  const place = (geometry: BufferGeometry): Mesh => {
+    const arch = new Mesh(resources.track(geometry), m.arch);
+    arch.position.set(x, base, z);
+    arch.castShadow = true; arch.receiveShadow = true; arch.name = 'landmark-arch';
+    root.add(arch);
+    return arch;
+  };
+  const fallback = place(archRibbon(span, height, 1.75, 1.5, 1.1, 2.0));
+  const ready = loadModel('landmark.glb').then((gltf) => {
+    if (!gltf) return;
+    const mesh = meshesOf(gltf.scene).find((candidate) => candidate.name === 'landmark_arch' || candidate.parent?.name === 'landmark_arch');
+    const geometry = mesh && !disposed() ? bake(mesh) : null;
+    disposeModel(gltf.scene);
+    if (!geometry || disposed()) { geometry?.dispose(); return; }
+    root.remove(fallback);
+    place(geometry);
   });
-  for (const arch of [main, ...wings]) { arch.castShadow = true; arch.receiveShadow = true; arch.name = 'landmark-arch'; root.add(arch); }
-  // Footings where each arch meets the ground (shared with navigation blockers).
-  for (const leg of landmarkFootings()) batch.add(m.stone, new CylinderGeometry(leg.radius, leg.radius * 1.15, 0.5, 24), place(leg.x, base, leg.z), 2);
   const orb = new Mesh(resources.track(new SphereGeometry(orbRadius, 64, 48)), m.chrome);
   orb.position.set(x, orbHeight, z);
   orb.castShadow = true; orb.name = 'landmark-orb';
   root.add(orb);
-  return (time) => { orb.position.y = orbHeight + Math.sin(time * 0.35) * 0.12; };
+  return { drift: (time) => { orb.position.y = orbHeight + Math.sin(time * 0.35) * 0.12; }, ready };
 }

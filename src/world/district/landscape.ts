@@ -1,5 +1,8 @@
-import { BufferAttribute, BufferGeometry, CylinderGeometry, IcosahedronGeometry, InstancedMesh, Matrix4, PlaneGeometry, Quaternion, Vector3 } from 'three';
-import type { Group, Material, MeshStandardMaterial } from 'three';
+import {
+  BufferAttribute, BufferGeometry, CylinderGeometry, DoubleSide, IcosahedronGeometry, InstancedMesh, Matrix4,
+  MeshStandardMaterial, PlaneGeometry, Quaternion, Vector3,
+} from 'three';
+import type { Group, Material, Mesh, Texture } from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { ResourceScope } from '../runtime.ts';
 import { place } from './geometry.ts';
@@ -8,6 +11,7 @@ import { district } from './layout.ts';
 import type { Rect } from './layout.ts';
 import { random } from './materials.ts';
 import type { DistrictMaterials } from './materials.ts';
+import { bake, disposeModel, loadModel, meshesOf } from './models.ts';
 
 const up = new Vector3(0, 1, 0);
 /** Tapered limb from `from` to `to`, as a non-indexed geometry ready to merge. */
@@ -70,6 +74,46 @@ function treeTemplate(seed: number, height: number, shape: { lean?: Vector3; spr
   return { trunk, leaves: crown };
 }
 
+/**
+ * Trees modelled in Blender (tools/blender/trees.py): three upright street trees and the leaning
+ * framing tree, in the same order as the procedural templates, each at two levels of detail.
+ */
+const treeKinds = ['street_a', 'street_b', 'street_c', 'framing'] as const;
+interface TreeModels { near: TreeTemplate[]; far: TreeTemplate[]; barkMap: Texture; leafMap: Texture }
+
+/** Loads public/world/models/trees.glb; resolves null on failure or after teardown. */
+function loadTrees(resources: ResourceScope, disposed: () => boolean): Promise<TreeModels | null> {
+  return loadModel('trees.glb').then((gltf) => {
+    if (!gltf) return null;
+    const meshes = meshesOf(gltf.scene);
+    const material = (mesh: Mesh): MeshStandardMaterial | undefined => (Array.isArray(mesh.material) ? undefined : mesh.material as MeshStandardMaterial);
+    const part = (tree: string, kind: 'tree_bark' | 'tree_leaves'): Mesh | undefined => {
+      const node = gltf.scene.getObjectByName(tree);
+      return node ? meshesOf(node).find((mesh) => material(mesh)?.name === kind) : undefined;
+    };
+    const lod = (level: number): TreeTemplate[] | null => {
+      const list: TreeTemplate[] = [];
+      for (const kind of treeKinds) {
+        const bark = part(`${kind}_lod${level}`, 'tree_bark'); const leaves = part(`${kind}_lod${level}`, 'tree_leaves');
+        if (!bark || !leaves) return null;
+        list.push({ trunk: bake(bark), leaves: bake(leaves) });
+      }
+      return list;
+    };
+    const near = disposed() ? null : lod(0); const far = near ? lod(1) : null;
+    const barkMap = meshes.map(material).find((m) => m?.name === 'tree_bark')?.map ?? null;
+    const leafMap = meshes.map(material).find((m) => m?.name === 'tree_leaves')?.map ?? null;
+    // Only the two textures and the baked copies survive; the loader's own objects go now.
+    disposeModel(gltf.scene, new Set([barkMap, leafMap]));
+    if (!near || !far || !barkMap || !leafMap || disposed()) {
+      for (const t of [...(near ?? []), ...(far ?? [])]) { t.trunk.dispose(); t.leaves.dispose(); }
+      barkMap?.dispose(); leafMap?.dispose();
+      return null;
+    }
+    return { near, far, barkMap: resources.track(barkMap), leafMap: resources.track(leafMap) };
+  });
+}
+
 /** Wind sway on foliage via a vertex hook; `time` stays frozen under reduced motion. */
 export function addWind(material: MeshStandardMaterial, time: { value: number }): void {
   material.onBeforeCompile = (shader) => {
@@ -122,16 +166,22 @@ function boulder(seed: number): BufferGeometry {
   return geometry;
 }
 
-export function buildLandscape(root: Group, m: DistrictMaterials, batch: StaticBatch, resources: ResourceScope, windTime: { value: number }, outerTrees: boolean): void {
+/**
+ * Plants, rocks, benches, and trees. Everything but the trees is built now; the trees come from
+ * the Blender model file (or the procedural templates if it fails to load) once the returned
+ * task settles, before the loading screen lifts.
+ */
+export function buildLandscape(root: Group, m: DistrictMaterials, batch: StaticBatch, resources: ResourceScope, windTime: { value: number }, outerTrees: boolean, disposed: () => boolean): Promise<void> {
   addWind(m.foliage, windTime);
   const rand = random(97);
-  const templates = [treeTemplate(3, 9.5), treeTemplate(8, 8.2), treeTemplate(21, 10.5),
-    // Framing tree: leans over the walkway (+X local) with a wide crown, like the mockup's corners.
-    treeTemplate(55, 12.5, { lean: new Vector3(1.9, 0, 0), spread: 1.4 })];
-  const trees: Matrix4[][] = templates.map(() => []);
-  const plant = (x: number, z: number, scale = 1, y = 0): void => {
+  // Trees in the district and on the terrace use full detail; groves and street trees beyond it,
+  // where dozens are in view at once, use the light level of detail. The terrace line gets its
+  // own meshes so it is culled whenever it is behind the visitor.
+  type TreeGroup = 'near' | 'terrace' | 'far';
+  const groups: Record<TreeGroup, Matrix4[][]> = { near: treeKinds.map(() => []), terrace: treeKinds.map(() => []), far: treeKinds.map(() => []) };
+  const plant = (x: number, z: number, scale = 1, y = 0, group: TreeGroup = 'near'): void => {
     const pick = Math.floor(rand() * 3);
-    trees[pick]?.push(place(x, y, z, rand() * Math.PI * 2, scale * (0.9 + rand() * 0.2)));
+    groups[group][pick]?.push(place(x, y, z, rand() * Math.PI * 2, scale * (0.9 + rand() * 0.2)));
   };
 
   const shrubs: Matrix4[] = []; const grass: Matrix4[] = []; const rocks: Matrix4[][] = [[], []];
@@ -143,7 +193,7 @@ export function buildLandscape(root: Group, m: DistrictMaterials, batch: StaticB
     }
     batch.box(m.soil, h * 2 - 0.48, 0.1, h * 2 - 0.48, place(t.x, 0.52, t.z), 1.2);
     const framing = district.framingTrees.some((f) => f.x === t.x && f.z === t.z);
-    if (framing) trees[3]?.push(place(t.x, 0.5, t.z, t.x < 0 ? 0 : Math.PI, 1.15));
+    if (framing) groups.near[3]?.push(place(t.x, 0.5, t.z, t.x < 0 ? 0 : Math.PI, 1.15));
     else plant(t.x, t.z, 1.2, 0.5);
     // Loose shrubs spilling over the rim instead of a clipped hedge block.
     for (let k = 0; k < 3; k++) shrubs.push(place(t.x + (rand() - 0.5) * 0.9, 0.45, t.z + (rand() - 0.5) * 0.9, rand() * 6, 0.62 + rand() * 0.25));
@@ -181,7 +231,7 @@ export function buildLandscape(root: Group, m: DistrictMaterials, batch: StaticB
   for (let i = 0; i < (outerTrees ? 70 : 0); i++) {
     const side = i % 2 ? 1 : -1;
     const x = side * (29 + rand() * 14); const z = -70 + rand() * 120;
-    plant(x, z, 1 + rand() * 0.35);
+    plant(x, z, 1 + rand() * 0.35, 0, 'far');
   }
   // A dense tree line behind the terrace closes the view back toward the entrance.
   const { terrace } = district;
@@ -189,18 +239,43 @@ export function buildLandscape(root: Group, m: DistrictMaterials, batch: StaticB
     const a = terrace.from + ((terrace.to - terrace.from) * (i + rand() * 0.6)) / 18;
     const r = district.gate.radius + district.gate.depth / 2 + 3.5 + rand() * 3.5;
     if (Math.abs(a - Math.PI / 2) < district.gate.opening + 0.05) continue;
-    plant(terrace.x + Math.cos(a) * r, terrace.z + Math.sin(a) * r, 1.15 + rand() * 0.3);
+    plant(terrace.x + Math.cos(a) * r, terrace.z + Math.sin(a) * r, 1.15 + rand() * 0.3, 0, 'terrace');
   }
   // Street trees along the city edges soften the block faces.
   for (let i = 0; i < (outerTrees ? 30 : 0); i++) {
     const side = i % 2 ? 1 : -1;
-    plant(side * (44 + rand() * 2), -52 + rand() * 118, 1.1 + rand() * 0.3);
+    plant(side * (44 + rand() * 2), -52 + rand() * 118, 1.1 + rand() * 0.3, 0, 'far');
   }
 
-  templates.forEach((template, i) => {
-    instanced(root, template.trunk, m.bark, trees[i] ?? [], resources, `tree-trunks-${i}`);
-    instanced(root, template.leaves, m.foliage, trees[i] ?? [], resources, `tree-canopies-${i}`);
-  });
+  const plantTrees = (models: TreeModels | null): void => {
+    if (disposed()) return;
+    let bark: Material = m.bark; let leaves: Material = m.foliage;
+    let near: TreeTemplate[]; let far: TreeTemplate[];
+    if (models) {
+      bark = resources.track(new MeshStandardMaterial({ map: models.barkMap, vertexColors: true, roughness: 0.92 }));
+      const foliage = resources.track(new MeshStandardMaterial({ map: models.leafMap, vertexColors: true, roughness: 0.8, alphaTest: 0.5, side: DoubleSide }));
+      addWind(foliage, windTime);
+      leaves = foliage; near = models.near; far = models.far;
+    } else {
+      near = [treeTemplate(3, 9.5), treeTemplate(8, 8.2), treeTemplate(21, 10.5),
+        // Framing tree: leans over the walkway (+X local) with a wide crown, like the mockup's corners.
+        treeTemplate(55, 12.5, { lean: new Vector3(1.9, 0, 0), spread: 1.4 })];
+      far = near;
+    }
+    const used = new Set<BufferGeometry>();
+    const add = (template: TreeTemplate | undefined, matrices: Matrix4[] | undefined, name: string): void => {
+      if (!template || !matrices?.length) return;
+      instanced(root, template.trunk, bark, matrices, resources, `tree-trunks-${name}`);
+      instanced(root, template.leaves, leaves, matrices, resources, `tree-canopies-${name}`);
+      used.add(template.trunk).add(template.leaves);
+    };
+    treeKinds.forEach((_, i) => {
+      add(near[i], groups.near[i], `${i}`);
+      add(near[i], groups.terrace[i], `terrace-${i}`);
+      add(far[i], groups.far[i], `far-${i}`);
+    });
+    for (const t of [...near, ...far]) for (const g of [t.trunk, t.leaves]) if (!used.has(g)) g.dispose();
+  };
   instanced(root, canopy(new Vector3(0, 0.55, 0), new Vector3(0.9, 0.6, 0.9), 22, 0.75, random(5)), m.foliage, shrubs, resources, 'shrubs');
   const tuft = mergeGeometries([0, 1, 2].map((k) => new PlaneGeometry(0.8, 0.6).translate(0, 0.3, 0).rotateY((k * Math.PI) / 3).toNonIndexed()), false);
   if (tuft) instanced(root, tuft, m.grass, grass, resources, 'grass', false);
@@ -211,4 +286,5 @@ export function buildLandscape(root: Group, m: DistrictMaterials, batch: StaticB
     batch.box(m.stone, 0.62, 0.4, 2.4, place(b.x, 0.2, b.z), 1.5);
     batch.box(m.wood, 0.66, 0.07, 2.44, place(b.x, 0.435, b.z), 1);
   }
+  return loadTrees(resources, disposed).then(plantTrees);
 }

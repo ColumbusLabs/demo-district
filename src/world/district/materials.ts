@@ -236,11 +236,16 @@ export function createMaterials(renderer: WebGLRenderer, resources: ResourceScop
     hedge: standard(0xffffff, 0.9, { map: hedgeTexture }),
     foliage: standard(0xffffff, 0.8, { map: leafTexture, alphaTest: 0.5, side: DoubleSide }),
     grass: standard(0xffffff, 0.9, { map: grassTexture, alphaTest: 0.45, side: DoubleSide }),
-    // Soft white stone with a light satin coat, not chrome: it should match the pavilion roofs.
-    arch: own(new MeshPhysicalMaterial({ color: 0xfbf9f5, roughness: 0.48, clearcoat: 0.25, clearcoatRoughness: 0.35, envMapIntensity: 1.6 })),
-    chrome: own(new MeshPhysicalMaterial({ color: 0xffffff, metalness: 1, roughness: 0.04, envMapIntensity: 1.2 })),
-    // Values above 1 feed the bloom pass: warm LED strips set into stone.
-    warmLight: own(new MeshBasicMaterial({ color: new Color(0xffc987).multiplyScalar(2.4), toneMapped: true })),
+    // Landmark color grading, matched to the mockup by sampling the same patches (see
+    // COLOR_GRADING.md). Pearl stone: near-neutral so the sun supplies the warmth and the shade
+    // takes the sky's cool; a strong satin clearcoat gives the rounded legs bright edge streaks.
+    // Note: with scene.environment in use, three.js (r163+) ignores a material's envMapIntensity
+    // and applies scene.environmentIntensity, so these two are graded by color alone.
+    arch: own(new MeshPhysicalMaterial({ color: 0xc9c6c1, roughness: 0.34, clearcoat: 0.65, clearcoatRoughness: 0.15 })),
+    // Warm-tinted polished chrome, darker than a pure mirror, as in the mockup.
+    chrome: own(new MeshPhysicalMaterial({ color: 0xcdc6bf, metalness: 1, roughness: 0.04 })),
+    // Luminance above the bloom threshold (1.5 in post.ts): warm LED strips set into stone.
+    warmLight: own(new MeshBasicMaterial({ color: new Color(0xffc987).multiplyScalar(3), toneMapped: true })),
     banner: standard(0x2b374a, 0.75, { side: DoubleSide }),
     facadeGlass: facade('glass', 71),
     facadeStone: facade('stone', 73),

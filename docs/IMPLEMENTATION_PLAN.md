@@ -19,7 +19,7 @@ On 2026-09-24 the user set **desktop browser as the primary target** (mobile sec
 - **Pass 2 — architecture and landmark** (slices 7, 8, 12): parametric pavilion kit with three roof families, storefront frames, wood accents, soffit lighting, interior-mapped storefront glass; the arch-and-orb landmark over the fountain.
 - **Pass 3 — life and atmosphere** (slices 9, 11): procedural trees, shrubs, grasses, boulders, benches, planters, wind sway; shader water with Fresnel sky reflection, bank shading, LED spill, and a fountain.
 
-An early baseline of slice 20 was needed to keep software-rendered browsers (and CI) usable: automatic high/medium/low tiers. **Pass 4 (signage, targeting, preview) is also done: see [PASS_04.md](PASS_04.md).** **Pass 5 (HUD, search, map, loading) is done: see [PASS_05.md](PASS_05.md).** **Pass 6 (measurement, optimization, quality presets) is done: see [PASS_06.md](PASS_06.md) and [PERFORMANCE_BUDGET.md](PERFORMANCE_BUDGET.md).** **Pass 7 (WORLD ALPHA audit) is done: see [WORLD_ALPHA_AUDIT.md](WORLD_ALPHA_AUDIT.md). It recommends declaring WORLD ALPHA for the desktop browser preview; backend slices (23+) stay locked until the owner decides.** Native Sites runtime acceptance and physical-device testing remain pending. No merge was performed. The owner authorized public Sites deployment on 2026-09-25 subject to a username-free URL; its current status is recorded below.
+An early baseline of slice 20 was needed to keep software-rendered browsers (and CI) usable: automatic high/medium/low tiers. **Pass 4 (signage, targeting, preview) is also done: see [PASS_04.md](PASS_04.md).** **Pass 5 (HUD, search, map, loading) is done: see [PASS_05.md](PASS_05.md).** **Pass 6 (measurement, optimization, quality presets) is done: see [PASS_06.md](PASS_06.md) and [PERFORMANCE_BUDGET.md](PERFORMANCE_BUDGET.md).** **Pass 7 (WORLD ALPHA audit) is done: see [WORLD_ALPHA_AUDIT.md](WORLD_ALPHA_AUDIT.md). It recommends declaring WORLD ALPHA for the desktop browser preview; backend slices (23+) stay locked until the owner decides.** **Blender trees (first Blender-authored asset, slice 9 follow-up) are on `claude/blender-environment-support-darnhc`: see [TREES_BLENDER.md](TREES_BLENDER.md). The landmark sculpture followed: see [LANDMARK_BLENDER.md](LANDMARK_BLENDER.md), then a lighting pass: see [LIGHTING_PASS.md](LIGHTING_PASS.md), landmark color grading: see [COLOR_GRADING.md](COLOR_GRADING.md), the bell fountain: see [FOUNTAIN.md](FOUNTAIN.md), and statue planting: see [STATUE_PLANTING.md](STATUE_PLANTING.md).** Native Sites acceptance and physical-device testing are tracked separately. The owner authorized deployment in this task; public access still requires a username-free URL.
 <!-- /passes-01-03-status -->
 
 <!-- slice-04-status -->
@@ -462,7 +462,7 @@ Each slice must end with:
 
 ### Slice 8 — Hero arch and orb landmark
 **Model:** GPT-6 Astra Pro
-**Status:** Implemented in world pass 2.
+**Status:** Implemented in world pass 2. Sculpture remodelled in Blender after the mockup ([LANDMARK_BLENDER.md](LANDMARK_BLENDER.md)).
 
 **Goal:** Build the central signature landmark that anchors Demo District visually.
 
@@ -484,7 +484,7 @@ Each slice must end with:
 
 ### Slice 9 — Landscaping kit
 **Model:** GPT-5.6 Sol
-**Status:** Implemented in world pass 3.
+**Status:** Implemented in world pass 3. Trees replaced by Blender-generated models ([TREES_BLENDER.md](TREES_BLENDER.md)).
 
 **Goal:** Break up hard architecture and establish the premium outdoor atmosphere.
 
@@ -526,7 +526,7 @@ Each slice must end with:
 
 ### Slice 11 — Water look and fountain motion
 **Model:** GPT-6 Astra Pro
-**Status:** Implemented in world pass 3.
+**Status:** Implemented in world pass 3. Fountain rebuilt as the mockup's bell fountain ([FOUNTAIN.md](FOUNTAIN.md)).
 
 **Goal:** Make the water channels feel alive without using expensive fluid simulation.
 
@@ -1765,3 +1765,7 @@ Do not combine Slice 1 with world construction. The repository and Sites deploym
 > **Demo District is a premium walkable Three.js district that acts as a community exhibition space for AI-created projects, with creator attribution, model metadata, ratings, submissions, and deliberate links out to the original experiences.**
 
 The project succeeds only if the world itself is worth entering. That is why the plan deliberately invests the first 22 slices in environment, navigation, interaction, visual identity, and performance before completing the community platform underneath it.
+
+## September 25, 2026 — pond and statue repair
+
+Owner requested removal of pond clipping and then replacement of statue shrub camouflage with direct water/paving contacts. Implemented as a bounded scene-assembly repair; see [evidence and limitations](POND_AND_STATUE_FIX.md). Remaining roadmap and backend gates are unchanged.

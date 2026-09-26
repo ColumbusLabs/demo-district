@@ -1,10 +1,11 @@
-import { BoxGeometry, CircleGeometry, CylinderGeometry, Mesh, PlaneGeometry, RingGeometry, Shape, ShapeGeometry } from 'three';
+import { BoxGeometry, CircleGeometry, CylinderGeometry, LatheGeometry, Mesh, PlaneGeometry, RingGeometry, Vector2 } from 'three';
 import type { Group, Material, ShaderMaterial } from 'three';
 import type { ResourceScope } from '../runtime.ts';
 import { place, StaticBatch } from './geometry.ts';
 import { district } from './layout.ts';
 import type { Rect } from './layout.ts';
 import type { DistrictMaterials } from './materials.ts';
+import { fountainBell } from './water.ts';
 
 const paveUv = 4; // meters of paving per texture repeat
 const slab = 0.3; // paving thickness below y = 0
@@ -92,17 +93,29 @@ export function buildGround(root: Group, m: DistrictMaterials, water: { channel:
   const ring = new Mesh(resources.track(new RingGeometry(plaza.radius - 0.35, plaza.radius, 96).rotateX(-Math.PI / 2)), m.charcoal);
   ring.position.set(plaza.x, 0.006, plaza.z); ring.receiveShadow = true;
   root.add(ring);
-  const rim = new Shape();
-  rim.absarc(0, 0, fountain.radius, 0, Math.PI * 2, false);
-  const hole = new Shape(); hole.absarc(0, 0, fountain.radius - 0.7, 0, Math.PI * 2, true);
-  rim.holes.push(hole);
-  const rimGeometry = new ShapeGeometry(rim, 64).rotateX(-Math.PI / 2);
-  batch.add(m.stone, rimGeometry, place(fountain.x, 0.55, fountain.z), 2);
-  batch.add(m.stone, new CylinderGeometry(fountain.radius, fountain.radius, 0.55, 96, 1, true), place(fountain.x, 0.275, fountain.z), 2);
-  batch.add(m.stone, new CylinderGeometry(fountain.radius - 0.7, fountain.radius - 0.7, 0.55, 96, 1, true), place(fountain.x, 0.275, fountain.z), 2);
-  lights.add(m.warmLight, new CylinderGeometry(fountain.radius + 0.01, fountain.radius + 0.01, 0.035, 96, 1, true), place(fountain.x, 0.08, fountain.z));
-  batch.add(m.stone, new CircleGeometry(fountain.radius - 0.7, 64).rotateX(-Math.PI / 2), place(fountain.x, -0.2, fountain.z), 2);
-  const basin = new Mesh(resources.track(new CircleGeometry(fountain.radius - 0.7, 64).rotateX(-Math.PI / 2)), water.basin);
+  // A continuous wall profile gives the inside inward-facing triangles. Separate outward-
+  // facing cylinders leave the inner wall culled, exposing the underside of the coping.
+  // Share segment count and angular alignment with the water to eliminate shoreline slivers.
+  const basinSegments = 128;
+  const innerRadius = fountain.radius - 0.7;
+  const shell = new LatheGeometry([
+    new Vector2(fountain.radius, -0.2),
+    new Vector2(fountain.radius, 0.55),
+    new Vector2(innerRadius, 0.55),
+    new Vector2(innerRadius, -0.2),
+    new Vector2(fountain.radius, -0.2),
+  ], basinSegments);
+  batch.add(m.stone, shell, place(fountain.x, 0, fountain.z), 2);
+  lights.add(m.warmLight, new CylinderGeometry(fountain.radius + 0.01, fountain.radius + 0.01, 0.035, basinSegments, 1, true), place(fountain.x, 0.08, fountain.z));
+  batch.add(m.stone, new CircleGeometry(innerRadius, basinSegments).rotateX(-Math.PI / 2), place(fountain.x, -0.2, fountain.z), 2);
+  // Bell-fountain pedestal: a slender stem flaring into a shallow cup that throws the water sheet.
+  const { nozzle, stem } = fountainBell;
+  const pedestal = new LatheGeometry([
+    [0.001, -0.56], [stem * 1.9, -0.56], [stem * 1.9, -0.2], [stem * 1.15, 0.05], [stem, 0.4],
+    [stem, nozzle - 0.45], [stem * 1.25, nozzle - 0.2], [stem * 1.75, nozzle - 0.04], [stem * 1.75, nozzle], [0.001, nozzle],
+  ].map(([r, y]) => new Vector2(r, y)), 32);
+  batch.add(m.stone, pedestal, place(fountain.x, 0.36, fountain.z), 1.5);
+  const basin = new Mesh(resources.track(new CircleGeometry(innerRadius, basinSegments).rotateX(-Math.PI / 2)), water.basin);
   basin.position.set(fountain.x, 0.36, fountain.z); basin.name = 'fountain-water';
   root.add(basin);
 

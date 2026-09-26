@@ -56,7 +56,12 @@ export const district = {
   /** Circular plaza with the fountain basin and landmark. */
   plaza: { x: 0, z: -44, radius: 18 } satisfies Circle,
   fountain: { x: 0, z: -44, radius: 9.5 } satisfies Circle,
-  landmark: { x: 0, z: -45, span: 15, height: 26, orbHeight: 11.5, orbRadius: 2.9, wingScale: 1.55, wingYaw: 0.62 },
+  /**
+   * Lancet arch and orb. The sculpture is modelled in tools/blender/landmark.py with these
+   * dimensions; its GLB records the same footings, checked by tests/unit/landmark-model.test.mjs.
+   * `wingFoot` is where each crescent wing meets the ground, relative to the landmark (+X side).
+   */
+  landmark: { x: 0, z: -45, span: 10, height: 25.7, orbHeight: 11, orbRadius: 2.6, wingFoot: { x: 10.826, z: -2.621 } },
   /** Waterfront edge; the lake and mountains lie beyond. */
   waterfrontZ: -64,
   pavilions: [...leftRow, ...leftRow.map((slot) => mirror(slot, slot.id.replace('west', 'east')))],
@@ -110,14 +115,13 @@ export function storefrontSize(slot: PavilionSlot): { width: number; height: num
 /** Distance from a pavilion's center to its storefront apron (where visitors stand). */
 export const apronReach = (slot: PavilionSlot): number => slot.depth / 2 + 1.8;
 
-/** Where each arch leg meets the ground: the main arch's two plus two per crossing wing. */
+/** Where the sculpture meets the ground: the main arch's two legs and the two wing feet. */
 export function landmarkFootings(): Circle[] {
-  const { x, z, span, wingScale, wingYaw } = district.landmark;
-  const legs: Circle[] = [];
-  for (const [reach, yaw, radius] of [[span / 2, 0, 1.4], [span * wingScale / 2, wingYaw, 1.1], [span * wingScale / 2, -wingYaw, 1.1]] as const) {
-    for (const side of [-1, 1]) legs.push({ x: x + Math.cos(yaw) * reach * side, z: z - Math.sin(yaw) * reach * side, radius });
-  }
-  return legs;
+  const { x, z, span, wingFoot } = district.landmark;
+  return [-1, 1].flatMap((side) => [
+    { x: x + side * span / 2, z, radius: 1.4 },
+    { x: x + side * wingFoot.x, z: z + wingFoot.z, radius: 1.0 },
+  ]);
 }
 
 const rectBlocker = (r: Rect): Blocker => ({
@@ -140,7 +144,8 @@ export function districtBlockers(): Blocker[] {
   for (const banner of district.banners) blockers.push({ x: banner.x, z: banner.z, radius: 0.35 });
   for (const bollard of district.bollards) blockers.push({ x: bollard.x, z: bollard.z, radius: 0.25 });
   blockers.push({ x: district.fountain.x, z: district.fountain.z, radius: district.fountain.radius + 0.4 });
-  for (const leg of landmarkFootings()) blockers.push({ ...leg, radius: leg.radius + 0.15 });
+  // Only the sculpture remains: avoid invisible collisions from the removed shrub beds.
+  for (const foot of landmarkFootings()) blockers.push({ ...foot });
   return blockers;
 }
 

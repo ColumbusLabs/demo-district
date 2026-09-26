@@ -7,13 +7,14 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import type { ResourceScope } from '../runtime.ts';
 
 /**
- * HDR render → restrained bloom (only emissive values above ~1 glow) → tone map/sRGB.
+ * HDR render → restrained bloom (only emissive light above luminance 1.5 glows, not sunlit stone
+ * or sky) → tone map/sRGB.
  * The multisampled target keeps the antialiasing the default framebuffer would have had.
  */
 export function createPost(renderer: WebGLRenderer, scene: Scene, camera: PerspectiveCamera, resources: ResourceScope, samples: number): { render: () => void; resize: (w: number, h: number, dpr: number) => void } {
   const target = new WebGLRenderTarget(1, 1, { type: HalfFloatType, samples });
   const composer = new EffectComposer(renderer, target);
-  const bloom = new UnrealBloomPass(new Vector2(1, 1), 0.38, 0.55, 1.05);
+  const bloom = new UnrealBloomPass(new Vector2(1, 1), 0.42, 0.55, 1.5);
   composer.addPass(new RenderPass(scene, camera));
   composer.addPass(bloom);
   composer.addPass(new OutputPass());

@@ -1,5 +1,5 @@
-import { AdditiveBlending, Color, Curve, CylinderGeometry, DoubleSide, Mesh, ShaderMaterial, TubeGeometry, UniformsLib, UniformsUtils, Vector3 } from 'three';
-import type { Group, Texture } from 'three';
+import { AdditiveBlending, Color, Curve, CylinderGeometry, DoubleSide, LatheGeometry, Mesh, RingGeometry, ShaderMaterial, UniformsLib, UniformsUtils, Vector2, Vector3 } from 'three';
+import type { BufferGeometry, Group, Texture } from 'three';
 import type { ResourceScope } from '../runtime.ts';
 import { hazeColor, skySampleGlsl, sunDirection } from './environment.ts';
 
@@ -123,12 +123,86 @@ export class PointCurve extends Curve<Vector3> {
   constructor(private readonly point: (t: number, target: Vector3) => Vector3) { super(); }
   override getPoint(t: number, target = new Vector3()): Vector3 { return this.point(t, target); }
 }
-const curve = (point: (t: number, target: Vector3) => Vector3): Curve<Vector3> => new PointCurve(point);
 
-/** Fountain: a central column and a ring of arcing jets. Returns an updater for decorative motion. */
-export function createFountain(parent: Group, resources: ResourceScope, center: Vector3, rimRadius: number): (time: number) => void {
-  const material = resources.track(new ShaderMaterial({
-    uniforms: { time: { value: 0 }, tint: { value: new Color(0xd8ecf2).multiplyScalar(0.9) } },
+/** Bell-fountain dimensions (meters, relative to the water surface), shared with its stone pedestal. */
+export const fountainBell = { radius: 2.4, apex: 3.1, nozzle: 2.25, stem: 0.32 } as const;
+
+/** Profile of a falling water sheet: from the nozzle over a rounded crown down to the water at `radius`. */
+function bellProfile(radius: number, apex: number, nozzle: number, steps: number): Vector2[] {
+  const points: Vector2[] = [];
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    // Rise briefly out of the nozzle, turn over the crown, then fall on a steepening curve.
+    const r = 0.06 + (radius - 0.06) * t;
+    const y = t < 0.18 ? nozzle + (apex - nozzle) * Math.sin((t / 0.18) * Math.PI / 2) : apex * (1 - ((t - 0.18) / 0.82) ** 2.4);
+    points.push(new Vector2(r, Math.max(y, 0)));
+  }
+  return points;
+}
+
+/**
+ * The mockup's bell fountain: a slender stone pedestal (built with the basin in ground.ts) throws a
+ * thin water sheet up and over into a glassy dome that falls back into the pool. The sheet is
+ * brightest where it is seen edge-on (its silhouette) and nearly clear face-on, with fine
+ * rivulets running down it; a central jet rises inside and white foam rings the landing.
+ * Returns an updater for decorative motion; with `time` frozen it still reads as water.
+ */
+export function createFountain(parent: Group, resources: ResourceScope, center: Vector3, _rimRadius: number): (time: number) => void {
+  const time = { value: 0 };
+  const sheet = (tint: number, strength: number, rivulets: number): ShaderMaterial => resources.track(new ShaderMaterial({
+    uniforms: { time, tint: { value: new Color(tint) }, strength: { value: strength }, rivulets: { value: rivulets } },
+    vertexShader: /* glsl */`
+      varying vec2 vUv;
+      varying vec3 vNormal;
+      varying vec3 vView;
+      void main() {
+        vUv = uv;
+        vec4 world = modelMatrix * vec4(position, 1.0);
+        vNormal = normalize(mat3(modelMatrix) * normal);
+        vView = normalize(cameraPosition - world.xyz);
+        gl_Position = projectionMatrix * viewMatrix * world;
+      }`,
+    fragmentShader: /* glsl */`
+      uniform float time;
+      uniform vec3 tint;
+      uniform float strength;
+      uniform float rivulets;
+      varying vec2 vUv;
+      varying vec3 vNormal;
+      varying vec3 vView;
+      float hash(float n) { return fract(sin(n) * 43758.5453); }
+      void main() {
+        // Lathe uv: x runs around the bell, y from the nozzle (0) down to the water (1).
+        float grazing = 1.0 - abs(dot(normalize(vNormal), normalize(vView)));
+        float edge = pow(grazing, 2.2);
+        // Rivulets: thin lanes around the bell whose brightness flows downward and flickers.
+        float lane = vUv.x * rivulets;
+        float id = floor(lane);
+        float across = abs(fract(lane) - 0.5) * 2.0;
+        float flow = fract(vUv.y * 3.0 - time * (0.9 + hash(id) * 0.5) + hash(id + 7.0));
+        float streak = (1.0 - smoothstep(0.0, 0.6, across)) * smoothstep(0.0, 0.25, flow) * smoothstep(1.0, 0.55, flow);
+        // The sheet thins and breaks up as it falls; it fades out into the foam at the waterline.
+        float body = 0.07 + 0.55 * edge + 0.22 * streak * (0.4 + vUv.y);
+        float alpha = body * strength * smoothstep(0.0, 0.04, vUv.y) * (1.0 - smoothstep(0.9, 1.0, vUv.y));
+        gl_FragColor = vec4(tint * (0.75 + 0.6 * edge + 0.5 * streak), alpha);
+      }`,
+    transparent: true, depthWrite: false, blending: AdditiveBlending, side: DoubleSide,
+  }));
+  const { radius, apex, nozzle } = fountainBell;
+  const add = (geometry: BufferGeometry, material: ShaderMaterial, name: string, order: number): void => {
+    const mesh = new Mesh(resources.track(geometry), material);
+    mesh.position.copy(center); mesh.name = name; mesh.renderOrder = order;
+    parent.add(mesh);
+  };
+  // Outer bell and a smaller, fainter inner sheet give the dome depth.
+  add(new LatheGeometry(bellProfile(radius, apex, nozzle, 26), 48), sheet(0xdcebf0, 1, 56), 'fountain-bell', 2);
+  add(new LatheGeometry(bellProfile(radius * 0.72, apex * 0.9, nozzle, 20), 36), sheet(0xcfe3ea, 0.55, 40), 'fountain-bell-inner', 1);
+  // Central jet: a short column above the nozzle, visible through the bell.
+  const jet = new LatheGeometry([new Vector2(0.001, apex - 0.05), new Vector2(0.09, apex - 0.3), new Vector2(0.12, nozzle), new Vector2(0.001, nozzle - 0.05)].reverse(), 16);
+  add(jet, sheet(0xeef6f8, 0.9, 10), 'fountain-jet', 3);
+  // Foam where the sheet lands: a flat ring on the water and a low, noisy spray skirt.
+  const foam = resources.track(new ShaderMaterial({
+    uniforms: { time, tint: { value: new Color(0xf2f6f6) } },
     vertexShader: /* glsl */`
       varying vec2 vUv;
       void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
@@ -136,31 +210,28 @@ export function createFountain(parent: Group, resources: ResourceScope, center: 
       uniform float time;
       uniform vec3 tint;
       varying vec2 vUv;
+      float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+      float noise(vec2 p) {
+        vec2 i = floor(p); vec2 f = fract(p); f = f * f * (3.0 - 2.0 * f);
+        return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y);
+      }
       void main() {
-        // Streaks travel along the jet (uv.x); edges fade so the tube reads as water, not glass.
-        float flow = fract(vUv.x * 6.0 - time * 1.6 + sin(vUv.y * 18.85) * 0.08);
-        float streak = smoothstep(0.0, 0.5, flow) * smoothstep(1.0, 0.6, flow);
-        float edge = sin(vUv.y * 3.14159);
-        float alpha = (0.18 + 0.5 * streak) * edge * smoothstep(0.0, 0.08, vUv.x) * smoothstep(1.0, 0.85, vUv.x);
-        gl_FragColor = vec4(tint * (0.8 + streak), alpha);
+        // uv.x around the ring, uv.y across it (0 inner/bottom → 1 outer/top).
+        vec2 p = vec2(vUv.x * 90.0, vUv.y * 6.0 - time * 1.4);
+        float n = noise(p) * 0.6 + noise(p * 2.7 + 3.1) * 0.4;
+        float band = smoothstep(0.0, 0.35, vUv.y) * (1.0 - smoothstep(0.45, 1.0, vUv.y));
+        gl_FragColor = vec4(tint, smoothstep(0.35, 0.85, n) * band * 0.7);
       }`,
-    transparent: true, depthWrite: false, blending: AdditiveBlending, side: DoubleSide,
+    transparent: true, depthWrite: false, side: DoubleSide,
   }));
-  // Central column: tube along a vertical path so uv.x runs upward like the arcing jets.
-  const up = curve((t, target) => target.set(center.x, center.y + t * 3.4, center.z));
-  const column = resources.track(new TubeGeometry(up, 12, 0.22, 16, false));
-  parent.add(new Mesh(column, material));
-  const cap = resources.track(new CylinderGeometry(0.5, 1.1, 0.5, 20, 1, true));
-  const splash = new Mesh(cap, material);
-  splash.position.set(center.x, center.y + 0.25, center.z);
-  parent.add(splash);
-  const jetCount = 14;
-  for (let i = 0; i < jetCount; i++) {
-    const angle = (i / jetCount) * Math.PI * 2;
-    const from = new Vector3(Math.cos(angle) * (rimRadius - 0.5), 0, Math.sin(angle) * (rimRadius - 0.5));
-    const to = new Vector3(Math.cos(angle) * (rimRadius - 3.4), 0, Math.sin(angle) * (rimRadius - 3.4));
-    const arc = curve((t, target) => target.lerpVectors(from, to, t).setY(Math.sin(t * Math.PI) * 1.6 * (1 - t * 0.25)).add(center));
-    parent.add(new Mesh(resources.track(new TubeGeometry(arc, 24, 0.05, 6, false)), material));
+  const ring = new RingGeometry(radius - 0.45, radius + 0.55, 72, 1).rotateX(-Math.PI / 2);
+  // RingGeometry's uv is planar; remap to (around, across) for the foam shader.
+  const position = ring.getAttribute('position'); const uv = ring.getAttribute('uv');
+  for (let i = 0; i < position.count; i++) {
+    const x = position.getX(i); const z = position.getZ(i);
+    uv.setXY(i, (Math.atan2(z, x) / (Math.PI * 2) + 0.5), (Math.hypot(x, z) - (radius - 0.45)) / 1.0);
   }
-  return (time) => { const uniform = material.uniforms.time; if (uniform) uniform.value = time; };
+  add(ring.translate(0, 0.02, 0), foam, 'fountain-foam', 4);
+  add(new CylinderGeometry(radius + 0.1, radius + 0.25, 0.45, 72, 1, true).translate(0, 0.2, 0), foam, 'fountain-spray', 5);
+  return (elapsed) => { time.value = elapsed; };
 }

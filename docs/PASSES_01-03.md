@@ -74,3 +74,7 @@ The layout reachability test flood-fills the walkable grid from spawn. It caught
 Contracts: [world engine](WORLD_ENGINE.md), [navigation](NAVIGATION.md), [art direction](WORLD_ART_DIRECTION.md), [roadmap](IMPLEMENTATION_PLAN.md).
 
 Next: **Pass 4 — interaction (slices 13 signage, 14 targeting, 15 preview overlay).**
+
+## September 25 pond and statue follow-up
+
+See [pond and statue repair](POND_AND_STATUE_FIX.md): enclosed basin, matching shoreline geometry, opaque pond, and direct sculpture contacts with no shrub islands or footing drums. Verification limitations are recorded there.

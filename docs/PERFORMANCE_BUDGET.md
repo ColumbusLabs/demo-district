@@ -77,15 +77,34 @@ It renders four fixed views synchronously, forcing GPU completion with a 1-pixel
 | --- | --- | --- |
 | High tier, desktop 1440×900, reference GPU (M5), median | ≤ 6 ms (≥ 2.5× headroom under 16.7 ms) | 2.7 ms |
 | High tier, DPR 2, reference GPU, median | ≤ 8 ms | 5.0 ms |
-| Draw calls at spawn | ≤ 120 | 94 |
-| Triangles in view | ≤ 150k | 87k |
+| Draw calls at spawn | ≤ 120 | 96 (Blender trees, landmark, and statue shrubs; bell fountain; SwiftShader count) |
+| Triangles in view | ≤ 150k | 149.4k at spawn: at budget (Blender trees, landmark, and statue shrubs; bell fountain; SwiftShader count) |
 | Initial transfer | ≤ 5 MB | 2.27 MB |
 | Local assets ready (broadband) | ≤ 2 s | about 0.5 s |
-| JS bundle (uncompressed) | ≤ 750 kB | 680 kB |
+| JS bundle (uncompressed) | ≤ 750 kB | 717 kB main + 71 kB lazy glTF loader |
 
 **Adaptive safety net.** In automatic mode, if the smoothed frame interval stays above 26 ms (about 38 fps) for 4 s after a 3 s warmup, the world steps down one tier in place. Judging starts only once content has loaded. A visitor's explicit graphics choice is never overridden. The governor's logic is unit-tested and exercised end to end on SwiftShader.
 
 **City ring (2026-09-25).** The entrance colonnade, city blocks, hills, and skyline add about 24k triangles and 5 draw calls (spawn: 121k triangles, 100 draws). An A/B run under identical conditions shows no measurable frame-time change: all city geometry merges into existing per-material batches. The low tier drops the skyline and roof light accents.
+
+**Blender trees (2026-09-25).** Trees now come from `public/world/models/trees.glb` (see [TREES_BLENDER.md](TREES_BLENDER.md)). Planter and terrace trees use ~1.5k-triangle models; groves and street trees use a ~430-triangle LOD. Measured with SwiftShader at 1440×900 (counts only; SwiftShader frame times are not meaningful):
+
+- High spawn: 100 → 106 draws, 121.6k → 139.1k triangles. Plaza: 124.6k.
+- Low spawn: 98.3k triangles.
+- Main bundle: 687 → 717 kB, plus a 71 kB lazy loader chunk. The GLB adds 257 kB of transfer.
+
+Frame time on the reference GPU is not yet re-measured.
+
+**Blender landmark (2026-09-25).** The arch sculpture comes from `public/world/models/landmark.glb` as one ~12.7k-triangle mesh (with the nested inner arch), replacing three procedural ribbons (see [LANDMARK_BLENDER.md](LANDMARK_BLENDER.md)). SwiftShader counts, high tier:
+
+- Spawn: 106 → 104 draws, 139.1k → 140.1k triangles.
+- Plaza: 125.6k triangles.
+
+The GLB adds 84 kB of transfer.
+
+**Bell fountain (2026-09-25).** The ring of 14 jet meshes is replaced by one bell, inner sheet, jet, and foam (see [FOUNTAIN.md](FOUNTAIN.md)). Spawn: 104 → 93 draws, 140.1k → 140.5k triangles.
+
+**Statue shrubs (2026-09-25).** Planters with 46 Blender shrubs around the landmark footings (see [STATUE_PLANTING.md](STATUE_PLANTING.md)). Spawn: 93 → 96 draws, 140.5k → 149.4k triangles. **Spawn is at the triangle budget**: offset anything new in view.
 
 ## Quality tiers
 
