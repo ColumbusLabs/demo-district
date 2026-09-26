@@ -6,6 +6,7 @@ import { place } from './geometry.ts';
 import type { StaticBatch } from './geometry.ts';
 import { plinthHeight, storefrontSize } from './layout.ts';
 import type { PavilionSlot } from './layout.ts';
+import { exhibitShapes, exhibitInstallation } from './exhibit-scenes.ts';
 import { exhibitTile } from './exhibits.ts';
 import type { DistrictMaterials } from './materials.ts';
 
@@ -51,6 +52,7 @@ function storefrontGlass(slot: PavilionSlot, width: number, height: number, skyM
   uniforms.artMap = { value: artMap };
   return resources.track(new ShaderMaterial({
     uniforms,
+    defines: { EXHIBIT_KIND: exhibitTile(slot.id).x + (1 - exhibitTile(slot.id).y) * 4 },
     vertexShader: /* glsl */`
       varying vec3 vLocal;
       varying vec3 vCamLocal;
@@ -101,6 +103,7 @@ function storefrontGlass(slot: PavilionSlot, width: number, height: number, skyM
           color = tint * light;
         }
       }
+      ${exhibitShapes}
       void main() {
         // Interior mapping: intersect the view ray with an imaginary room behind the glass.
         vec3 dir = normalize(vLocal - vCamLocal);
@@ -114,61 +117,76 @@ function storefrontGlass(slot: PavilionSlot, width: number, height: number, skyM
         float up = clamp((hit.y + halfSize.y) / size.y, 0.0, 1.0);
         vec3 warm = vec3(1.0, 0.8, 0.58);
         vec3 room;
+        #if EXHIBIT_KIND == 0
+          vec3 wallTint=vec3(0.38,0.31,0.24);
+        #elif EXHIBIT_KIND == 1
+          vec3 wallTint=vec3(0.035,0.15,0.16);
+        #elif EXHIBIT_KIND == 2
+          vec3 wallTint=vec3(0.045,0.065,0.14);
+        #elif EXHIBIT_KIND == 3
+          vec3 wallTint=vec3(0.065,0.095,0.22);
+        #elif EXHIBIT_KIND == 4
+          vec3 wallTint=vec3(0.24,0.13,0.065);
+        #elif EXHIBIT_KIND == 5
+          vec3 wallTint=vec3(0.13,0.065,0.16);
+        #elif EXHIBIT_KIND == 6
+          vec3 wallTint=vec3(0.035,0.12,0.08);
+        #else
+          vec3 wallTint=vec3(0.055,0.065,0.16);
+        #endif
         if (t == far.z) {
-          // Square artwork in a dark frame on a softly illuminated plaster wall.
-          float artSize = min(size.x * 0.30, size.y * 0.31);
-          vec2 p = hit.xy - vec2(-size.x * 0.08, size.y * 0.12);
-          float edge = max(abs(p.x), abs(p.y));
-          room = vec3(0.38, 0.34, 0.29) * (0.65 + 0.35 * up);
-          room += vec3(0.18, 0.14, 0.09) * exp(-length(p) * 0.8);
-          if (edge < artSize + 0.10) room = vec3(0.026, 0.03, 0.035);
-          if (edge < artSize) room = artwork(p / (artSize * 2.0) + 0.5) * 1.65;
-          // Small exhibition label beneath the frame.
-          if (abs(p.x) < artSize * 0.52 && abs(p.y + artSize + 0.25) < 0.04) room = vec3(0.68, 0.62, 0.51);
+          vec2 p = hit.xy / halfSize;
+          vec2 artUv = p * 0.5 + 0.5;
+          vec3 accent = hsv(hue, 0.6, 0.5);
+          room = mix(vec3(0.055,0.065,0.09), accent*0.24, 0.45);
+          float shape = 0.0;
+          #if EXHIBIT_KIND == 0
+            // Monumental diptych, with a deliberate off-center split.
+            shape = step(abs(p.y-0.05),0.79)*step(abs(p.x),0.83)*(1.0-step(abs(p.x+0.15),0.025));
+          #elif EXHIBIT_KIND == 1
+            // Circular portal to another world.
+            float r=length(hit.xy/size.y-vec2(0.0,0.05));
+            room += vec3(0.1,0.6,0.65)*exp(-abs(r-0.43)*100.0);
+            shape=1.0-step(0.42,r);
+          #elif EXHIBIT_KIND == 2
+            // A panoramic stage backdrop with narrow acoustic wall fins.
+            shape=step(abs(p.y-0.23),0.48)*step(abs(p.x),0.9);
+            room += vec3(0.02,0.07,0.12)*step(0.85,fract(p.x*18.0));
+          #elif EXHIBIT_KIND == 3
+            // Offset tilted game-world screen.
+            vec2 q=mat2(0.985,0.174,-0.174,0.985)*(hit.xy/size.y);
+            shape=step(abs(q.x),0.43)*step(abs(q.y-0.03),0.36);
+            artUv=q+0.5;
+          #elif EXHIBIT_KIND == 4
+            // Tall illuminated story panels, like pages of a book.
+            shape=step(abs(p.x),0.8)*step(abs(p.y),0.83)*(1.0-step(0.91,fract((p.x+1.0)*2.5)));
+            room=vec3(0.15,0.075,0.033);
+          #elif EXHIBIT_KIND == 5
+            // Woven wall across the full studio, behind the physical loom.
+            shape=step(abs(p.x),0.9)*step(abs(p.y),0.78);
+          #elif EXHIBIT_KIND == 6
+            // Round botanical specimen window with a green halo.
+            float r=length(hit.xy/size.y-vec2(0.0,0.08));
+            shape=1.0-step(0.4,r);
+            room+=vec3(0.1,0.6,0.22)*exp(-abs(r-0.42)*90.0);
+          #else
+            // Observatory: an uninterrupted dark astronomical panorama.
+            shape=step(abs(p.x),0.94)*step(abs(p.y),0.91);
+          #endif
+          room=mix(room,artwork(artUv)*1.05,shape);
         } else if (t == far.y) {
           float strip = step(abs(hit.z + roomDepth * 0.42), 0.055);
           float joints = max(step(0.975, fract(hit.x / 1.3)), step(0.975, fract(hit.z / 1.3)));
-          room = hit.y > 0.0 ? mix(vec3(0.15, 0.145, 0.13), warm * 2.0, strip)
-            : mix(vec3(0.26, 0.235, 0.20), vec3(0.16, 0.15, 0.135), joints);
+          room = hit.y > 0.0 ? mix(wallTint * 0.5, warm * 2.0, strip)
+            : mix(wallTint * 0.8 + vec3(0.045), wallTint * 0.45, joints);
           if (hit.y < 0.0) room *= 0.65 + 0.35 * exp(-length(hit.xz - vec2(0.0, -roomDepth * 0.55)));
         } else {
           float recess = step(abs(hit.z + roomDepth * 0.55), roomDepth * 0.22);
-          room = vec3(0.30, 0.285, 0.255) * mix(0.65, 1.05, up);
+          room = wallTint * mix(0.65, 1.05, up);
           room *= 1.0 - recess * 0.17;
           if (abs(hit.y - halfSize.y + 0.15) < 0.025) room = warm * 1.4;
         }
-        // Analytic foreground exhibits give occlusion and parallax without extra draw calls.
-        float nearest = t;
-        float floorY = -halfSize.y;
-        vec3 pedestal = vec3(size.x * 0.16, floorY + size.y * 0.17, -roomDepth * 0.47);
-        displayBox(vLocal, dir, pedestal, vec3(size.x * 0.10, size.y * 0.17, 0.42), vec3(0.44, 0.40, 0.34), nearest, room);
-        // Polished sphere above the plinth, with a small contact shadow at its base.
-        float radius = size.y * 0.13;
-        vec3 sphere = pedestal + vec3(0.0, size.y * 0.17 + radius, 0.0);
-        vec3 oc = vLocal - sphere;
-        float qb = dot(oc, dir);
-        float disc = qb * qb - dot(oc, oc) + radius * radius;
-        if (disc > 0.0) {
-          float sphereT = -qb - sqrt(disc);
-          if (sphereT > 0.0 && sphereT < nearest) {
-            nearest = sphereT;
-            vec3 normal = normalize(vLocal + dir * sphereT - sphere);
-            room = hsv(hue, 0.48, 0.65) * (0.35 + 0.65 * max(0.0, dot(normal, normalize(vec3(-0.5, 1.0, 1.0)))));
-            room += vec3(0.8, 0.7, 0.5) * pow(max(0.0, dot(reflect(dir, normal), normalize(vec3(-0.5, 1.0, 1.0)))), 24.0);
-          }
-        }
-        // Slim side kiosk with an angled display face.
-        vec3 kiosk = vec3(-size.x * 0.30, floorY + size.y * 0.18, -roomDepth * 0.25);
-        displayBox(vLocal, dir, kiosk, vec3(0.09, size.y * 0.18, 0.09), vec3(0.075), nearest, room);
-        mat3 tilt = mat3(1.0, 0.0, 0.0, 0.0, 0.94, -0.342, 0.0, 0.342, 0.94);
-        vec3 screenCenter = kiosk + vec3(0.0, size.y * 0.18, 0.0);
-        float before = nearest;
-        displayBox(tilt * (vLocal - screenCenter), tilt * dir, vec3(0.0), vec3(size.x * 0.09, size.y * 0.075, 0.045), vec3(0.025), nearest, room);
-        if (nearest < before) {
-          vec3 p = tilt * (vLocal + dir * nearest - screenCenter);
-          if (p.z > 0.04 && abs(p.x) < size.x * 0.08 && abs(p.y) < size.y * 0.063)
-            room = artwork(p.xy / vec2(size.x * 0.16, size.y * 0.126) + 0.5) * 1.2;
-        }
+        ${exhibitInstallation}
         vec3 v = normalize(cameraPosition - vWorld);
         float fresnel = 0.035 + 0.48 * pow(1.0 - abs(dot(v, vNormal)), 5.0);
         vec3 reflection = sampleSky(reflect(-v, vNormal));

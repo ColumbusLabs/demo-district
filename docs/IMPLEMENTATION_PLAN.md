@@ -1777,3 +1777,7 @@ Replaced ragged low leaf-card planting with compact opaque crowns and modeled le
 ## September 26 — storefront exhibit pass
 
 Replaced the eight placeholder storefront panels with original exhibit artwork and parallax gallery interiors; see [checkpoint and verification limits](STOREFRONTS.md). Community/backend roadmap remains unchanged.
+
+### Storefront creativity follow-up
+
+Each category now has a distinct installation, backdrop silhouette and interior palette rather than repeating the pedestal/kiosk composition. See [storefront evidence](STOREFRONTS.md). No navigation or platform scope changes.
