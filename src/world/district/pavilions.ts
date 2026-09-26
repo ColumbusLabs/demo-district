@@ -7,7 +7,7 @@ import type { StaticBatch } from './geometry.ts';
 import { plinthHeight, storefrontSize } from './layout.ts';
 import type { PavilionSlot } from './layout.ts';
 import { exhibitShapes, exhibitInstallation } from './exhibit-scenes.ts';
-import { exhibitTile } from './exhibits.ts';
+import { exhibitKind, exhibitTile } from './exhibits.ts';
 import type { DistrictMaterials } from './materials.ts';
 
 
@@ -52,7 +52,7 @@ function storefrontGlass(slot: PavilionSlot, width: number, height: number, skyM
   uniforms.artMap = { value: artMap };
   return resources.track(new ShaderMaterial({
     uniforms,
-    defines: { EXHIBIT_KIND: exhibitTile(slot.id).x + (1 - exhibitTile(slot.id).y) * 4 },
+    defines: { EXHIBIT_KIND: exhibitKind(slot.id) },
     vertexShader: /* glsl */`
       varying vec3 vLocal;
       varying vec3 vCamLocal;
@@ -131,6 +131,8 @@ function storefrontGlass(slot: PavilionSlot, width: number, height: number, skyM
           vec3 wallTint=vec3(0.13,0.065,0.16);
         #elif EXHIBIT_KIND == 6
           vec3 wallTint=vec3(0.035,0.12,0.08);
+        #elif EXHIBIT_KIND == 8
+          vec3 wallTint=vec3(0.03,0.045,0.07);
         #else
           vec3 wallTint=vec3(0.055,0.065,0.16);
         #endif
@@ -169,6 +171,10 @@ function storefrontGlass(slot: PavilionSlot, width: number, height: number, skyM
             float r=length(hit.xy/size.y-vec2(0.0,0.08));
             shape=1.0-step(0.4,r);
             room+=vec3(0.1,0.6,0.22)*exp(-abs(r-0.42)*90.0);
+          #elif EXHIBIT_KIND == 8
+            // Optics bench: a dark wall with a faint measuring grid.
+            vec2 g=abs(fract(hit.xy/size.y*6.0)-0.5);
+            room=vec3(0.02,0.03,0.05)+vec3(0.03,0.07,0.1)*step(0.47,max(g.x,g.y));
           #else
             // Observatory: an uninterrupted dark astronomical panorama.
             shape=step(abs(p.x),0.94)*step(abs(p.y),0.91);

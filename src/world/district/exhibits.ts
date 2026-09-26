@@ -1,11 +1,14 @@
 import { LinearFilter, SRGBColorSpace, TextureLoader, Vector2 } from 'three';
 import type { ResourceScope } from '../runtime.ts';
+import { exhibitForSlot, exhibitKinds } from '../../data/showcase.ts';
 import { assetUrl } from './materials.ts';
 
-const tiles = ['west-gate', 'east-gate', 'west-promenade', 'east-promenade', 'west-grove', 'east-grove', 'west-plaza', 'east-plaza'];
-export function exhibitTile(id: string): Vector2 {
-  const index = tiles.indexOf(id);
-  if (index < 0) throw new Error(`Missing exhibit artwork: ${id}`);
+/** Compile-time installation index for a slot's window (EXHIBIT_KIND in the glass shader). */
+export const exhibitKind = (slot: string): number => exhibitKinds.indexOf(exhibitForSlot(slot));
+
+/** Artwork atlas tile: one per category; the lens bench reuses the dark Learning panorama. */
+export function exhibitTile(slot: string): Vector2 {
+  const index = Math.min(exhibitKind(slot), 7);
   return new Vector2(index % 4, 1 - Math.floor(index / 4));
 }
 

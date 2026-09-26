@@ -22,6 +22,13 @@ export const exhibitShapes = /* glsl */`
     if (abs(r-radius) < thickness) { nearest=t; color=tint; }
   }
   mat3 spin(float a) { float c=cos(a),s=sin(a); return mat3(c,s,0.0,-s,c,0.0,0.0,0.0,1.0); }
+  // A thin square beam from a to b in the window plane (a.z is used for both ends).
+  void beam(vec3 o, vec3 d, vec3 a, vec3 b, float w, vec3 tint, inout float nearest, inout vec3 color) {
+    vec2 v = b.xy - a.xy;
+    mat3 turn = spin(-atan(v.y, v.x));
+    vec3 c = vec3((a.xy + b.xy) * 0.5, a.z);
+    displayBox(turn*(o-c), turn*d, vec3(0.0), vec3(length(v)*0.5, w, w), tint, nearest, color);
+  }
 `;
 
 export const exhibitInstallation = /* glsl */`
@@ -103,6 +110,34 @@ export const exhibitInstallation = /* glsl */`
       orb(origin,ray,base+vec3(x,0.2+h,0.025*sin(f)),vec3(0.064,0.085,0.064),vec3(0.35,0.85,0.28),0.55,nearExhibit,room);
     }
     hoop(origin,ray,base+vec3(0.0,0.49,0.0),vec3(0.2,0.15,1.0),0.37,0.005,vec3(0.3,0.65,0.4),nearExhibit,room);
+  #elif EXHIBIT_KIND == 8
+    // LENS: an optics bench. Light from a miniature tree passes three glass elements in a
+    // brass barrel and converges on a glowing plane of focus.
+    displayBox(origin,ray,base+vec3(0.0,0.07,0.0),vec3(0.47,0.022,0.05),ink,nearExhibit,room);
+    displayBox(origin,ray,base+vec3(0.0,0.094,0.052),vec3(0.47,0.003,0.002),gold,nearExhibit,room);
+    // The subject: a small tree on a stand.
+    displayBox(origin,ray,base+vec3(-0.40,0.12,0.0),vec3(0.035,0.03,0.035),ink,nearExhibit,room);
+    displayBox(origin,ray,base+vec3(-0.40,0.20,0.0),vec3(0.009,0.05,0.009),vec3(0.24,0.14,0.07),nearExhibit,room);
+    orb(origin,ray,base+vec3(-0.40,0.33,0.0),vec3(0.055,0.095,0.055),vec3(0.16,0.42,0.22),0.1,nearExhibit,room);
+    // Lens elements, barrel rings and mount.
+    vec3 axis=base+vec3(0.0,0.42,0.0);
+    orb(origin,ray,axis+vec3(-0.08,0.0,0.0),vec3(0.018,0.17,0.17),vec3(0.30,0.55,0.72),0.25,nearExhibit,room);
+    orb(origin,ray,axis,vec3(0.03,0.21,0.21),vec3(0.36,0.62,0.80),0.3,nearExhibit,room);
+    orb(origin,ray,axis+vec3(0.07,0.0,0.0),vec3(0.016,0.15,0.15),vec3(0.30,0.55,0.72),0.25,nearExhibit,room);
+    for (int i=0;i<3;i++) hoop(origin,ray,axis+vec3(-0.11+float(i)*0.1,0.0,0.0),vec3(1.0,0.0,0.0),0.225,0.011,gold,nearExhibit,room);
+    displayBox(origin,ray,base+vec3(0.0,0.15,0.0),vec3(0.025,0.06,0.025),gold*0.7,nearExhibit,room);
+    // Rays: out from the treetop, bent by the glass, meeting on the focal plane.
+    vec3 subject=base+vec3(-0.40,0.40,0.0);
+    vec3 image=base+vec3(0.34,0.31,0.0);
+    vec3 beamTint=vec3(1.7,1.05,0.45);
+    for (int i=0;i<3;i++) {
+      vec3 glass=axis+vec3(0.0,(1.0-float(i))*0.15,0.0);
+      beam(origin,ray,subject,glass,0.0035,beamTint,nearExhibit,room);
+      beam(origin,ray,glass,image,0.0035,beamTint,nearExhibit,room);
+    }
+    // The plane of focus: a glowing sensor sheet on a slim stand.
+    displayBox(origin,ray,image+vec3(0.0,0.03,0.0),vec3(0.004,0.15,0.11),vec3(0.55,1.45,2.0),nearExhibit,room);
+    displayBox(origin,ray,base+vec3(0.34,0.14,0.0),vec3(0.008,0.05,0.008),ink,nearExhibit,room);
   #else
     // LEARNING: a suspended orrery, two orbital planes and bright satellites.
     vec3 center=base+vec3(0.0,0.54,0.0);

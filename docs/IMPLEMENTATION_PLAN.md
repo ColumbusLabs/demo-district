@@ -22,6 +22,10 @@ On 2026-09-24 the user set **desktop browser as the primary target** (mobile sec
 An early baseline of slice 20 was needed to keep software-rendered browsers (and CI) usable: automatic high/medium/low tiers. **Pass 4 (signage, targeting, preview) is also done: see [PASS_04.md](PASS_04.md).** **Pass 5 (HUD, search, map, loading) is done: see [PASS_05.md](PASS_05.md).** **Pass 6 (measurement, optimization, quality presets) is done: see [PASS_06.md](PASS_06.md) and [PERFORMANCE_BUDGET.md](PERFORMANCE_BUDGET.md).** **Pass 7 (WORLD ALPHA audit) is done: see [WORLD_ALPHA_AUDIT.md](WORLD_ALPHA_AUDIT.md). It recommends declaring WORLD ALPHA for the desktop browser preview; backend slices (23+) stay locked until the owner decides.** **Blender trees (first Blender-authored asset, slice 9 follow-up) are on `claude/blender-environment-support-darnhc`: see [TREES_BLENDER.md](TREES_BLENDER.md). The landmark sculpture followed: see [LANDMARK_BLENDER.md](LANDMARK_BLENDER.md), then a lighting pass: see [LIGHTING_PASS.md](LIGHTING_PASS.md), landmark color grading: see [COLOR_GRADING.md](COLOR_GRADING.md), the bell fountain: see [FOUNTAIN.md](FOUNTAIN.md), and statue planting: see [STATUE_PLANTING.md](STATUE_PLANTING.md).** Native Sites acceptance and physical-device testing are tracked separately. The owner authorized deployment in this task; public access still requires a username-free URL.
 <!-- /passes-01-03-status -->
 
+<!-- first-exhibit-status -->
+**First real exhibit (2026-09-26):** the owner opened real project records. *The Plane of Focus* by @RyanSael (Claude Opus 5.5) occupies the east gate pavilion as a link-out listing with an original lens-bench storefront installation, a "Now showing" gate plaque, build provenance in the preview, and a named external destination. Listings remain static data in `src/data/showcase.ts`; slices 23–27 still own the durable contract, D1, and the full launch flow. See [FIRST_EXHIBIT.md](FIRST_EXHIBIT.md).
+<!-- /first-exhibit-status -->
+
 <!-- slice-04-status -->
 ## Historical implementation checkpoint — Slice 4
 
@@ -776,6 +780,8 @@ Each slice must end with:
 - Define project ID/slug, title, description, creator identity/links, source post, project URL, project type, model family/version, category, dates, poster, status, featured state, district slot, and attribution/permission metadata.
 - Support external, hosted-media, and creator-submitted hosted-demo cases without conflating them.
 - Keep spatial location data independent from raw Three.js object references.
+
+**Status (2026-09-26):** partially started. `ShowcaseProject` in `src/data/showcase.ts` now carries real link-out records (handle-only credit, project URL, source post, optional build provenance and storefront exhibit). This slice still owns the durable schema; migrate the first record rather than re-deriving it.
 
 **Acceptance:**
 - The contract supports link-only entries and later permissioned hosting.

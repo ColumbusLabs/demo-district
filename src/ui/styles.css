@@ -115,6 +115,8 @@ button, input, select { font: inherit; color: inherit; }
 .preview__close { width: 44px; height: 44px; border-radius: 50%; border: 1px solid #ffffff38; background: #ffffff10; font-size: 1.4rem; line-height: 1; cursor: pointer; }
 .preview__eyebrow { display: flex; gap: .6rem; align-items: center; margin: 0 3rem .5rem 0; font-size: .7rem; font-weight: 650; letter-spacing: .16em; text-transform: uppercase; color: #d9c7a8; }
 .preview__badge { padding: .15rem .5rem; border-radius: 999px; border: 1px solid #d9c7a866; letter-spacing: .08em; font-weight: 600; }
+.preview__badge--live { border-color: #9fd8e866; color: #bfe6f0; }
+.preview__meta-wide { grid-column: 1 / -1; }
 .preview h2 { margin: 0 0 .3rem; font-size: 1.6rem; font-weight: 500; letter-spacing: -.02em; line-height: 1.15; }
 .preview__byline { margin: 0 0 1rem; color: #c9d3d6; font-size: .9rem; }
 .preview__meta { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; margin: 0 0 1rem; }

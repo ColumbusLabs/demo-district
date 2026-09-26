@@ -1,3 +1,4 @@
+import { buildSummary, destinationHost } from '../data/showcase.ts';
 import type { ShowcaseProject } from '../data/showcase.ts';
 
 export interface ProjectPreview {
@@ -10,7 +11,8 @@ export interface ProjectPreview {
 /**
  * The 2D project layer over the world: a modal dialog (native focus containment and Escape)
  * with attribution, model, description, a rating placeholder, and deliberate external actions.
- * Sample listings have no links, so nothing external can open from the preview yet.
+ * Real listings name the external host before the visitor opens it in a new tab; sample
+ * listings have no links, so nothing external can open from them.
  */
 export function createProjectPreview(doc: Document, hooks: { onOpen?: () => void; onClose?: () => void }): ProjectPreview {
   const dialog = doc.querySelector<HTMLDialogElement>('#project-preview');
@@ -47,6 +49,11 @@ export function createProjectPreview(doc: Document, hooks: { onOpen?: () => void
       text('preview-model', project.model);
       text('preview-description', project.description);
       field('preview-sample')?.toggleAttribute('hidden', !project.sample);
+      field('preview-showing')?.toggleAttribute('hidden', project.sample);
+      text('preview-build', project.build ? buildSummary(project.build) : '');
+      field('preview-build-row')?.toggleAttribute('hidden', !project.build);
+      text('preview-host', project.projectUrl ? destinationHost(project.projectUrl) : '');
+      field('preview-destination')?.toggleAttribute('hidden', !project.projectUrl);
       field('preview-note')?.toggleAttribute('hidden', Boolean(project.projectUrl));
       setLink(field('preview-launch'), project.projectUrl);
       setLink(field('preview-source'), project.sourcePostUrl);

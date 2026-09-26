@@ -7,7 +7,7 @@ import type { StaticBatch } from './geometry.ts';
 import { district } from './layout.ts';
 import type { DistrictMaterials } from './materials.ts';
 import { storefrontFrame } from './pavilions.ts';
-import { signCopy } from './signage-copy.ts';
+import { nowShowing, signCopy } from './signage-copy.ts';
 
 const font = (weight: number, px: number): string => `${weight} ${px}px ui-sans-serif, system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif`;
 
@@ -105,9 +105,11 @@ export function buildSignage(root: Group, m: DistrictMaterials, batch: StaticBat
       band.at(0, band.bandCenterY, band.front + 0.012), true, `sign-band-${slot.id}`);
   }
 
-  // Gate pavilions: freestanding dark slabs with stacked words beside the storefront.
+  // Gate pavilions: freestanding dark slabs with stacked words beside the storefront. A real
+  // listing turns its slab into a "now showing" plaque with the title and creator handle.
   for (const slot of district.pavilions) {
-    const words = signCopy.gateWalls[slot.id];
+    const project = projectForSlot(slot.id);
+    const words = signCopy.gateWalls[slot.id] && project && !project.sample ? nowShowing(project.title, project.creator) : signCopy.gateWalls[slot.id];
     if (!words) continue;
     const band = storefrontFrame(slot);
     const side = slot.accent === 'left' ? 1 : -1; // opposite the wood panel

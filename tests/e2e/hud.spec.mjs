@@ -75,9 +75,18 @@ test('the menu is a disclosure: Escape closes it and returns focus', async ({ pa
 test('reduced motion jumps instantly; the profile control is honest about sign-in', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await ready(page);
-  await page.getByRole('combobox', { name: 'Search the district' }).fill('orbit');
+  await page.getByRole('combobox', { name: 'Search the district' }).fill('focus');
   await page.keyboard.press('Enter');
-  await expect(page.getByRole('dialog', { name: 'Orbit Primer' })).toBeVisible();
+  const dialog = page.getByRole('dialog', { name: 'The Plane of Focus' });
+  await expect(dialog).toBeVisible();
+  // The first real listing: credited by handle, destination named, links open in a new tab.
+  await expect(dialog).toContainText('@RyanSael');
+  await expect(dialog).toContainText('1 h 26 min · one shot · $25.66 API');
+  await expect(dialog).toContainText('Opens lens.lab.sael.net in a new tab');
+  await expect(page.locator('#preview-sample')).toBeHidden();
+  await expect(page.locator('#preview-launch')).toHaveAttribute('href', 'https://lens.lab.sael.net/');
+  await expect(page.locator('#preview-launch')).toHaveAttribute('target', '_blank');
+  await expect(page.locator('#preview-source')).toHaveAttribute('href', /x\.com\/RyanSael\/status\//);
   await expect(page.locator('#transition')).not.toHaveAttribute('data-active', '');
   await expect(page.locator('#profile-button')).toHaveAttribute('aria-disabled', 'true');
   await expect(page.locator('#profile-note')).toHaveText('Sign-in arrives in a later release.');
