@@ -23,17 +23,20 @@ test('search finds a storefront by category and jumps to its preview', async ({ 
   const search = page.getByRole('combobox', { name: 'Search the district' });
   await search.fill('games');
   await expect(search).toHaveAttribute('aria-expanded', 'true');
-  await expect(page.getByRole('option', { name: /Paper Comet/ })).toBeVisible();
+  await expect(page.getByRole('option', { name: /Games/ })).toBeVisible();
   await search.fill('no such thing');
   await expect(page.locator('#search-results')).toContainText('No storefronts match yet.');
-  await search.fill('tide');
+  await search.fill('music');
   await page.keyboard.press('Enter');
-  await expect(page.getByRole('dialog', { name: 'Tidepool Synth' })).toBeVisible();
+  const music = page.getByRole('dialog', { name: 'Music' });
+  await expect(music).toBeVisible();
+  await expect(music).toContainText('No demos in Music yet');
+  await expect(page.locator('#preview-launch')).toBeHidden();
   await expect(search).toHaveValue('');
   await page.keyboard.press('Escape');
   expect(await previewOpen(page)).toBe(false);
   // After the jump the visitor stands facing that storefront.
-  await expect(page.locator('#world-prompt')).toContainText('Tidepool Synth');
+  await expect(page.locator('#world-prompt')).toContainText('Music');
 });
 
 test('the map toggles by button and M key, marks storefronts, and jumps from them', async ({ page }) => {
@@ -45,8 +48,8 @@ test('the map toggles by button and M key, marks storefronts, and jumps from the
   await expect(map).toBeVisible();
   await expect(map.locator('.slot')).toHaveCount(8);
   await expect(map.locator('.you')).toHaveAttribute('transform', /translate\(0\.0 10\.0\)/);
-  await map.getByRole('button', { name: /Lantern Coast/ }).click();
-  await expect(page.getByRole('dialog', { name: 'Lantern Coast' })).toBeVisible();
+  await map.getByRole('button', { name: /Learning \(1 demo\)/ }).click();
+  await expect(page.getByRole('dialog', { name: 'The Plane of Focus' })).toBeVisible();
   await page.keyboard.press('Escape');
   await page.locator('#world-canvas').focus();
   await page.keyboard.press('m');
@@ -79,14 +82,19 @@ test('reduced motion jumps instantly; the profile control is honest about sign-i
   await page.keyboard.press('Enter');
   const dialog = page.getByRole('dialog', { name: 'The Plane of Focus' });
   await expect(dialog).toBeVisible();
-  // The first real listing: credited by handle, destination named, links open in a new tab.
+  // A real demo: credited by handle, destination named, one building shown at a time.
+  await expect(dialog).toContainText('Learning');
   await expect(dialog).toContainText('@RyanSael');
   await expect(dialog).toContainText('1 h 26 min · one shot · $25.66 API');
   await expect(dialog).toContainText('Opens lens.lab.sael.net in a new tab');
-  await expect(page.locator('#preview-sample')).toBeHidden();
-  await expect(page.locator('#preview-launch')).toHaveAttribute('href', 'https://lens.lab.sael.net/');
-  await expect(page.locator('#preview-launch')).toHaveAttribute('target', '_blank');
-  await expect(page.locator('#preview-source')).toHaveAttribute('href', /x\.com\/RyanSael\/status\//);
+  await expect(page.locator('#preview-pager')).toBeHidden();
+  await expect(page.locator('#preview-source')).toHaveCount(0);
+  const launch = page.locator('#preview-launch');
+  await expect(launch).toHaveAttribute('href', 'https://lens.lab.sael.net/');
+  // Opening goes through window.open (stubbed here so the test never leaves for the real site).
+  await page.evaluate(() => { window.__opened = []; window.open = (url, target) => { window.__opened.push([url, target]); return {}; }; });
+  await launch.click();
+  expect(await page.evaluate(() => window.__opened)).toEqual([['https://lens.lab.sael.net/', '_blank']]);
   await expect(page.locator('#transition')).not.toHaveAttribute('data-active', '');
   await expect(page.locator('#profile-button')).toHaveAttribute('aria-disabled', 'true');
   await expect(page.locator('#profile-note')).toHaveText('Sign-in arrives in a later release.');

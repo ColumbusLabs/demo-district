@@ -3,12 +3,12 @@ import { createDistrict, districtNavigation } from '../world/district/index.ts';
 import type { District } from '../world/district/index.ts';
 import { createInteractions } from '../world/interactions/InteractionManager.ts';
 import type { Interactions } from '../world/interactions/InteractionManager.ts';
-import { projectForSlot, showcase } from '../data/showcase.ts';
+import { buildingForSlot } from '../data/showcase.ts';
 import { createHud } from '../ui/hud.ts';
 import type { Hud } from '../ui/hud.ts';
 import { createMinimap } from '../ui/minimap.ts';
 import type { Minimap } from '../ui/minimap.ts';
-import { createSearch } from '../ui/search.ts';
+import { createSearch, districtEntries } from '../ui/search.ts';
 import type { SearchBox } from '../ui/search.ts';
 import { createProjectPreview } from '../ui/project-preview.ts';
 import type { ProjectPreview } from '../ui/project-preview.ts';
@@ -113,17 +113,17 @@ export function mountApplication(doc: Document, options: MountOptions = {}): () 
   /** The bottom-center pill: how to explore, or how to open the storefront in focus. */
   const renderPrompt = (): void => {
     if (!prompt || disposed) return;
-    const project = focusedSlot ? projectForSlot(focusedSlot) : undefined;
+    const building = focusedSlot ? buildingForSlot(focusedSlot) : undefined;
     const show = running && !preview?.isOpen();
     prompt.hidden = !show;
     if (!show) return;
     const parts: Array<string | HTMLElement> = [];
     const key = (label: string): HTMLElement => { const k = doc.createElement('kbd'); k.textContent = label; return k; };
     const strong = (label: string): HTMLElement => { const s = doc.createElement('strong'); s.textContent = label; return s; };
-    if (modality === 'touch') parts.push(...(project ? ['Tap to view ', strong(project.title)] : ['Tap a storefront to view it']));
+    if (modality === 'touch') parts.push(...(building ? ['Tap to view ', strong(building.category)] : ['Tap a storefront to view it']));
     // Enter only works once the scene has keyboard focus; until then, offer the click.
-    else if (project && mode !== 'idle') parts.push(key('Enter'), ' or click to view ', strong(project.title));
-    else if (project) parts.push('Click to view ', strong(project.title));
+    else if (building && mode !== 'idle') parts.push(key('Enter'), ' or click to view ', strong(building.category));
+    else if (building) parts.push('Click to view ', strong(building.category));
     else parts.push('Use ', key('W'), key('A'), key('S'), key('D'), ' to explore');
     prompt.replaceChildren(...parts);
   };
@@ -305,9 +305,8 @@ export function mountApplication(doc: Document, options: MountOptions = {}): () 
         canInteract: () => activeWorld.snapshot().state === 'running' && !activePreview.isOpen(),
         onFocusChange: (id) => { focusedSlot = id; activeDistrict.highlight(id); minimap?.setFocus(id); renderPrompt(); },
         onActivate: (id, source) => {
-          const project = projectForSlot(id);
           // Keyboard visitors return to the scene; pointer visitors keep their own focus.
-          if (project) activePreview.open(project, source === 'keyboard' ? canvas : null);
+          if (buildingForSlot(id)) activePreview.open(id, source === 'keyboard' ? canvas : null);
         },
       });
       world.addSystem(interactions);
@@ -317,12 +316,12 @@ export function mountApplication(doc: Document, options: MountOptions = {}): () 
        * Jump to a storefront's framed viewpoint, then open its preview. A brief fade hides the
        * move (no camera flight through trees or walls); reduced motion moves instantly.
        */
-      const jumpTo = (slot: string): void => {
+      const jumpTo = (slot: string, projectId?: string): void => {
         const target = activeDistrict.targets.find((t) => t.id === slot);
         if (!target || !running) return;
         activePreview.close(); activeHud.closeMenu(); clearTimeout(jumpTimer);
         const land = (): void => { activeControls.teleport({ ...target.view, pitch: 0.06 }); activeWorld.invalidate(); };
-        const show = (): void => { const project = projectForSlot(slot); if (project && !disposed) activePreview.open(project, canvas); };
+        const show = (): void => { if (buildingForSlot(slot) && !disposed) activePreview.open(slot, canvas, projectId); };
         if (reducedMotion.matches || !fade) { land(); show(); return; }
         fade.dataset.active = '';
         jumpTimer = setTimeout(() => {
@@ -330,8 +329,8 @@ export function mountApplication(doc: Document, options: MountOptions = {}): () 
           jumpTimer = setTimeout(show, 300);
         }, 200);
       };
-      if (searchInput && searchList) search = createSearch(searchInput, searchList, showcase, (project) => jumpTo(project.slot));
-      if (mapSvg) minimap = createMinimap(mapSvg, jumpTo);
+      if (searchInput && searchList) search = createSearch(searchInput, searchList, districtEntries(), (entry) => jumpTo(entry.slot, entry.projectId));
+      if (mapSvg) minimap = createMinimap(mapSvg, (slot) => jumpTo(slot));
       const activeMinimap = minimap;
       // Keeps the map marker in step with the camera; never requests frames itself.
       world.addSystem({

@@ -1,35 +1,33 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildSummary, destinationHost, exhibitForSlot, showcase } from '../../src/data/showcase.ts';
+import { buildSummary, buildings, categories, demoCount, destinationHost, projects, projectsInBuilding } from '../../src/data/showcase.ts';
 import { district } from '../../src/world/district/layout.ts';
+import { exhibitKind } from '../../src/world/district/exhibits.ts';
 
-test('every pavilion has exactly one listing and every listing has a pavilion and exhibit', () => {
-  const slots = district.pavilions.map((p) => p.id);
-  assert.deepEqual([...showcase.map((p) => p.slot)].sort(), [...slots].sort());
-  assert.equal(new Set(showcase.map((p) => p.id)).size, showcase.length);
-  for (const slot of slots) assert.ok(exhibitForSlot(slot));
+test('every pavilion is one category building, each category once', () => {
+  assert.deepEqual(buildings.map((b) => b.slot).sort(), district.pavilions.map((p) => p.id).sort());
+  assert.deepEqual(buildings.map((b) => b.category).sort(), [...categories].sort());
 });
 
-test('real listings link out over https with a source post and a public handle; samples link nowhere', () => {
-  const real = showcase.filter((p) => !p.sample);
-  assert.ok(real.length >= 1);
-  for (const p of real) {
-    for (const url of [p.projectUrl, p.sourcePostUrl]) {
-      assert.ok(url, `${p.id} needs a project URL and source post`);
-      assert.equal(new URL(url).protocol, 'https:');
-    }
-    assert.match(p.creator, /^@\w+$/, 'real creators are credited by public handle');
-  }
-  for (const p of showcase.filter((q) => q.sample)) {
-    assert.equal(p.projectUrl, undefined); assert.equal(p.sourcePostUrl, undefined); assert.equal(p.build, undefined);
+test('storefront windows follow the building category, not the demos inside', () => {
+  for (const b of buildings) assert.equal(exhibitKind(b.slot), categories.indexOf(b.category));
+});
+
+test('demos sit in a real building, link out over https, and credit a public handle', () => {
+  assert.equal(new Set(projects.map((p) => p.id)).size, projects.length);
+  for (const p of projects) {
+    assert.ok(buildings.some((b) => b.slot === p.slot), `${p.id} is in a building`);
+    assert.equal(new URL(p.projectUrl).protocol, 'https:');
+    assert.match(p.creator, /^@\w+$/);
   }
 });
 
-test('The Plane of Focus is the first real exhibit, at the east gate', () => {
-  const p = showcase.find((q) => q.id === 'plane-of-focus');
-  assert.equal(p?.slot, 'east-gate');
-  assert.equal(p?.sample, false);
-  assert.equal(exhibitForSlot('east-gate'), 'Lens');
+test('The Plane of Focus is in the Learning building at the east gate', () => {
+  const p = projects.find((q) => q.id === 'plane-of-focus');
+  assert.equal(buildings.find((b) => b.slot === p.slot)?.category, 'Learning');
+  assert.deepEqual(projectsInBuilding('east-gate').map((q) => q.id), ['plane-of-focus']);
+  assert.equal(demoCount('east-gate'), '1 demo');
+  assert.equal(demoCount('west-promenade'), 'Coming soon');
   assert.equal(destinationHost(p.projectUrl), 'lens.lab.sael.net');
   assert.equal(buildSummary(p.build), '1 h 26 min · one shot · $25.66 API');
 });

@@ -1,14 +1,21 @@
 import { LinearFilter, SRGBColorSpace, TextureLoader, Vector2 } from 'three';
 import type { ResourceScope } from '../runtime.ts';
-import { exhibitForSlot, exhibitKinds } from '../../data/showcase.ts';
+import { buildingForSlot, categories } from '../../data/showcase.ts';
 import { assetUrl } from './materials.ts';
 
-/** Compile-time installation index for a slot's window (EXHIBIT_KIND in the glass shader). */
-export const exhibitKind = (slot: string): number => exhibitKinds.indexOf(exhibitForSlot(slot));
+/**
+ * Compile-time installation index for a slot's window (EXHIBIT_KIND in the glass shader). The
+ * window belongs to the building's category, never to a project listed inside it.
+ */
+export function exhibitKind(slot: string): number {
+  const building = buildingForSlot(slot);
+  if (!building) throw new Error(`No building for storefront ${slot}`);
+  return categories.indexOf(building.category);
+}
 
-/** Artwork atlas tile: one per category; the lens bench reuses the dark Learning panorama. */
+/** Artwork atlas tile: one per category, in the same order. */
 export function exhibitTile(slot: string): Vector2 {
-  const index = Math.min(exhibitKind(slot), 7);
+  const index = exhibitKind(slot);
   return new Vector2(index % 4, 1 - Math.floor(index / 4));
 }
 

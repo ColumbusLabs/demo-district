@@ -1,4 +1,4 @@
-import { projectForSlot } from '../data/showcase.ts';
+import { buildingForSlot, demoCount } from '../data/showcase.ts';
 import { district, landmarkFootings } from '../world/district/layout.ts';
 
 const ns = 'http://www.w3.org/2000/svg';
@@ -33,10 +33,10 @@ export function createMinimap(svg: SVGSVGElement, onSelect: (slot: string) => vo
   el('circle', { cx: landmark.x, cy: landmark.z, r: 1.6, fill: '#ffffff', stroke: '#8a97a0', 'stroke-width': 0.3 });
   const slots = new Map<string, SVGElement>();
   for (const p of pavilions) {
-    const project = projectForSlot(p.id);
+    const building = buildingForSlot(p.id);
     const group = el('g', {
       class: 'slot', transform: `translate(${p.x} ${p.z}) rotate(${(-p.facing * 180) / Math.PI})`,
-      role: 'button', tabindex: 0, 'aria-label': project ? `Go to ${project.title} (${project.category})` : `Go to ${p.id}`,
+      role: 'button', tabindex: 0, 'aria-label': building ? `Go to ${building.category} (${demoCount(p.id)})` : `Go to ${p.id}`,
     });
     el('rect', { class: 'slot__body', x: -p.width / 2, y: -p.depth / 2, width: p.width, height: p.depth, rx: 2, fill: '#fbfaf6', stroke: '#8a97a0', 'stroke-width': 0.35 }, group);
     // Storefront edge in warm light, on the local +Z face.

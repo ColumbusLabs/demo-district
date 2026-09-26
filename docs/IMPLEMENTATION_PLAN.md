@@ -23,7 +23,7 @@ An early baseline of slice 20 was needed to keep software-rendered browsers (and
 <!-- /passes-01-03-status -->
 
 <!-- first-exhibit-status -->
-**First real exhibit (2026-09-26):** the owner opened real project records. *The Plane of Focus* by @RyanSael (Claude Opus 5.5) occupies the east gate pavilion as a link-out listing with an original lens-bench storefront installation, a "Now showing" gate plaque, build provenance in the preview, and a named external destination. Listings remain static data in `src/data/showcase.ts`; slices 23–27 still own the durable contract, D1, and the full launch flow. See [FIRST_EXHIBIT.md](FIRST_EXHIBIT.md).
+**First real exhibit (2026-09-26):** the owner opened real project records. Storefronts are category buildings that each hold any number of demos (previous/next in the preview); windows stay category art. *The Plane of Focus* by @RyanSael (Claude Opus 5.5) is the first demo, in the Learning building at the east gate. Sample listings were removed. Listings remain static data in `src/data/showcase.ts`; slices 23–27 still own the durable contract, D1, and the full launch flow. See [FIRST_EXHIBIT.md](FIRST_EXHIBIT.md).
 <!-- /first-exhibit-status -->
 
 <!-- slice-04-status -->
@@ -781,7 +781,7 @@ Each slice must end with:
 - Support external, hosted-media, and creator-submitted hosted-demo cases without conflating them.
 - Keep spatial location data independent from raw Three.js object references.
 
-**Status (2026-09-26):** partially started. `ShowcaseProject` in `src/data/showcase.ts` now carries real link-out records (handle-only credit, project URL, source post, optional build provenance and storefront exhibit). This slice still owns the durable schema; migrate the first record rather than re-deriving it.
+**Status (2026-09-26):** partially started. `src/data/showcase.ts` now holds category `buildings` and real link-out `projects` (handle-only credit, project URL, optional build provenance), many projects per building. This slice still owns the durable schema; migrate the first record rather than re-deriving it.
 
 **Acceptance:**
 - The contract supports link-only entries and later permissioned hosting.

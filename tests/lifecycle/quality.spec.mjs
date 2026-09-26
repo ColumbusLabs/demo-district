@@ -13,7 +13,7 @@ test('automatic mode steps down on slow frames and keeps the visitor in place', 
   expect(await tier(page)).toBe('medium');
   await expect(page.locator('#world-canvas')).toHaveAttribute('data-quality', 'low', { timeout: 90_000 });
   await expect(page.locator('#world-notice')).toHaveText('Graphics adjusted for smoother movement.', { timeout: 30_000 });
-  await expect(page.locator('#world-prompt')).toContainText('Tidepool Synth');
+  await expect(page.locator('#world-prompt')).toContainText('Music');
   await expect(page.locator('#quality-select')).toHaveValue('auto');
 });
 
@@ -26,7 +26,7 @@ test('a graphics choice applies live, persists across reloads, and is never over
   await page.locator('#quality-select').selectOption('medium');
   await expect(page.locator('#world-canvas')).toHaveAttribute('data-quality', 'medium');
   expect(page.url()).toBe(before);
-  await expect(page.locator('#world-prompt')).toContainText('Tidepool Synth');
+  await expect(page.locator('#world-prompt')).toContainText('Music');
   expect(await page.evaluate(() => localStorage.getItem('demo-district.graphics'))).toBe('medium');
   // Slow software frames must not demote an explicit choice.
   await page.waitForTimeout(9000);

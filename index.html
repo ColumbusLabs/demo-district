@@ -87,24 +87,29 @@
         </div>
       </section>
 
-      <dialog id="project-preview" class="preview" aria-labelledby="preview-title" aria-describedby="preview-description">
+      <dialog id="project-preview" class="preview" aria-labelledby="preview-title">
         <div class="preview__card">
-          <form method="dialog" class="preview__close-form"><button id="preview-close" class="preview__close" aria-label="Close preview">&times;</button></form>
-          <p class="preview__eyebrow"><span id="preview-category"></span><span id="preview-sample" class="preview__badge">Sample listing</span><span id="preview-showing" class="preview__badge preview__badge--live" hidden>Now showing</span></p>
+          <form method="dialog" class="preview__close-form"><button id="preview-close" class="preview__close" aria-label="Close">&times;</button></form>
+          <p class="preview__eyebrow"><span id="preview-category"></span><span id="preview-count" aria-live="polite"></span></p>
           <h2 id="preview-title"></h2>
-          <p class="preview__byline">by <span id="preview-creator"></span></p>
-          <dl class="preview__meta">
-            <div><dt>Model</dt><dd id="preview-model"></dd></div>
-            <div><dt>Rating</dt><dd>Ratings arrive with sign-in</dd></div>
-            <div id="preview-build-row" class="preview__meta-wide" hidden><dt>Build, as reported by the creator</dt><dd id="preview-build"></dd></div>
-          </dl>
-          <p id="preview-description"></p>
-          <div class="preview__actions">
-            <a id="preview-launch" class="preview__action preview__action--primary" target="_blank" rel="noopener noreferrer">Open project <span aria-hidden="true">↗</span></a>
-            <a id="preview-source" class="preview__action" target="_blank" rel="noopener noreferrer">Original post <span aria-hidden="true">↗</span></a>
+          <div id="preview-project">
+            <p class="preview__byline">by <span id="preview-creator"></span></p>
+            <dl class="preview__meta">
+              <div><dt>Model</dt><dd id="preview-model"></dd></div>
+              <div><dt>Rating</dt><dd>Ratings arrive with sign-in</dd></div>
+              <div id="preview-build-row" class="preview__meta-wide" hidden><dt>Build, as reported by the creator</dt><dd id="preview-build"></dd></div>
+            </dl>
+            <p id="preview-description"></p>
+            <div class="preview__actions">
+              <a id="preview-launch" class="preview__action preview__action--primary" target="_blank" rel="noopener noreferrer">Open demo <span aria-hidden="true">↗</span></a>
+              <div id="preview-pager" class="preview__pager" hidden>
+                <button id="preview-prev" type="button" class="preview__action" aria-label="Previous demo in this building">&larr;</button>
+                <button id="preview-next" type="button" class="preview__action" aria-label="Next demo in this building">&rarr;</button>
+              </div>
+            </div>
+            <p class="preview__note">Opens <strong id="preview-host"></strong> in a new tab. It is the creator's own site, not part of Demo District.</p>
           </div>
-          <p id="preview-destination" class="preview__note" hidden>Opens <strong id="preview-host"></strong> in a new tab. It is the creator's own site, not part of Demo District.</p>
-          <p id="preview-note" class="preview__note">This is a sample storefront. Real projects open on their creators' own sites, only when you choose.</p>
+          <p id="preview-empty" class="preview__note" hidden><span id="preview-empty-text"></span></p>
         </div>
       </dialog>
     </main>

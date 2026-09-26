@@ -1,13 +1,13 @@
 import { CanvasTexture, LinearMipmapLinearFilter, Mesh, MeshBasicMaterial, MeshStandardMaterial, PlaneGeometry, SRGBColorSpace } from 'three';
 import type { Group, Matrix4, WebGLRenderer } from 'three';
-import { projectForSlot } from '../../data/showcase.ts';
+import { buildingForSlot } from '../../data/showcase.ts';
 import type { ResourceScope } from '../runtime.ts';
 import { place } from './geometry.ts';
 import type { StaticBatch } from './geometry.ts';
 import { district } from './layout.ts';
 import type { DistrictMaterials } from './materials.ts';
 import { storefrontFrame } from './pavilions.ts';
-import { nowShowing, signCopy } from './signage-copy.ts';
+import { signCopy } from './signage-copy.ts';
 
 const font = (weight: number, px: number): string => `${weight} ${px}px ui-sans-serif, system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif`;
 
@@ -96,20 +96,18 @@ export function buildSignage(root: Group, m: DistrictMaterials, batch: StaticBat
       place(p.x + Math.sin(p.angle) * out, 0.86, p.z + Math.cos(p.angle) * out, p.angle), false, `plinth-sign-${i}`);
   });
 
-  // Storefront sign bands: the listing's category, lit like the mockup's GAMES band.
+  // Storefront sign bands: the building's category, lit like the mockup's GAMES band.
   for (const slot of district.pavilions) {
-    const project = projectForSlot(slot.id);
-    if (!project) continue;
+    const building = buildingForSlot(slot.id);
+    if (!building) continue;
     const band = storefrontFrame(slot);
-    plane({ lines: [project.category.toUpperCase()], width: band.width * 0.9, height: band.bandHeight * 0.8, size: Math.min(0.28, band.bandHeight * 0.34), weight: 500, color: '#f1ebe1', tracking: 0.32 },
+    plane({ lines: [building.category.toUpperCase()], width: band.width * 0.9, height: band.bandHeight * 0.8, size: Math.min(0.28, band.bandHeight * 0.34), weight: 500, color: '#f1ebe1', tracking: 0.32 },
       band.at(0, band.bandCenterY, band.front + 0.012), true, `sign-band-${slot.id}`);
   }
 
-  // Gate pavilions: freestanding dark slabs with stacked words beside the storefront. A real
-  // listing turns its slab into a "now showing" plaque with the title and creator handle.
+  // Gate pavilions: freestanding dark slabs with stacked words beside the storefront.
   for (const slot of district.pavilions) {
-    const project = projectForSlot(slot.id);
-    const words = signCopy.gateWalls[slot.id] && project && !project.sample ? nowShowing(project.title, project.creator) : signCopy.gateWalls[slot.id];
+    const words = signCopy.gateWalls[slot.id];
     if (!words) continue;
     const band = storefrontFrame(slot);
     const side = slot.accent === 'left' ? 1 : -1; // opposite the wood panel
