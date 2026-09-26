@@ -101,13 +101,18 @@
             </dl>
             <p id="preview-description"></p>
             <div class="preview__actions">
-              <a id="preview-launch" class="preview__action preview__action--primary" target="_blank" rel="noopener noreferrer">Open demo <span aria-hidden="true">↗</span></a>
+              <a id="preview-launch" class="preview__action preview__action--primary" target="_top" rel="noopener noreferrer">Open demo <span aria-hidden="true">↗</span></a>
               <div id="preview-pager" class="preview__pager" hidden>
                 <button id="preview-prev" type="button" class="preview__action" aria-label="Previous demo in this building">&larr;</button>
                 <button id="preview-next" type="button" class="preview__action" aria-label="Next demo in this building">&rarr;</button>
               </div>
             </div>
-            <p class="preview__note">Opens <strong id="preview-host"></strong> in a new tab. It is the creator's own site, not part of Demo District.</p>
+            <p class="preview__note">Opens <strong id="preview-host"></strong> in this browser. Use Back to return to the district.</p>
+            <div class="preview__link-copy">
+              <input id="preview-url" type="text" readonly aria-label="Demo address" spellcheck="false" />
+              <button id="preview-copy" type="button" class="preview__action">Copy link</button>
+            </div>
+            <p id="preview-link-status" class="preview__note" role="status">If the demo doesn’t open here, copy its address into your browser.</p>
           </div>
           <p id="preview-empty" class="preview__note" hidden><span id="preview-empty-text"></span></p>
         </div>

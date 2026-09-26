@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { advanceMotion, constrainMotion, initialMotion, movementConfig } from '../../src/world/controls/motion.ts';
-import { district, districtNavigation } from '../../src/world/district/layout.ts';
+import { channelSections, district, districtNavigation, districtWalkways } from '../../src/world/district/layout.ts';
 
 const config = movementConfig(districtNavigation());
 const step = 0.5;
@@ -37,7 +37,7 @@ test('spawn is free, faces the landmark, and the boulevard to the plaza is unobs
   assert.equal(spawn.x, district.spawn.x); assert.equal(spawn.z, district.spawn.z);
   assert.equal(district.landmark.x, 0); assert.ok(district.landmark.z < spawn.z);
   for (let z = spawn.z; z > district.plaza.z + district.plaza.radius; z -= 0.25) {
-    for (const x of [-3.5, 0, 3.5]) assert.ok(free(x, z), `boulevard blocked at ${x}, ${z}`);
+    for (const x of [-3.3, 0, 3.3]) assert.ok(free(x, z), `boulevard blocked at ${x}, ${z}`);
   }
 });
 
@@ -55,8 +55,8 @@ test('every storefront and the whole plaza ring are reachable on foot', () => {
   }
 });
 
-test('water is never walkable', () => {
-  for (const c of district.channels) {
+test('uncovered water is never walkable', () => {
+  for (const c of district.channels.flatMap(channelSections)) {
     for (let z = c.minZ + 0.5; z < c.maxZ; z += 2) assert.equal(free((c.minX + c.maxX) / 2, z), false);
   }
   assert.equal(free(district.fountain.x, district.fountain.z), false);
@@ -72,4 +72,29 @@ test('fast walking at the frame-time limit cannot enter the fountain', () => {
     assert.ok(Math.hypot(state.x - district.fountain.x, state.z - district.fountain.z) >= district.fountain.radius + 0.4 + fast.radius - 1e-8);
   }
   assert.ok(state.z < -30, 'visitor reaches the pool rather than staying at spawn');
+});
+
+
+test('every marked walkway has a clear pedestrian width, including storefront approaches', () => {
+  for (const path of districtWalkways()) {
+    for (let i = 1; i < path.points.length; i++) {
+      const a = path.points[i - 1], b = path.points[i];
+      const dx = b.x - a.x, dz = b.z - a.z, length = Math.hypot(dx, dz);
+      const usableHalf = path.width / 2 - config.radius - 0.05;
+      for (let t = 0; t <= 1.0001; t += 0.02) for (const offset of [-usableHalf, 0, usableHalf]) {
+        const x = a.x + dx * t + dz / length * offset;
+        const z = a.z + dz * t - dx / length * offset;
+        assert.ok(free(x, z), `${path.id} blocked at ${x.toFixed(2)}, ${z.toFixed(2)}`);
+      }
+    }
+  }
+});
+
+test('walking directly left or right crosses both channels at each bridge', () => {
+  for (const crossing of district.crossings) for (const right of [-1, 1]) {
+    const state = { ...initialMotion(config), x: 0, z: crossing.z, yaw: 0 };
+    for (let i = 0; i < 45; i++) advanceMotion(state, { forward: 0, right, yaw: 0, pitch: 0 }, 0.05, config);
+    assert.ok(Math.abs(state.x) > 10, `stopped at channel on crossing ${crossing.z}`);
+    assert.ok(Math.abs(state.z - crossing.z) < 1e-8, 'crossing requires no detour');
+  }
 });

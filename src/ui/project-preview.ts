@@ -12,7 +12,7 @@ export interface ProjectPreview {
 /**
  * The 2D building layer over the world: a modal dialog (native focus containment and Escape)
  * listing the demos in one building, one at a time, with previous/next when there are several.
- * Each demo names its external host before the visitor deliberately opens it in a new tab.
+ * Each demo names its external host before the visitor deliberately opens it in the top browser context.
  */
 export function createProjectPreview(doc: Document, hooks: { onOpen?: () => void; onClose?: () => void }): ProjectPreview {
   const win = doc.defaultView;
@@ -21,6 +21,9 @@ export function createProjectPreview(doc: Document, hooks: { onOpen?: () => void
   const text = (id: string, value: string): void => { const el = field(id); if (el) el.textContent = value; };
   const show = (id: string, visible: boolean): void => { field(id)?.toggleAttribute('hidden', !visible); };
   const launch = field('preview-launch');
+  const copy = field('preview-copy');
+  const address = doc.querySelector<HTMLInputElement>('#preview-url');
+  let destroyed = false;
   const prev = field('preview-prev');
   const next = field('preview-next');
   let slot = '';
@@ -29,6 +32,7 @@ export function createProjectPreview(doc: Document, hooks: { onOpen?: () => void
   let returnTo: HTMLElement | null = null;
 
   const render = (): void => {
+    text('preview-link-status', 'If the demo doesn’t open here, copy its address into your browser.');
     const building = buildingForSlot(slot);
     const project = list[index];
     text('preview-category', project ? building?.category ?? '' : 'Coming soon');
@@ -40,6 +44,7 @@ export function createProjectPreview(doc: Document, hooks: { onOpen?: () => void
       text('preview-title', building?.category ?? '');
       text('preview-empty-text', `No demos in ${building?.category ?? 'this building'} yet. New demos appear here as they are listed.`);
       launch?.removeAttribute('href');
+      if (address) address.value = '';
       return;
     }
     text('preview-title', project.title);
@@ -49,6 +54,7 @@ export function createProjectPreview(doc: Document, hooks: { onOpen?: () => void
     text('preview-build', project.build ? buildSummary(project.build) : '');
     show('preview-build-row', Boolean(project.build));
     text('preview-host', destinationHost(project.projectUrl));
+    if (address) address.value = project.projectUrl;
     if (launch instanceof HTMLAnchorElement) launch.href = project.projectUrl;
   };
   const step = (delta: number): void => {
@@ -58,19 +64,21 @@ export function createProjectPreview(doc: Document, hooks: { onOpen?: () => void
   };
   const onPrev = (): void => step(-1);
   const onNext = (): void => step(1);
-  /**
-   * The link opens a new tab. Some hosts frame the page in a sandbox that silently blocks new
-   * tabs; when the browser refuses one, leave Demo District in this tab instead of doing nothing.
-   */
-  const onLaunch = (event: MouseEvent): void => {
+  // Keep the primary action a native link: no preventDefault, popup, or scripted frame fallback.
+  // A user-activated target="_top" works in hosts that allow top navigation but block popups.
+  // When a host forbids external navigation altogether, the visible address remains usable.
+  const onCopy = async (): Promise<void> => {
     const url = list[index]?.projectUrl;
-    if (!url || !win) { event.preventDefault(); return; }
-    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-    event.preventDefault();
-    let opened: Window | null = null;
-    try { opened = win.open(url, '_blank'); } catch { opened = null; }
-    if (opened) { try { opened.opener = null; } catch { /* cross-origin already */ } return; }
-    try { (win.top ?? win).location.assign(url); } catch { win.location.assign(url); }
+    if (!url) return;
+    try {
+      if (!win?.navigator.clipboard) throw new Error('Clipboard unavailable');
+      await win.navigator.clipboard.writeText(url);
+      if (!destroyed && list[index]?.projectUrl === url) text('preview-link-status', 'Link copied. Paste it into your browser.');
+    } catch {
+      if (destroyed || list[index]?.projectUrl !== url) return;
+      address?.focus(); address?.select();
+      text('preview-link-status', 'Select and copy the address above, then paste it into your browser.');
+    }
   };
   const onClose = (): void => {
     const target = returnTo; returnTo = null;
@@ -94,7 +102,7 @@ export function createProjectPreview(doc: Document, hooks: { onOpen?: () => void
   dialog?.addEventListener('pointerdown', onPress);
   dialog?.addEventListener('click', onClick);
   dialog?.addEventListener('keydown', onKey);
-  launch?.addEventListener('click', onLaunch);
+  copy?.addEventListener('click', onCopy);
   prev?.addEventListener('click', onPrev);
   next?.addEventListener('click', onNext);
   return {
@@ -116,7 +124,8 @@ export function createProjectPreview(doc: Document, hooks: { onOpen?: () => void
       dialog?.removeEventListener('pointerdown', onPress);
       dialog?.removeEventListener('click', onClick);
       dialog?.removeEventListener('keydown', onKey);
-      launch?.removeEventListener('click', onLaunch);
+      destroyed = true;
+      copy?.removeEventListener('click', onCopy);
       prev?.removeEventListener('click', onPrev);
       next?.removeEventListener('click', onNext);
       returnTo = null;

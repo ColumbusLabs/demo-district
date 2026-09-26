@@ -2,7 +2,7 @@ import { BoxGeometry, CircleGeometry, CylinderGeometry, LatheGeometry, Mesh, Pla
 import type { Group, Material, ShaderMaterial } from 'three';
 import type { ResourceScope } from '../runtime.ts';
 import { place, StaticBatch } from './geometry.ts';
-import { district } from './layout.ts';
+import { channelSections, district, districtWalkways } from './layout.ts';
 import type { Rect } from './layout.ts';
 import type { DistrictMaterials } from './materials.ts';
 import { fountainBell } from './water.ts';
@@ -35,16 +35,40 @@ export function buildGround(root: Group, m: DistrictMaterials, water: { channel:
     const w = c.maxX - c.minX; const d = c.maxZ - c.minZ; const cx = (c.minX + c.maxX) / 2; const cz = (c.minZ + c.maxZ) / 2;
     batch.box(m.stone, w, 0.1, d, place(cx, -0.5, cz), 2);
     const cope = district.copingWidth;
-    for (const x of [c.minX - cope / 2, c.maxX + cope / 2]) batch.box(m.stone, cope, 0.62, d + cope * 2, place(x, -0.19, cz), 2);
+    for (const reach of channelSections(c)) {
+      const start = reach.minZ - (reach.minZ === c.minZ ? cope : 0);
+      const end = reach.maxZ + (reach.maxZ === c.maxZ ? cope : 0);
+      for (const x of [c.minX - cope / 2, c.maxX + cope / 2]) batch.box(m.stone, cope, 0.62, end - start, place(x, -0.19, (start + end) / 2), 2);
+      for (const x of [c.minX + 0.02, c.maxX - 0.02]) lights.box(m.warmLight, 0.03, 0.04, reach.maxZ - reach.minZ, place(x, 0.05, (reach.minZ + reach.maxZ) / 2));
+    }
+    for (const crossing of district.crossings) {
+      // Solid flush stone decks span water and coping; no step or rail across the route.
+      pave({ minX: c.minX - cope, maxX: c.maxX + cope, minZ: crossing.z - crossing.width / 2, maxZ: crossing.z + crossing.width / 2 }, m.stone);
+    }
     batch.box(m.stone, w, 0.62, cope, place(cx, -0.19, c.minZ - cope / 2), 2);
     batch.box(m.stone, w, 0.62, cope, place(cx, -0.19, c.maxZ + cope / 2), 2);
     // LED strip facing the water on both long sides.
-    lights.box(m.warmLight, 0.03, 0.04, d - 0.2, place(c.minX + 0.02, 0.05, cz));
-    lights.box(m.warmLight, 0.03, 0.04, d - 0.2, place(c.maxX - 0.02, 0.05, cz));
+
     const surface = new Mesh(resources.track(new PlaneGeometry(w, d).rotateX(-Math.PI / 2)), water.channel);
     surface.position.set(cx, -0.12, cz);
     surface.name = 'channel-water';
     root.add(surface);
+  }
+
+  // Pale stone paths make the safe routes legible at ground level. World UVs stay continuous.
+  for (const path of districtWalkways()) {
+    for (let i = 1; i < path.points.length; i++) {
+      const a = path.points[i - 1]!; const b = path.points[i]!;
+      const dx = b.x - a.x; const dz = b.z - a.z; const length = Math.hypot(dx, dz);
+      const angle = Math.atan2(dx, dz);
+      batch.box(m.stone, path.width, 0.016, length, place((a.x + b.x) / 2, 0, (a.z + b.z) / 2, angle), 3);
+      for (const side of [-1, 1]) {
+        const ox = Math.cos(angle) * (path.width / 2 - 0.08) * side;
+        const oz = -Math.sin(angle) * (path.width / 2 - 0.08) * side;
+        batch.box(m.bronze, 0.035, 0.008, length, place((a.x + b.x) / 2 + ox, 0.012, (a.z + b.z) / 2 + oz, angle), 2);
+      }
+    }
+    for (const point of path.points.slice(1, -1)) batch.add(m.stone, new CircleGeometry(path.width / 2, 32).rotateX(-Math.PI / 2), place(point.x, 0.009, point.z), 3);
   }
 
   // Flush light lines edging the boulevard, and chevrons near spawn like the mockup's foreground.

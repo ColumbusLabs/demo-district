@@ -51,3 +51,13 @@ Canvas/window blur, Tab/Escape, hidden tabs, zero-sized canvases, world stop, gr
 Touch tests use Chromium's touch emulation through the DevTools protocol. They verify pointer-event generation, `touch-action`, and capture in Chromium, not iOS Safari behavior or physical-device ergonomics. Run `npm run verify`, `npm run test:browser`, and `npm run test:lifecycle`.
 
 Primary browser API references: https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events, https://developer.mozilla.org/en-US/docs/Web/CSS/touch-action, and https://developer.mozilla.org/en-US/docs/Web/API/Element/setPointerCapture
+
+## September 26 — direct pedestrian routes
+
+Four flush bridges cross the two entrance channels: a pair at spawn (z=10) and a pair opposite the gate storefront aprons. Each is 4.4 m wide. Coping is interrupted over each deck. Uncovered channel sections supply both visible coping and collision; uncovered water stays blocked.
+
+Pale stone paths with narrow bronze edges connect the bridges to the first buildings, cross to the promenade buildings, fan out into the grove, and continue around the fountain to the plaza buildings. Paths derive from `districtWalkways()` in layout.ts and appear on the minimap. Approaches are 3.2 m wide, with 4.4 m gate approaches. Buildings retain their positions.
+
+The second alley tree row, low planters, framing trees, entrance beds, signs and benches were moved out of the routes. Forecourt shrubs and rocks are excluded from each path plus a clearance margin. Geometry and collision still use the same position data.
+
+Unit coverage now checks the whole usable width of every path at 2% intervals, and simulates uninterrupted lateral walking across each bridge in both directions. Global reachability and fountain/open-water exclusion tests remain. Full rendered/mobile QA is pending because the managed preview browser is blocked.

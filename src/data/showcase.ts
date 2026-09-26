@@ -45,7 +45,7 @@ export const projects: readonly ShowcaseProject[] = [
     id: 'plane-of-focus', slot: 'east-gate',
     title: 'The Plane of Focus', creator: '@RyanSael', model: 'Claude Opus 5.5',
     description: 'An interactive lens lab that explains camera focus. Turn the focus ring and watch the glass elements move the sharp plane through a miniature scene; open the aperture to see how much of it stays sharp.',
-    projectUrl: 'https://lens.lab.sael.net/',
+    projectUrl: 'https://sael.net/plane-of-focus/',
     build: { minutes: 86, costUsd: 25.66, attempts: 'one shot' },
   },
 ];

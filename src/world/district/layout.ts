@@ -51,6 +51,11 @@ export const district = {
     { minX: 4.1, maxX: 8.2, minZ: -11, maxZ: 21 },
   ] satisfies Rect[],
   copingWidth: 0.4,
+  /** Flush, 4.4 m crossings: at spawn and directly opposite the gate storefronts. */
+  crossings: [
+    { z: 10, width: 4.4 },
+    { z: leftRow[0]!.z + Math.cos(leftRow[0]!.facing) * (leftRow[0]!.depth / 2 + 1.8), width: 4.4 },
+  ],
   /** Flush light chevrons in the near paving (z of each pair). */
   chevrons: [5, -1],
   /** Circular plaza with the fountain basin and landmark. */
@@ -67,23 +72,23 @@ export const district = {
   pavilions: [...leftRow, ...leftRow.map((slot) => mirror(slot, slot.id.replace('west', 'east')))],
   /** Planted beds with low stone walls; the sign plinths sit at their fronts. */
   beds: [
-    { minX: -12.9, maxX: -9, minZ: -8.2, maxZ: -4.9 },
-    { minX: 9, maxX: 12.9, minZ: -8.2, maxZ: -4.9 },
+    { minX: -12.9, maxX: -9, minZ: -0.2, maxZ: 3.1 },
+    { minX: 9, maxX: 12.9, minZ: -0.2, maxZ: 3.1 },
   ] satisfies Rect[],
   /** Sign plinths angled toward the approach (text arrives with signage). */
   plinths: [
-    { x: -10.4, z: -4.3, width: 4.4, angle: 0.32 },
-    { x: 10.4, z: -4.3, width: 4.4, angle: -0.32 },
+    { x: -10.4, z: 3.7, width: 4.4, angle: 0.32 },
+    { x: 10.4, z: 3.7, width: 4.4, angle: -0.32 },
   ],
   /** Tree allee between the channel ends and the plaza, each in a square planter. */
-  allee: [-16, -22].flatMap((z) => [{ x: -6.6, z }, { x: 6.6, z }]),
+  allee: [-16, -26.3].flatMap((z) => [{ x: -6.6, z }, { x: 6.6, z }]),
   planterHalf: 0.85,
   /** Trees in planters where the allee opens into the plaza. */
   plazaTrees: [{ x: -10, z: -27 }, { x: 10, z: -27 }, { x: -13.5, z: -29.5 }, { x: 13.5, z: -29.5 }],
   /** Large trees near spawn whose canopies frame the top corners of the opening view. */
-  framingTrees: [{ x: -14.2, z: -1.8 }, { x: 14.2, z: -1.8 }],
+  framingTrees: [{ x: -18, z: 5 }, { x: 18, z: 5 }],
   /** Low lit planters lining the path between the channels and the plaza (mockup mid-ground). */
-  edgePlanters: [-13.8, -19, -24.2].flatMap((z) => [{ x: -4.45, z }, { x: 4.45, z }]),
+  edgePlanters: [-13.8, -18, -27.5].flatMap((z) => [{ x: -4.45, z }, { x: 4.45, z }]),
   /** Curved stone terrace closing the view behind spawn: center, radius, and arc (radians). */
   terrace: { x: 0, z: 23, radius: 11, from: 0.18, to: Math.PI - 0.18 },
   /** Entrance colonnade on the terrace: a curved canopy on slender columns with a central portal. */
@@ -98,7 +103,7 @@ export const district = {
     street: 7,
   },
   /** Stone benches with wood tops behind the plinths (long axis along Z). */
-  benches: [{ x: -9.4, z: 5.5 }, { x: 9.4, z: 5.5 }, { x: -9.4, z: 11.5 }, { x: 9.4, z: 11.5 }],
+  benches: [{ x: -9.4, z: 6 }, { x: 9.4, z: 6 }, { x: -9.4, z: 16 }, { x: 9.4, z: 16 }],
   banners: [{ x: -9.3, z: -15.5 }, { x: 9.3, z: -15.5 }],
   /** Lit bollards marking where the channels end and the allee begins. */
   bollards: [-6.15, 6.15].map((x) => ({ x, z: -11.95 })),
@@ -114,6 +119,56 @@ export function storefrontSize(slot: PavilionSlot): { width: number; height: num
 }
 /** Distance from a pavilion's center to its storefront apron (where visitors stand). */
 export const apronReach = (slot: PavilionSlot): number => slot.depth / 2 + 1.8;
+
+export interface Walkway {
+  id: string;
+  width: number;
+  points: { x: number; z: number }[];
+}
+
+/** Uncovered channel reaches: used by both the visible coping and collision. */
+export function channelSections(channel: Rect): Rect[] {
+  const sections: Rect[] = [];
+  let from = channel.minZ;
+  for (const crossing of [...district.crossings].sort((a, b) => a.z - b.z)) {
+    const start = Math.max(channel.minZ, crossing.z - crossing.width / 2);
+    const end = Math.min(channel.maxZ, crossing.z + crossing.width / 2);
+    if (end <= from || start >= channel.maxZ) continue;
+    if (start > from) sections.push({ ...channel, minZ: from, maxZ: start });
+    from = end;
+  }
+  if (from < channel.maxZ) sections.push({ ...channel, minZ: from });
+  return sections;
+}
+
+/** A clear pedestrian network derived from the storefront positions. */
+export function districtWalkways(): Walkway[] {
+  const routes: Walkway[] = [{ id: 'entrance-crossing', width: 4.4, points: [{ x: -14.6, z: 10 }, { x: 14.6, z: 10 }] }];
+  for (const slot of district.pavilions) {
+    const side = Math.sign(slot.x);
+    const end = { x: slot.x + Math.sin(slot.facing) * apronReach(slot), z: slot.z + Math.cos(slot.facing) * apronReach(slot) };
+    let points: Walkway['points'];
+    if (slot.id.endsWith('plaza')) {
+      const grove = district.pavilions.find((p) => Math.sign(p.x) === side && p.id.endsWith('grove'))!;
+      const groveZ = grove.z + Math.cos(grove.facing) * apronReach(grove);
+      points = [{ x: side * 12.5, z: groveZ }, { x: side * 14, z: -40 }, { x: side * 14, z: end.z }, end];
+    } else if (slot.id.endsWith('grove')) {
+      points = [{ x: 0, z: -27 }, { x: side * 7.5, z: end.z }, end];
+    } else points = [{ x: 0, z: end.z }, end];
+    if (slot.id.endsWith('gate')) routes.push({ id: `${slot.id}-arrival`, width: 3.2, points: [{ x: side * 14.6, z: 10 }, end] });
+    routes.push({ id: slot.id, width: slot.id.endsWith('gate') ? 4.4 : 3.2, points });
+  }
+  return routes;
+}
+
+/** Keep decorative planting outside the pedestrian corridor, including its rounded joins. */
+export function nearWalkway(x: number, z: number, clearance = 0): boolean {
+  return districtWalkways().some((path) => path.points.slice(1).some((b, i) => {
+    const a = path.points[i]!; const dx = b.x - a.x; const dz = b.z - a.z;
+    const t = Math.max(0, Math.min(1, ((x - a.x) * dx + (z - a.z) * dz) / (dx * dx + dz * dz)));
+    return Math.hypot(x - a.x - dx * t, z - a.z - dz * t) < path.width / 2 + clearance;
+  }));
+}
 
 /** Where the sculpture meets the ground: the main arch's two legs and the two wing feet. */
 export function landmarkFootings(): Circle[] {
@@ -131,7 +186,12 @@ const rectBlocker = (r: Rect): Blocker => ({
 /** Solid footprints for navigation. Kept slightly generous so the camera never clips geometry. */
 export function districtBlockers(): Blocker[] {
   const blockers: Blocker[] = [];
-  for (const channel of district.channels) blockers.push(rectBlocker(channel));
+  for (const channel of district.channels) for (const reach of channelSections(channel)) {
+    const cope = district.copingWidth;
+    blockers.push(rectBlocker({ ...reach, minX: reach.minX - cope, maxX: reach.maxX + cope,
+      minZ: reach.minZ - (reach.minZ === channel.minZ ? cope : 0),
+      maxZ: reach.maxZ + (reach.maxZ === channel.maxZ ? cope : 0) }));
+  }
   for (const bed of district.beds) blockers.push(rectBlocker(bed));
   for (const p of district.pavilions) {
     // Pavilion body plus a little roof overhang margin at the storefront.

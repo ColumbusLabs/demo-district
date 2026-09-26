@@ -1787,3 +1787,7 @@ Replaced the eight placeholder storefront panels with original exhibit artwork a
 ### Storefront creativity follow-up
 
 Each category now has a distinct installation, backdrop silhouette and interior palette rather than repeating the pedestal/kiosk composition. See [storefront evidence](STOREFRONTS.md). No navigation or platform scope changes.
+
+## September 26 — circulation and demo launch repair
+
+Added four flush channel bridges and a visible path network to every building, cleared planters and decorations from approaches, and mapped the routes. Replaced the reported nonfunctional popup launch with a native link to the verified canonical destination and a copy-address fallback. See NAVIGATION.md and FIRST_EXHIBIT.md for validation and the remaining hosted iPhone check.

@@ -145,3 +145,7 @@ button, input, select { font: inherit; color: inherit; }
   .preview__card { border-radius: 1.1rem 1.1rem 0 0; padding-bottom: max(1.3rem, env(safe-area-inset-bottom)); }
 }
 @media (max-height: 480px) { .minimap { width: 8rem; } .hud-menu { max-height: calc(100svh - 5rem); } }
+
+.preview__link-copy { display: flex; gap: .5rem; margin-top: .65rem; }
+.preview__link-copy input { min-width: 0; flex: 1; border: 1px solid #ffffff30; border-radius: .55rem; background: #ffffff09; padding: .65rem; font-size: .875rem; color: #dce8ed; }
+.preview__link-copy button { flex-shrink: 0; min-height: 44px; }

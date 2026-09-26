@@ -7,7 +7,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { ResourceScope } from '../runtime.ts';
 import { place } from './geometry.ts';
 import type { StaticBatch } from './geometry.ts';
-import { district } from './layout.ts';
+import { district, nearWalkway } from './layout.ts';
 import type { Rect } from './layout.ts';
 import { random } from './materials.ts';
 import type { DistrictMaterials } from './materials.ts';
@@ -264,8 +264,12 @@ export function buildLandscape(root: Group, m: DistrictMaterials, batch: StaticB
       const along = side * (p.width / 2 + 1.1); const out = p.depth / 2 + 0.8;
       const x = p.x + Math.cos(p.facing) * along + Math.sin(p.facing) * out;
       const z = p.z - Math.sin(p.facing) * along + Math.cos(p.facing) * out;
-      shrubs.push(place(x, 0, z, rand() * 6, 1.1 + rand() * 0.4));
-      rocks[Math.floor(rand() * 2)]?.push(place(x + rand() - 0.5, 0, z + rand() - 0.5, rand() * 6, 0.6 + rand() * 0.4));
+      const shrub = place(x, 0, z, rand() * 6, 1.1 + rand() * 0.4);
+      const rockKind = Math.floor(rand() * 2);
+      const rx = x + rand() - 0.5; const rz = z + rand() - 0.5;
+      const rock = place(rx, 0, rz, rand() * 6, 0.6 + rand() * 0.4);
+      if (!nearWalkway(x, z, 1.6)) shrubs.push(shrub);
+      if (!nearWalkway(rx, rz, 1.0)) rocks[rockKind]?.push(rock);
     }
   }
   // Groves outside the paved district: behind the pavilions, and along the lakefront sides.

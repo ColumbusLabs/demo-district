@@ -86,16 +86,20 @@ test('reduced motion jumps instantly; the profile control is honest about sign-i
   await expect(dialog).toContainText('Learning');
   await expect(dialog).toContainText('@RyanSael');
   await expect(dialog).toContainText('1 h 26 min · one shot · $25.66 API');
-  await expect(dialog).toContainText('Opens lens.lab.sael.net in a new tab');
+  await expect(dialog).toContainText('Opens sael.net in this browser');
   await expect(page.locator('#preview-pager')).toBeHidden();
   await expect(page.locator('#preview-source')).toHaveCount(0);
   const launch = page.locator('#preview-launch');
-  await expect(launch).toHaveAttribute('href', 'https://lens.lab.sael.net/');
-  // Opening goes through window.open (stubbed here so the test never leaves for the real site).
-  await page.evaluate(() => { window.__opened = []; window.open = (url, target) => { window.__opened.push([url, target]); return {}; }; });
-  await launch.click();
-  expect(await page.evaluate(() => window.__opened)).toEqual([['https://lens.lab.sael.net/', '_blank']]);
+  await expect(launch).toHaveAttribute('href', 'https://sael.net/plane-of-focus/');
+  await expect(launch).toHaveAttribute('target', '_top');
+  await expect(page.locator('#preview-url')).toHaveValue('https://sael.net/plane-of-focus/');
   await expect(page.locator('#transition')).not.toHaveAttribute('data-active', '');
   await expect(page.locator('#profile-button')).toHaveAttribute('aria-disabled', 'true');
   await expect(page.locator('#profile-note')).toHaveText('Sign-in arrives in a later release.');
+  // Exercise real browser navigation, serving a local response instead of contacting the demo.
+  await page.route('https://sael.net/plane-of-focus/', (route) => route.fulfill({ contentType: 'text/html', body: '<h1>Demo destination</h1>' }));
+  await launch.click();
+  await expect(page).toHaveURL('https://sael.net/plane-of-focus/');
+  await expect(page.getByRole('heading', { name: 'Demo destination' })).toBeVisible();
+
 });

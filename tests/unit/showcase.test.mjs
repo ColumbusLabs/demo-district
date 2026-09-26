@@ -28,6 +28,6 @@ test('The Plane of Focus is in the Learning building at the east gate', () => {
   assert.deepEqual(projectsInBuilding('east-gate').map((q) => q.id), ['plane-of-focus']);
   assert.equal(demoCount('east-gate'), '1 demo');
   assert.equal(demoCount('west-promenade'), 'Coming soon');
-  assert.equal(destinationHost(p.projectUrl), 'lens.lab.sael.net');
+  assert.equal(destinationHost(p.projectUrl), 'sael.net');
   assert.equal(buildSummary(p.build), '1 h 26 min · one shot · $25.66 API');
 });

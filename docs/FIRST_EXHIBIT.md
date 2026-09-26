@@ -24,11 +24,15 @@ The first version gave the demo its own storefront installation, a "Now showing"
 
 ## Open button on the deployed Site
 
-The owner reported that Open and Original post did nothing on the deployed Site. The links were correct locally (`href` set, `target="_blank"`), and nothing in the app blocks anchor clicks, so the likely cause is the host serving the page in a sandboxed frame that silently blocks new tabs. This is not yet confirmed on the Site itself. Open now calls `window.open`; if the browser refuses a new tab it navigates this tab (top frame when allowed) to the demo instead. Modified clicks (middle, Cmd/Ctrl) keep native link behaviour.
+The owner reported that the popup-based Open button still did nothing in the deployed iPhone host. The original short URL was checked on 2026-09-26: it returns HTTP 301 to `https://sael.net/plane-of-focus/`, which returns HTTP 200 and the expected lens demo. The listing now uses that canonical address.
+
+The primary action is a native anchor with `target="_top"` and no click interception, `window.open`, or scripted fallback. This lets the user's tap navigate the browser context directly in hosts that allow user-activated top navigation. Browser restrictions cannot be overridden by application code. The panel therefore also exposes a read-only, selectable URL and Copy link; if clipboard access fails, it selects the address and provides manual-copy instructions.
+
+The production browser session reached the owner's sign-in gate; managed preview returned `ERR_BLOCKED_BY_CLIENT`. The exact iPhone host failure is therefore unconfirmed. The revised browser test follows an actual native navigation to an intercepted test destination rather than merely asserting a stubbed `window.open` call. It has not been run in this environment; iPhone end-to-end confirmation is still required.
 
 ## Evidence
 
 - `npm run verify`: unit tests (showcase and search rewritten for buildings), TypeScript, production build, static artifact checks.
-- Browser and lifecycle suites updated for buildings (Music replaces the old Tidepool Synth sample in interaction and quality tests; the HUD test stubs `window.open` and checks the launch call).
+- Browser and lifecycle suites updated for buildings (Music replaces the old Tidepool Synth sample in interaction and quality tests; the HUD test checks native navigation to an intercepted destination).
 - Desktop app browser pane, this Mac's GPU: Learning window from the boulevard, the demo card, the pager with a second in-memory demo (not committed), Open calling `window.open` with the current demo, and the empty Music card.
 - Not checked: the deployed Site, Safari, physical phone.

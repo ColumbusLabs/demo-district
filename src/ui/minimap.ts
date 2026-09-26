@@ -1,5 +1,5 @@
 import { buildingForSlot, demoCount } from '../data/showcase.ts';
-import { district, landmarkFootings } from '../world/district/layout.ts';
+import { district, districtWalkways, landmarkFootings } from '../world/district/layout.ts';
 
 const ns = 'http://www.w3.org/2000/svg';
 export interface Minimap {
@@ -29,6 +29,10 @@ export function createMinimap(svg: SVGSVGElement, onSelect: (slot: string) => vo
   for (const c of channels) el('rect', { x: c.minX, y: c.minZ, width: c.maxX - c.minX, height: c.maxZ - c.minZ, fill: '#5d7f93', stroke: 'none' });
   el('circle', { cx: plaza.x, cy: plaza.z, r: plaza.radius, fill: '#efe9df', stroke: '#b9b0a2', 'stroke-width': 0.35 });
   el('circle', { cx: fountain.x, cy: fountain.z, r: fountain.radius, fill: '#5d7f93', stroke: 'none' });
+  for (const path of districtWalkways()) el('polyline', {
+    points: path.points.map((p) => `${p.x},${p.z}`).join(' '),
+    fill: 'none', stroke: '#fff8e6', 'stroke-width': path.width, 'stroke-linejoin': 'round',
+  });
   for (const leg of landmarkFootings()) el('circle', { cx: leg.x, cy: leg.z, r: 0.9, fill: '#ffffff', stroke: 'none' });
   el('circle', { cx: landmark.x, cy: landmark.z, r: 1.6, fill: '#ffffff', stroke: '#8a97a0', 'stroke-width': 0.3 });
   const slots = new Map<string, SVGElement>();
