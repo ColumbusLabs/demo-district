@@ -1769,3 +1769,7 @@ The project succeeds only if the world itself is worth entering. That is why the
 ## September 25, 2026 — pond and statue repair
 
 Owner requested removal of pond clipping and then replacement of statue shrub camouflage with direct water/paving contacts. Implemented as a bounded scene-assembly repair; see [evidence and limitations](POND_AND_STATUE_FIX.md). Remaining roadmap and backend gates are unchanged.
+
+## September 25 — side planting follow-up
+
+Replaced ragged low leaf-card planting with compact opaque crowns and modeled leaves; see [checkpoint](SIDE_PLANTING.md). Trees and the rest of the roadmap are preserved.

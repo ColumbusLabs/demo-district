@@ -1,6 +1,6 @@
 import {
   BufferAttribute, BufferGeometry, CylinderGeometry, DoubleSide, IcosahedronGeometry, InstancedMesh, Matrix4,
-  MeshStandardMaterial, PlaneGeometry, Quaternion, Vector3,
+  MeshStandardMaterial, PlaneGeometry, Quaternion, SphereGeometry, Vector3,
 } from 'three';
 import type { Group, Material, Mesh, Texture } from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -166,6 +166,48 @@ function boulder(seed: number): BufferGeometry {
   return geometry;
 }
 
+/** Dense low boxwood: an opaque crown with small folded leaves, never alpha-cut cards. */
+function compactShrub(): BufferGeometry {
+  const core = new SphereGeometry(0.43, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2).scale(1, 0.9, 1).toNonIndexed();
+  const positions = Array.from(core.getAttribute('position').array);
+  const normals = Array.from(core.getAttribute('normal').array);
+  const uvs = Array.from(core.getAttribute('uv').array);
+  const colors: number[] = [];
+  for (let i = 0; i < positions.length; i += 3) {
+    const light = 0.56 + 0.44 * Math.max(positions[i + 1] ?? 0, 0) / 0.4;
+    colors.push(light * 0.78, light * 0.88, light * 0.7);
+  }
+  core.dispose();
+  const rand = random(541);
+  const n = new Vector3(); const tangent = new Vector3(); const across = new Vector3();
+  for (let i = 0; i < 24; i++) {
+    // Golden-angle distribution keeps the silhouette even; leaves sit on the solid crown.
+    const y = (i + 0.5) / 24; const a = i * 2.399963;
+    const reach = Math.sqrt(1 - y * y);
+    n.set(Math.cos(a) * reach, y, Math.sin(a) * reach);
+    const center = new Vector3(n.x * 0.435, n.y * 0.395, n.z * 0.435);
+    tangent.crossVectors(n, new Vector3(0, 0, 1)).normalize();
+    across.crossVectors(n, tangent).normalize();
+    const length = 0.07 + rand() * 0.035; const width = length * 0.43;
+    const points = [center.clone().addScaledVector(tangent, -length), center.clone().addScaledVector(across, width), center.clone().addScaledVector(tangent, length), center.clone().addScaledVector(across, -width), center.clone().addScaledVector(n, 0.025)];
+    const tint = 0.78 + rand() * 0.2;
+    for (const ids of [[0, 1, 4], [1, 2, 4], [2, 3, 4], [3, 0, 4]]) {
+      for (const id of ids) {
+        const p = points[id]!;
+        positions.push(p.x, p.y, p.z); normals.push(n.x, n.y, n.z);
+        uvs.push(id === 4 ? 0.5 : id % 2, id === 4 ? 0.5 : (id < 2 ? 0 : 1));
+        colors.push(tint * 0.8, tint * 0.94, tint * 0.72);
+      }
+    }
+  }
+  const geometry = new BufferGeometry();
+  geometry.setAttribute('position', new BufferAttribute(new Float32Array(positions), 3));
+  geometry.setAttribute('normal', new BufferAttribute(new Float32Array(normals), 3));
+  geometry.setAttribute('uv', new BufferAttribute(new Float32Array(uvs), 2));
+  geometry.setAttribute('color', new BufferAttribute(new Float32Array(colors), 3));
+  return geometry;
+}
+
 /**
  * Plants, rocks, benches, and trees. Everything but the trees is built now; the trees come from
  * the Blender model file (or the procedural templates if it fails to load) once the returned
@@ -184,7 +226,7 @@ export function buildLandscape(root: Group, m: DistrictMaterials, batch: StaticB
     groups[group][pick]?.push(place(x, y, z, rand() * Math.PI * 2, scale * (0.9 + rand() * 0.2)));
   };
 
-  const shrubs: Matrix4[] = []; const grass: Matrix4[] = []; const rocks: Matrix4[][] = [[], []];
+  const shrubs: Matrix4[] = []; const rocks: Matrix4[][] = [[], []];
   // Allee and plaza trees in square stone planters with a hedge collar.
   const h = district.planterHalf;
   for (const t of [...district.allee, ...district.plazaTrees, ...district.framingTrees]) {
@@ -195,8 +237,8 @@ export function buildLandscape(root: Group, m: DistrictMaterials, batch: StaticB
     const framing = district.framingTrees.some((f) => f.x === t.x && f.z === t.z);
     if (framing) groups.near[3]?.push(place(t.x, 0.5, t.z, t.x < 0 ? 0 : Math.PI, 1.15));
     else plant(t.x, t.z, 1.2, 0.5);
-    // Loose shrubs spilling over the rim instead of a clipped hedge block.
-    for (let k = 0; k < 3; k++) shrubs.push(place(t.x + (rand() - 0.5) * 0.9, 0.45, t.z + (rand() - 0.5) * 0.9, rand() * 6, 0.62 + rand() * 0.25));
+    // One low dense collar sits inside the opening; the trunk passes through its center.
+    shrubs.push(place(t.x, 0.55, t.z, rand() * 6, 1.12));
   }
 
   // Low lit planters along the path edge, as in the mockup's mid-ground.
@@ -205,16 +247,15 @@ export function buildLandscape(root: Group, m: DistrictMaterials, batch: StaticB
     batch.box(m.soil, 0.9, 0.06, 0.9, place(p.x, 0.53, p.z), 1.2);
     const inward = p.x < 0 ? 1 : -1;
     batch.box(m.warmLight, 0.03, 0.03, 0.9, place(p.x + inward * 0.56, 0.08, p.z), 1);
-    for (let k = 0; k < 2; k++) shrubs.push(place(p.x + (rand() - 0.5) * 0.4, 0.5, p.z + (rand() - 0.5) * 0.4, rand() * 6, 0.7 + rand() * 0.2));
+    shrubs.push(place(p.x, 0.555, p.z, rand() * 6, 0.92));
   }
 
-  // Beds: shrubs, grass tufts, and boulders, clustered toward the back.
+  // Beds: low dense shrubs and boulders; no crossed grass cards.
   const scatter = (bed: Rect, count: number, fn: (x: number, z: number) => void): void => {
     for (let i = 0; i < count; i++) fn(bed.minX + 0.6 + rand() * (bed.maxX - bed.minX - 1.2), bed.minZ + 0.6 + rand() * (bed.maxZ - bed.minZ - 1.2));
   };
   for (const bed of district.beds) {
     scatter(bed, 7, (x, z) => shrubs.push(place(x, 0.4, z, rand() * 6, 0.7 + rand() * 0.5)));
-    scatter(bed, 26, (x, z) => grass.push(place(x, 0.45, z, rand() * 6, 0.6 + rand() * 0.5)));
     scatter(bed, 2, (x, z) => rocks[Math.floor(rand() * 2)]?.push(place(x, 0.45, z, rand() * 6, 0.45 + rand() * 0.35)));
   }
   // Shrubs and boulders framing pavilion forecourts.
@@ -276,9 +317,11 @@ export function buildLandscape(root: Group, m: DistrictMaterials, batch: StaticB
     });
     for (const t of [...near, ...far]) for (const g of [t.trunk, t.leaves]) if (!used.has(g)) g.dispose();
   };
-  instanced(root, canopy(new Vector3(0, 0.55, 0), new Vector3(0.9, 0.6, 0.9), 22, 0.75, random(5)), m.foliage, shrubs, resources, 'shrubs');
-  const tuft = mergeGeometries([0, 1, 2].map((k) => new PlaneGeometry(0.8, 0.6).translate(0, 0.3, 0).rotateY((k * Math.PI) / 3).toNonIndexed()), false);
-  if (tuft) instanced(root, tuft, m.grass, grass, resources, 'grass', false);
+  const shrubMaterial = resources.track(m.hedge.clone());
+  shrubMaterial.vertexColors = true;
+  shrubMaterial.side = DoubleSide;
+  shrubMaterial.roughness = 0.86;
+  instanced(root, compactShrub(), shrubMaterial, shrubs, resources, 'compact-shrubs');
   rocks.forEach((list, i) => instanced(root, boulder(31 + i * 17), m.rock, list, resources, `boulders-${i}`));
 
   // Benches: stone blocks with a warm wood top.

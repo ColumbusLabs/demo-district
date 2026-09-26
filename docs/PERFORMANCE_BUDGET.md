@@ -119,3 +119,7 @@ Visitors can override the tier in the Explore menu (Automatic / High / Balanced 
 ## Not yet measured (release gate, slice 46)
 
 Mid-range laptops with integrated graphics, Windows and Linux GPUs, and physical iPhone and Android devices (thermal behaviour, Safari's WebGL). The budgets above hold on the reference machine only; the governor is the safety net until real devices are measured.
+
+## Side planting follow-up
+
+See [side planting](SIDE_PLANTING.md): opaque low crowns replace alpha cards; static accounting adds 7,008 low-plant triangles and removes one instanced draw relative to the immediately previous source. The older 149.4k figure includes the since-removed statue planting and is not a measurement of the current scene. Current real-GPU measurement remains pending because the preview browser is blocked.
