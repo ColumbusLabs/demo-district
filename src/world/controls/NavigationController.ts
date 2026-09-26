@@ -247,7 +247,7 @@ export function createNavigationController(canvas: HTMLCanvasElement, camera: Pe
       motion = destination; applyCamera(); updateMode(); wake();
     },
     setSpeed: (speed: number): void => {
-      if (!Number.isFinite(speed) || speed < 0.5 || speed > 8) throw new RangeError('Walk speed must be 0.5–8 m/s.');
+      if (!Number.isFinite(speed) || speed < 0.5 || speed > 10) throw new RangeError('Walk speed must be 0.5–10 m/s.');
       if (disposed) return;
       config.speed = speed;
       resetMotion(motion);

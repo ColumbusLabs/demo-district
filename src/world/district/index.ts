@@ -61,7 +61,7 @@ export function createDistrict({ resources, renderer, camera, invalidate }: Cont
   const m = createMaterials(renderer, resources, refresh, isDisposed);
   const water = {
     channel: waterMaterial(env.skyTexture, resources, { scale: 1.6, deep: 0x0f1d21, shallow: 0x2a454c, opacity: 0.96, reflectivity: 0.85, ripple: 0.3, bankShade: 1, glow: { mode: 'sides', size: 3 } }),
-    basin: waterMaterial(env.skyTexture, resources, { scale: 1.3, deep: 0x15272c, shallow: 0x3d5f66, opacity: 1, reflectivity: 0.8, ripple: 0.5, bankShade: 0.8, glow: { mode: 'rim', size: 8.8 } }),
+    basin: waterMaterial(env.skyTexture, resources, { scale: 2.2, deep: 0x247c89, shallow: 0x64c2c4, opacity: 1, reflectivity: 0.7, ripple: 1.0, bankShade: 0.2, glow: { mode: 'rim', size: 8.8 } }),
     lake: waterMaterial(env.skyTexture, resources, { scale: 9, deep: 0x33505e, shallow: 0x6d8a96, opacity: 1, reflectivity: 0.85, ripple: 1, bankShade: 0.15 }),
   };
   const batch = new StaticBatch(resources);

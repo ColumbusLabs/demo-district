@@ -11,11 +11,11 @@ function travel(input, fps = 60, seconds = 2, config = movementConfig()) {
 }
 test('defaults are human-scale, bounded, and separately copied', () => {
   const a = movementConfig(); const b = movementConfig();
-  assert.equal(a.eyeHeight, 1.7); assert.equal(a.speed, 3.2);
+  assert.equal(a.eyeHeight, 1.7); assert.equal(a.speed, 6.4);
   a.bounds.minX = 0; assert.equal(b.bounds.minX, -35);
 });
 test('configuration rejects unusable speed, dimensions, and nonfinite values', () => {
-  for (const value of [0, -1, NaN, Infinity, 8.1]) assert.throws(() => movementConfig({ speed: value }));
+  for (const value of [0, -1, NaN, Infinity, 10.1]) assert.throws(() => movementConfig({ speed: value }));
   assert.throws(() => movementConfig({ eyeHeight: -1 }));
   assert.throws(() => movementConfig({ maxPitch: Math.PI / 2 }));
   assert.throws(() => movementConfig({ bounds: { minX: 0, maxX: 0.2, minZ: 0, maxZ: 10 } }));

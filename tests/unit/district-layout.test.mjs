@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { constrainMotion, initialMotion, movementConfig } from '../../src/world/controls/motion.ts';
+import { advanceMotion, constrainMotion, initialMotion, movementConfig } from '../../src/world/controls/motion.ts';
 import { district, districtNavigation } from '../../src/world/district/layout.ts';
 
 const config = movementConfig(districtNavigation());
@@ -61,4 +61,15 @@ test('water is never walkable', () => {
   }
   assert.equal(free(district.fountain.x, district.fountain.z), false);
   assert.equal(free(0, district.waterfrontZ - 1), false);
+});
+
+
+test('fast walking at the frame-time limit cannot enter the fountain', () => {
+  const fast = movementConfig({ ...districtNavigation(), speed: 10 });
+  const state = initialMotion(fast);
+  for (let i = 0; i < 250; i++) {
+    advanceMotion(state, { forward: 1, right: 0, yaw: 0, pitch: 0 }, 0.05, fast);
+    assert.ok(Math.hypot(state.x - district.fountain.x, state.z - district.fountain.z) >= district.fountain.radius + 0.4 + fast.radius - 1e-8);
+  }
+  assert.ok(state.z < -30, 'visitor reaches the pool rather than staying at spawn');
 });

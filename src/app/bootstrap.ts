@@ -225,7 +225,7 @@ export function mountApplication(doc: Document, options: MountOptions = {}): () 
   status.dataset.state = 'loading';
   status.textContent = 'Starting the world engine…';
   stopWatchingInput = watchInputModality(doc, (next) => { modality = next; describeNavigation(); renderPrompt(); });
-  if (speed) speed.value = '3.2';
+  if (speed) speed.value = '6.4';
   const choice: QualityChoice = options.quality ?? readPreference(win) ?? 'auto';
   if (qualitySelect) qualitySelect.value = choice;
   try {

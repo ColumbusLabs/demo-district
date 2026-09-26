@@ -91,6 +91,21 @@ export function waterMaterial(skyMap: Texture, resources: ResourceScope, options
       void main() {
         // Fade ripples with distance so the wave sum never aliases into visible rings.
         vec2 s = slope(vWorld.xz) / (1.0 + distance(cameraPosition, vWorld) / (rippleScale * 12.0));
+        // The round pool receives waves from the bell fountain's impact ring. Broad,
+        // outward-moving ripples remain readable on a phone without extra meshes or passes.
+        float poolWave = 0.0;
+        float poolEnvelope = 0.0;
+        if (glowMode == 2) {
+          vec2 local = (vUv - 0.5) * (2.0 * glowSize);
+          float radius = length(local);
+          float fromImpact = max(radius - 2.4, 0.0);
+          poolEnvelope = smoothstep(2.1, 2.7, radius) * exp(-fromImpact * 0.2);
+          float phase = fromImpact * 7.0 - time * 3.0;
+          poolWave = sin(phase);
+          // Circle UV's Y runs opposite world Z after rotating into the ground plane.
+          vec2 radial = vec2(local.x, -local.y) / max(radius, 0.01);
+          s += radial * cos(phase) * 0.065 * poolEnvelope;
+        }
         vec3 n = normalize(vec3(-s.x, 1.0, -s.y));
         vec3 v = normalize(cameraPosition - vWorld);
         // Capped Fresnel and dimmed reflection: real water here mirrors banks and buildings, not
@@ -102,10 +117,16 @@ export function waterMaterial(skyMap: Texture, resources: ResourceScope, options
         float glint = pow(max(dot(reflect(-sunDir, n), v), 0.0), 240.0);
         vec3 body = mix(deep, shallow, clamp(dot(n, v), 0.0, 1.0) * 0.6);
         vec3 color = mix(body, reflected, fresnel) + sunColor * glint;
+        if (glowMode == 2) {
+          // Soft moving highlights mark the ripple crests; retain blue-green body color
+          // at grazing angles so the pool cannot read as a brown stone platform.
+          color = mix(color, body, 0.22);
+          color += vec3(0.22, 0.38, 0.4) * pow(max(poolWave, 0.0), 6.0) * poolEnvelope * 0.28;
+        }
         if (glowMode > 0) {
           float edge = glowMode == 1 ? min(vUv.x, 1.0 - vUv.x) * glowSize : (1.0 - length(vUv - 0.5) * 2.0) * glowSize;
           // Rippled light spill from the LED strips just above the waterline.
-          color += glowColor * exp(-edge / 0.35) * (0.8 + 2.5 * s.x / max(ripple, 0.05));
+          color += glowColor * (glowMode == 2 ? 0.4 : 1.0) * exp(-edge / (glowMode == 2 ? 0.16 : 0.35)) * (0.8 + 2.5 * s.x / max(ripple, 0.05));
         }
         gl_FragColor = vec4(color, mix(opacity, 1.0, fresnel));
         #include <tonemapping_fragment>

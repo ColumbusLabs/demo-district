@@ -6,7 +6,7 @@
 
 **Touch.** Drag one finger on the scene to look. Hold and push the movement stick (bottom left) to walk; how far you push sets the speed. Both work at once with two thumbs. Releasing the stick lets the walk ease to a stop. A tap or a small wobble (under 8 CSS px) does not move the camera, which leaves taps free for storefront selection in Slice 14. Two fingers on the scene still pinch-zoom the page.
 
-**Everyone.** **Reset view** returns to the spawn without an animated camera flight. **Walk speed** offers Leisurely (2 m/s), Normal (3.2 m/s), and Brisk (5 m/s), which also caps the stick's top speed.
+**Everyone.** **Reset view** returns to the spawn without an animated camera flight. **Walk speed** offers Leisurely (4 m/s), Normal (6.4 m/s), and Brisk (10 m/s), which also caps the stick's top speed.
 
 Nothing autofocuses or requests pointer lock. Browser shortcuts and mouse-wheel scrolling are not intercepted.
 
@@ -22,9 +22,9 @@ The stick is `aria-hidden` and not focusable: keyboard and screen-reader users a
 
 `src/world/controls/motion.ts` is DOM/Three.js-independent. `movementConfig` copies and validates speed, acceleration/deceleration, mouse and touch look sensitivity, keyboard look speed, eye height, footprint radius, rectangular bounds, and spawn. Invalid speed or nonfinite/unusable geometry is rejected. `stickInput` maps a thumb offset to a unit-disc knob position and analog walking input.
 
-**Collision.** `MovementConfig.blockers` lists solid footprints: oriented boxes (`x`, `z`, half extents, yaw `angle`) and circles. After each step the player's 0.3 m footprint is pushed out of any blocker it overlaps (up to four passes for corners) and velocity into the surface is cancelled, so walking along a wall slides. A spawn inside a blocker is pushed out. The district supplies its spawn, bounds, and blockers from `districtNavigation()` in `src/world/district/layout.ts`; blocker thickness is kept well above the 0.25 m maximum step so fast movement cannot tunnel.
+**Collision.** `MovementConfig.blockers` lists solid footprints: oriented boxes (`x`, `z`, half extents, yaw `angle`) and circles. After each step the player's 0.3 m footprint is pushed out of any blocker it overlaps (up to four passes for corners) and velocity into the surface is cancelled, so walking along a wall slides. A spawn inside a blocker is pushed out. The district supplies its spawn, bounds, and blockers from `districtNavigation()` in `src/world/district/layout.ts`; blocker thickness is kept well above the 0.5 m maximum step so fast movement cannot tunnel.
 
-Defaults: eye height 1.7 m, speed 3.2 m/s, acceleration 12/s, deceleration 18/s, mouse sensitivity 0.0025 rad/px, touch sensitivity 0.006 rad/px, keyboard look 1.5 rad/s, maximum pitch 84.6 degrees, footprint radius 0.3 m. Stick travel is 30% of the pad width with a 15% dead zone; output ramps from zero at the dead-zone edge. Without district settings (the engine test scene) the bounds are ±35 m and nothing is solid. The district's walkable area is x ±27 m, z −63 to 22 m, spawning at (0, 10) facing the landmark.
+Defaults: eye height 1.7 m, speed 6.4 m/s, acceleration 12/s, deceleration 18/s, mouse sensitivity 0.0025 rad/px, touch sensitivity 0.006 rad/px, keyboard look 1.5 rad/s, maximum pitch 84.6 degrees, footprint radius 0.3 m. Stick travel is 30% of the pad width with a 15% dead zone; output ramps from zero at the dead-zone edge. Without district settings (the engine test scene) the bounds are ±35 m and nothing is solid. The district's walkable area is x ±27 m, z −63 to 22 m, spawning at (0, 10) facing the landmark.
 
 Velocity uses exact exponential integration for each fixed input/time segment. Keyboard and stick input add, then clamp to the unit disc, so diagonal or combined input is never faster than full speed. Walking stays in the XZ plane independent of pitch. Outward boundary velocity is cleared while tangential movement remains possible. A 50 ms simulation cap matches the engine's long-frame safety limit. Pitch is clamped and yaw wrapped; the camera uses YXZ Euler order with no roll, head bob, auto-pan, zoom pulse, or FOV animation.
 

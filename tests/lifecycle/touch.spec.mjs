@@ -35,9 +35,9 @@ test('the stick walks analog speed in its direction and coasts to rest after rel
   await expect.poll(async () => (await state(page)).vz).toBeLessThan(-0.5);
   await page.waitForTimeout(400);
   const half = -(await state(page)).vz;
-  expect(half).toBeLessThan(0.7 * 3.2);
+  expect(half).toBeLessThan(0.7 * 6.4);
   await touch.move([{ x: pad.x, y: pad.y - pad.travel * 3, id: 1 }]);
-  await expect.poll(async () => -(await state(page)).vz).toBeGreaterThan(3.1);
+  await expect.poll(async () => -(await state(page)).vz).toBeGreaterThan(6.1);
   const walking = await state(page);
   expect(walking.stick.forward).toBeCloseTo(1, 6); expect(Math.abs(walking.x)).toBeLessThan(1e-9); expect(walking.mode).toBe('active');
   await touch.end();

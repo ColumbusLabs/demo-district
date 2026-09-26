@@ -19,8 +19,8 @@ test('menu controls focus the canvas, allow escape, and expose speed/reset witho
   await page.keyboard.press('Escape');
   await expect(page.locator('#world-canvas')).not.toBeFocused();
   await openMenu(page);
-  await page.getByLabel('Walk speed', { exact: true }).selectOption('5');
-  await expect(page.getByLabel('Walk speed', { exact: true })).toHaveValue('5');
+  await page.getByLabel('Walk speed', { exact: true }).selectOption('10');
+  await expect(page.getByLabel('Walk speed', { exact: true })).toHaveValue('10');
   await page.getByRole('button', { name: 'Reset view', exact: true }).click();
   await expect(page.locator('#world-canvas')).toBeFocused();
   await expect(page.locator('#menu-panel')).toBeHidden();

@@ -24,7 +24,7 @@ export interface StickInput { x: number; y: number; right: number; forward: numb
 
 export function movementConfig(overrides: Partial<MovementConfig> = {}): MovementConfig {
   const config: MovementConfig = {
-    speed: 3.2, acceleration: 12, deceleration: 18, eyeHeight: 1.7, radius: 0.3,
+    speed: 6.4, acceleration: 12, deceleration: 18, eyeHeight: 1.7, radius: 0.3,
     sensitivity: 0.0025, touchSensitivity: 0.006, keyboardLookSpeed: 1.5, maxPitch: Math.PI * 0.47,
     ...overrides,
     bounds: { minX: -35, maxX: 35, minZ: -35, maxZ: 35, ...overrides.bounds },
@@ -36,8 +36,8 @@ export function movementConfig(overrides: Partial<MovementConfig> = {}): Movemen
       throw new RangeError(`Invalid movement setting: ${key}`);
     }
   }
-  if (config.speed < 0.5 || config.speed > 8 || config.maxPitch >= Math.PI / 2) {
-    throw new RangeError('Speed must be 0.5–8 m/s and pitch must remain below vertical.');
+  if (config.speed < 0.5 || config.speed > 10 || config.maxPitch >= Math.PI / 2) {
+    throw new RangeError('Speed must be 0.5–10 m/s and pitch must remain below vertical.');
   }
   if (!Object.values(config.bounds).every(Number.isFinite) ||
       !Object.values(config.spawn).every(Number.isFinite) ||

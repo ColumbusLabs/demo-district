@@ -21,3 +21,11 @@ Branch: `build/demo-district-v1`. Requested September 25, 2026.
 - Browser installation also returns an invalid/truncated Chromium archive; browser/lifecycle suites remain unverified in this environment.
 
 No merge or deployment performed. The repository's AGENTS.md requires explicit publication authorization.
+
+## Follow-up — faster exploration and recognizable water
+
+The owner approved pushing and private publication, then requested at least double walking speed and a clearer fountain pool. Presets are now 4 / 6.4 / 10 m/s (all doubled); the default, menu, controller validation, and touch expectations agree. A maximum-frame-time collision regression checks that 10 m/s movement stops outside the pond.
+
+The pool now has a blue-green body, brighter sky reflections, broader surface ripples, and outward waves from the fountain impact ring. Warm edge spill is narrower and dimmer so it does not color the whole pool brown. The opaque depth-writing surface is retained to prevent the earlier see-through defect. The shader adds no meshes, render passes, textures, or per-frame JavaScript work. Low quality and reduced-motion behavior remain unchanged.
+
+Validation: 71 unit tests, TypeScript, production build, and static artifact checks passed. Browser/iPhone visual verification is still unavailable in this environment, as described above.
