@@ -37,6 +37,7 @@ test('keyboard: facing a storefront offers Enter, opens an accessible preview, a
 });
 
 test('pointer: hover marks the storefront, click opens it, drags and sky clicks do not', async ({ page }) => {
+  test.skip(test.info().project.use.hasTouch, 'Hover is the pointer layout; desktop covers it.');
   await arrive(page);
   const { x, y } = center(page);
   await page.mouse.move(x, y);
