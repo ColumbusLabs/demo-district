@@ -14,7 +14,8 @@ test('the district streams only local world assets, all successfully, with no er
   expect(external).toEqual([]);
   expect(assets.filter((a) => a.status !== 200)).toEqual([]);
   // 4 PBR sets x 3 maps, the lighting HDR, the sky backdrop, and the Blender tree and landmark models.
-  expect(new Set(assets.map((a) => a.path)).size).toBe(16);
+  expect(new Set(assets.map((a) => a.path)).size).toBe(17);
+  expect(assets.some((a) => a.path.endsWith('/world/exhibits/gallery-atlas.webp'))).toBe(true);
   expect(assets.some((a) => a.path.endsWith('/world/models/shrubs.glb'))).toBe(false);
   for (const model of ['trees', 'landmark']) expect(assets.some((a) => a.path.endsWith(`/world/models/${model}.glb`))).toBe(true);
   expect(errors).toEqual([]);

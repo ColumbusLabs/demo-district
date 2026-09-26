@@ -20,7 +20,7 @@ const entries = await readdir(path.join(root, 'assets'));
 // World assets must resolve relative to the page (Vite base './') so a subpath host works.
 const bundle = (await Promise.all(entries.filter((name) => name.endsWith('.js')).map((name) => readFile(path.join(root, 'assets', name), 'utf8')))).join('\n');
 assert.ok(bundle.includes('./') && /world\//.test(bundle) && !/["'`]\/world\//.test(bundle), 'World asset URLs must be relative.');
-for (const file of ['world/LICENSES.md', 'world/sky/kloppenheim_06_1k.hdr', 'world/sky/kloppenheim_06_upper.webp', 'world/models/trees.glb', 'world/models/landmark.glb', 'world/models/shrubs.glb']) {
+for (const file of ['world/exhibits/gallery-atlas.webp', 'world/LICENSES.md', 'world/sky/kloppenheim_06_1k.hdr', 'world/sky/kloppenheim_06_upper.webp', 'world/models/trees.glb', 'world/models/landmark.glb', 'world/models/shrubs.glb']) {
   assert.ok((await stat(path.join(root, file))).isFile(), `Missing world asset: ${file}`);
 }
 assert.ok(entries.every((name) => !name.endsWith('.map')), 'Do not publish source maps.');

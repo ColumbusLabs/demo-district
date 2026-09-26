@@ -7,6 +7,7 @@ import { buildLandmark } from './landmark.ts';
 import { buildLandscape } from './landscape.ts';
 import { district } from './layout.ts';
 import { createMaterials } from './materials.ts';
+import { loadExhibitArt } from './exhibits.ts';
 import { buildPavilion } from './pavilions.ts';
 import { buildSignage } from './signage.ts';
 import { buildSurroundings } from './surroundings.ts';
@@ -67,7 +68,8 @@ export function createDistrict({ resources, renderer, camera, invalidate }: Cont
   const batch = new StaticBatch(resources);
   const lights = new StaticBatch(resources);
   buildGround(root, m, water, resources);
-  const glass = new Map(district.pavilions.map((slot) => [slot.id, buildPavilion(slot, m, batch, lights, root, env.skyTexture, resources)] as const));
+  const exhibits = loadExhibitArt(resources, isDisposed);
+  const glass = new Map(district.pavilions.map((slot) => [slot.id, buildPavilion(slot, m, batch, lights, root, env.skyTexture, exhibits.texture, resources)] as const));
   buildSignage(root, m, batch, renderer, resources);
   const landmark = buildLandmark(root, m, resources, isDisposed);
   const windTime = { value: 0 };
@@ -102,7 +104,7 @@ export function createDistrict({ resources, renderer, camera, invalidate }: Cont
     quality: quality.tier,
     animated: quality.animated,
     ready: (() => {
-      const tasks = [env.ready, env.skyReady, trees, landmark.ready, ...m.tasks];
+      const tasks = [exhibits.ready, env.ready, env.skyReady, trees, landmark.ready, ...m.tasks];
       let settled = 0;
       options.onProgress?.(0);
       for (const task of tasks) void task.finally(() => { settled += 1; if (!disposed) options.onProgress?.(settled / tasks.length); });

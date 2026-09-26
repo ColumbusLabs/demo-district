@@ -6,6 +6,7 @@ import { place } from './geometry.ts';
 import type { StaticBatch } from './geometry.ts';
 import { plinthHeight, storefrontSize } from './layout.ts';
 import type { PavilionSlot } from './layout.ts';
+import { exhibitTile } from './exhibits.ts';
 import type { DistrictMaterials } from './materials.ts';
 
 
@@ -35,16 +36,19 @@ function ellipse(rx: number, rz: number, offsetZ: number): Shape {
 }
 
 /** Glass that shows a warm implied room and a glowing display, plus Fresnel sky reflection. */
-function storefrontGlass(slot: PavilionSlot, width: number, height: number, skyMap: Texture, resources: ResourceScope): ShaderMaterial {
+function storefrontGlass(slot: PavilionSlot, width: number, height: number, skyMap: Texture, artMap: Texture, resources: ResourceScope): ShaderMaterial {
   const uniforms = UniformsUtils.merge([UniformsLib.fog, {
     size: { value: new Vector2(width, height) },
     roomDepth: { value: Math.min(slot.depth * 0.7, 6) },
     hue: { value: slot.display },
+    artTile: { value: exhibitTile(slot.id) },
+    artMap: { value: null },
     highlight: { value: 0 },
     skyMap: { value: null },
     hazeTint: { value: hazeColor },
   }]);
   uniforms.skyMap = { value: skyMap };
+  uniforms.artMap = { value: artMap };
   return resources.track(new ShaderMaterial({
     uniforms,
     vertexShader: /* glsl */`
@@ -67,6 +71,8 @@ function storefrontGlass(slot: PavilionSlot, width: number, height: number, skyM
       uniform vec2 size;
       uniform float roomDepth;
       uniform float hue;
+      uniform sampler2D artMap;
+      uniform vec2 artTile;
       uniform float highlight;
       varying vec3 vLocal;
       varying vec3 vCamLocal;
@@ -77,6 +83,23 @@ function storefrontGlass(slot: PavilionSlot, width: number, height: number, skyM
       vec3 hsv(float h, float s, float v) {
         vec3 k = clamp(abs(mod(h * 6.0 + vec3(0.0, 4.0, 2.0), 6.0) - 3.0) - 1.0, 0.0, 1.0);
         return v * mix(vec3(1.0), k, s);
+      }
+      vec3 artwork(vec2 uv) {
+        // Inset each tile to avoid neighboring images bleeding at the seams.
+        return texture2D(artMap, (artTile + mix(vec2(0.008), vec2(0.992), clamp(uv, 0.0, 1.0))) / vec2(4.0, 2.0)).rgb;
+      }
+      void displayBox(vec3 origin, vec3 ray, vec3 center, vec3 extent, vec3 tint, inout float nearest, inout vec3 color) {
+        vec3 safe = sign(ray) * max(abs(ray), vec3(0.0001)) + vec3(equal(ray, vec3(0.0))) * 0.0001;
+        vec3 a = (center - extent - origin) / safe;
+        vec3 b = (center + extent - origin) / safe;
+        vec3 entry = min(a, b);
+        float nearT = max(max(entry.x, entry.y), entry.z);
+        vec3 exitT = max(a, b);
+        if (nearT > 0.0 && nearT < nearest && nearT < min(min(exitT.x, exitT.y), exitT.z)) {
+          nearest = nearT;
+          float light = nearT == entry.y ? 1.15 : (nearT == entry.x ? 0.65 : 0.9);
+          color = tint * light;
+        }
       }
       void main() {
         // Interior mapping: intersect the view ray with an imaginary room behind the glass.
@@ -92,27 +115,62 @@ function storefrontGlass(slot: PavilionSlot, width: number, height: number, skyM
         vec3 warm = vec3(1.0, 0.8, 0.58);
         vec3 room;
         if (t == far.z) {
-          // Back wall with a glowing display.
-          vec2 p = hit.xy / halfSize;
-          vec2 screen = abs(p - vec2(0.0, 0.05)) - vec2(0.62, 0.48);
-          float inside = step(max(screen.x, screen.y), 0.0);
-          vec3 art = mix(hsv(hue, 0.65, 1.0), hsv(hue + 0.18, 0.8, 0.55), 0.5 + 0.5 * p.y);
-          art += hsv(hue + 0.5, 0.4, 1.0) * smoothstep(0.55, 0.0, length(p - vec2(0.25, 0.2))) * 0.35;
-          vec3 wall = vec3(0.07, 0.065, 0.06) * mix(0.55, 1.0, up);
-          room = mix(wall, art * 1.7, inside);
+          // Square artwork in a dark frame on a softly illuminated plaster wall.
+          float artSize = min(size.x * 0.30, size.y * 0.31);
+          vec2 p = hit.xy - vec2(-size.x * 0.08, size.y * 0.12);
+          float edge = max(abs(p.x), abs(p.y));
+          room = vec3(0.38, 0.34, 0.29) * (0.65 + 0.35 * up);
+          room += vec3(0.18, 0.14, 0.09) * exp(-length(p) * 0.8);
+          if (edge < artSize + 0.10) room = vec3(0.026, 0.03, 0.035);
+          if (edge < artSize) room = artwork(p / (artSize * 2.0) + 0.5) * 1.65;
+          // Small exhibition label beneath the frame.
+          if (abs(p.x) < artSize * 0.52 && abs(p.y + artSize + 0.25) < 0.04) room = vec3(0.68, 0.62, 0.51);
         } else if (t == far.y) {
-          // Dark ceiling with one warm light strip; a dim floor that fades toward the back.
-          float strip = step(abs(hit.z + roomDepth * 0.35), 0.18);
-          room = hit.y > 0.0 ? mix(vec3(0.08, 0.07, 0.065), warm * 2.2, strip) : vec3(0.11, 0.1, 0.09) * mix(1.0, 0.45, -hit.z / roomDepth);
+          float strip = step(abs(hit.z + roomDepth * 0.42), 0.055);
+          float joints = max(step(0.975, fract(hit.x / 1.3)), step(0.975, fract(hit.z / 1.3)));
+          room = hit.y > 0.0 ? mix(vec3(0.15, 0.145, 0.13), warm * 2.0, strip)
+            : mix(vec3(0.26, 0.235, 0.20), vec3(0.16, 0.15, 0.135), joints);
+          if (hit.y < 0.0) room *= 0.65 + 0.35 * exp(-length(hit.xz - vec2(0.0, -roomDepth * 0.55)));
         } else {
-          float poster = step(abs(hit.z + roomDepth * 0.5), roomDepth * 0.22) * step(abs(hit.y), size.y * 0.18);
-          room = mix(vec3(0.1, 0.09, 0.085) * mix(0.55, 1.05, up), hsv(hue + 0.33, 0.45, 1.1), poster * 0.85);
+          float recess = step(abs(hit.z + roomDepth * 0.55), roomDepth * 0.22);
+          room = vec3(0.30, 0.285, 0.255) * mix(0.65, 1.05, up);
+          room *= 1.0 - recess * 0.17;
+          if (abs(hit.y - halfSize.y + 0.15) < 0.025) room = warm * 1.4;
         }
-        // Soft falloff toward the back and into corners keeps depth readable.
-        vec2 edge = min(halfSize - abs(hit.xy), vec2(1.0));
-        room *= warm * mix(0.6, 1.0, smoothstep(0.0, 0.6, min(edge.x, edge.y))) * mix(1.0, 0.7, -hit.z / roomDepth);
+        // Analytic foreground exhibits give occlusion and parallax without extra draw calls.
+        float nearest = t;
+        float floorY = -halfSize.y;
+        vec3 pedestal = vec3(size.x * 0.16, floorY + size.y * 0.17, -roomDepth * 0.47);
+        displayBox(vLocal, dir, pedestal, vec3(size.x * 0.10, size.y * 0.17, 0.42), vec3(0.44, 0.40, 0.34), nearest, room);
+        // Polished sphere above the plinth, with a small contact shadow at its base.
+        float radius = size.y * 0.13;
+        vec3 sphere = pedestal + vec3(0.0, size.y * 0.17 + radius, 0.0);
+        vec3 oc = vLocal - sphere;
+        float qb = dot(oc, dir);
+        float disc = qb * qb - dot(oc, oc) + radius * radius;
+        if (disc > 0.0) {
+          float sphereT = -qb - sqrt(disc);
+          if (sphereT > 0.0 && sphereT < nearest) {
+            nearest = sphereT;
+            vec3 normal = normalize(vLocal + dir * sphereT - sphere);
+            room = hsv(hue, 0.48, 0.65) * (0.35 + 0.65 * max(0.0, dot(normal, normalize(vec3(-0.5, 1.0, 1.0)))));
+            room += vec3(0.8, 0.7, 0.5) * pow(max(0.0, dot(reflect(dir, normal), normalize(vec3(-0.5, 1.0, 1.0)))), 24.0);
+          }
+        }
+        // Slim side kiosk with an angled display face.
+        vec3 kiosk = vec3(-size.x * 0.30, floorY + size.y * 0.18, -roomDepth * 0.25);
+        displayBox(vLocal, dir, kiosk, vec3(0.09, size.y * 0.18, 0.09), vec3(0.075), nearest, room);
+        mat3 tilt = mat3(1.0, 0.0, 0.0, 0.0, 0.94, -0.342, 0.0, 0.342, 0.94);
+        vec3 screenCenter = kiosk + vec3(0.0, size.y * 0.18, 0.0);
+        float before = nearest;
+        displayBox(tilt * (vLocal - screenCenter), tilt * dir, vec3(0.0), vec3(size.x * 0.09, size.y * 0.075, 0.045), vec3(0.025), nearest, room);
+        if (nearest < before) {
+          vec3 p = tilt * (vLocal + dir * nearest - screenCenter);
+          if (p.z > 0.04 && abs(p.x) < size.x * 0.08 && abs(p.y) < size.y * 0.063)
+            room = artwork(p.xy / vec2(size.x * 0.16, size.y * 0.126) + 0.5) * 1.2;
+        }
         vec3 v = normalize(cameraPosition - vWorld);
-        float fresnel = 0.1 + 0.9 * pow(1.0 - abs(dot(v, vNormal)), 5.0);
+        float fresnel = 0.035 + 0.48 * pow(1.0 - abs(dot(v, vNormal)), 5.0);
         vec3 reflection = sampleSky(reflect(-v, vNormal));
         vec3 color = mix(room * (0.95 + 0.5 * highlight), reflection, fresnel);
         // Focus cue: a warm light line traces the glass edge when the storefront is targeted.
@@ -146,7 +204,7 @@ export function storefrontFrame(slot: PavilionSlot) {
  * One pavilion from the kit. Static stone/plaster/wood/charcoal pieces go into the shared
  * batches (world space); the storefront glass is its own mesh because each implies a room.
  */
-export function buildPavilion(slot: PavilionSlot, m: DistrictMaterials, batch: StaticBatch, lights: StaticBatch, root: Group, skyMap: Texture, resources: ResourceScope): ShaderMaterial {
+export function buildPavilion(slot: PavilionSlot, m: DistrictMaterials, batch: StaticBatch, lights: StaticBatch, root: Group, skyMap: Texture, artMap: Texture, resources: ResourceScope): ShaderMaterial {
   const store = storefrontFrame(slot);
   const at = store.at;
   const add = (target: StaticBatch, material: Parameters<StaticBatch['add']>[0], geometry: BufferGeometry, x = 0, y = 0, z = 0, uv = 3): void => target.add(material, geometry, at(x, y, z), uv);
@@ -163,7 +221,7 @@ export function buildPavilion(slot: PavilionSlot, m: DistrictMaterials, batch: S
   for (const side of [-1, 1]) batch.box(m.charcoal, jamb, storeHeight, proud + 0.3, at(side * (storeWidth / 2 + jamb / 2), plinthHeight + storeHeight / 2, front + proud / 2 - 0.15), 3);
   batch.box(m.charcoal, storeWidth + jamb * 2, storeHeight - glassHeight, proud + 0.3, at(0, plinthHeight + glassHeight + (storeHeight - glassHeight) / 2, front + proud / 2 - 0.15), 3);
   batch.box(m.charcoal, storeWidth, 0.12, proud + 0.3, at(0, plinthHeight + 0.06, front + proud / 2 - 0.15), 3);
-  const glassMaterial = storefrontGlass(slot, storeWidth, glassHeight - 0.12, skyMap, resources);
+  const glassMaterial = storefrontGlass(slot, storeWidth, glassHeight - 0.12, skyMap, artMap, resources);
   const glass = new Mesh(resources.track(new PlaneGeometry(storeWidth, glassHeight - 0.12)), glassMaterial);
   glass.applyMatrix4(at(0, plinthHeight + 0.12 + (glassHeight - 0.12) / 2, front + 0.12));
   glass.name = `storefront-${slot.id}`;

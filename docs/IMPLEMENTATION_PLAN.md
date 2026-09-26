@@ -1773,3 +1773,7 @@ Owner requested removal of pond clipping and then replacement of statue shrub ca
 ## September 25 — side planting follow-up
 
 Replaced ragged low leaf-card planting with compact opaque crowns and modeled leaves; see [checkpoint](SIDE_PLANTING.md). Trees and the rest of the roadmap are preserved.
+
+## September 26 — storefront exhibit pass
+
+Replaced the eight placeholder storefront panels with original exhibit artwork and parallax gallery interiors; see [checkpoint and verification limits](STOREFRONTS.md). Community/backend roadmap remains unchanged.

@@ -23,3 +23,9 @@ by `src/world/district/materials.ts` and have no external source.
 
 When adding an asset: keep it local, record it in this table with its license and changes,
 and prefer CC0. Never copy creator thumbnails or media without explicit permission.
+
+## Original exhibit artwork
+
+`exhibits/gallery-atlas.webp` — original AI-generated sample exhibit illustrations, created with OpenAI image generation for Demo District on September 26, 2026. No third-party creator thumbnails or media were supplied. Not represented as CC0. 1774 × 887 WebP, 515,716 bytes; one shared 4 × 2 atlas. These are fictional sample exhibits, not screenshots of real projects.
+
+Art direction: eight square, text-free cinematic gallery artworks, no gutters or frames. Top row: coral/ivory ribbons on plum; a lantern island in teal twilight; blue/aqua sound sculpture; orange paper comet through cobalt space. Bottom row: open-book amber landscape; magenta/cyan woven strands; emerald bioluminescent botanical sculpture; pearly planet and orbital rings on indigo.
