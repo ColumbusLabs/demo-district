@@ -11,3 +11,7 @@ Replaced the low vegetation shown in the owner's phone screenshot. Large transpa
 71 unit tests, TypeScript, production build, and static artifact checks pass. Browser preview remains blocked by the environment, so no final visual or physical-device verification is claimed.
 
 Static geometry accounting (entire district, before visibility culling): 46 shrub instances × 228 triangles = 10,488 low-plant triangles, versus 3,480 previously including grass. One instanced draw replaces two. This is a geometry count, not a GPU timing measurement; the scene should be remeasured on a real GPU.
+
+## Tree planter simplification
+
+At the owner’s request, removed all 10 tree-base shrub collars. Trunks now enter the existing flat dark soil directly. Standalone shrubs remain. Other seeded placements are preserved. This removes 2,280 triangles; low planting now has 36 instances and 8,208 triangles. TypeScript, production build, and static artifact validation passed; visual confirmation remains unavailable in this environment.

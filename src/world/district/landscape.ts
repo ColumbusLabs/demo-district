@@ -227,7 +227,7 @@ export function buildLandscape(root: Group, m: DistrictMaterials, batch: StaticB
   };
 
   const shrubs: Matrix4[] = []; const rocks: Matrix4[][] = [[], []];
-  // Allee and plaza trees in square stone planters with a hedge collar.
+  // Allee and plaza trees in square stone planters with exposed, flat dark soil.
   const h = district.planterHalf;
   for (const t of [...district.allee, ...district.plazaTrees, ...district.framingTrees]) {
     for (const [dx, dz, w, d] of [[0, -h + 0.12, h * 2, 0.24], [0, h - 0.12, h * 2, 0.24], [-h + 0.12, 0, 0.24, h * 2 - 0.48], [h - 0.12, 0, 0.24, h * 2 - 0.48]] as const) {
@@ -237,8 +237,8 @@ export function buildLandscape(root: Group, m: DistrictMaterials, batch: StaticB
     const framing = district.framingTrees.some((f) => f.x === t.x && f.z === t.z);
     if (framing) groups.near[3]?.push(place(t.x, 0.5, t.z, t.x < 0 ? 0 : Math.PI, 1.15));
     else plant(t.x, t.z, 1.2, 0.5);
-    // One low dense collar sits inside the opening; the trunk passes through its center.
-    shrubs.push(place(t.x, 0.55, t.z, rand() * 6, 1.12));
+    // Keep subsequent seeded placements stable after removing the former shrub collar.
+    rand();
   }
 
   // Low lit planters along the path edge, as in the mockup's mid-ground.
