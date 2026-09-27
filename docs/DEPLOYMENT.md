@@ -4,8 +4,8 @@
 
 The owner requested a public, username-free Cloudflare Pages deployment from
 `ColumbusLabs/demo-district`, production branch `build/demo-district-v1`.
-Use the Pages GitHub integration (not Workers or Direct Upload), project name
-`demo-district` or, if unavailable, `demo-district-columbuslabs`.
+Published at **https://demo-district.pages.dev/** using the Pages GitHub
+integration and project `demo-district`.
 Build from the repository root with `npm run build`, output `dist`, and
 `NODE_VERSION=26`. No Functions, D1, R2, paid plan, domain purchase, or secrets are
 needed. Keep automatic production branch deployments enabled.
@@ -19,7 +19,11 @@ While checks ran, GitHub received the same complete source as `52e8bb1`; its tre
 was verified identical to Site version 14 and adopted as the deployment baseline.
 The existing owner-private ChatGPT Site and `.openai/hosting.json` remain intact.
 
-Publication and live verification are pending GitHub browser sign-in/setup.
+First production deployment succeeded from `c8fe86d13703019b37db0d759aad4ab3640ce673`
+(deployment `e5616ec4-e8ac-4a3a-b162-5881e5dfda67`). The dashboard confirms automatic
+production deployments are enabled for `build/demo-district-v1`. Live desktop and
+390×844 layout checks passed; this documentation push is the follow-up GitHub
+automatic-deployment check, with its resulting commit/status reported in the handoff.
 See [Pages checkpoint](CLOUDFLARE_PAGES.md) for the latest evidence.
 
 ## Current publication — September 26, 2026

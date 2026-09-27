@@ -40,7 +40,31 @@ Requested September 26, 2026. Branch: `build/demo-district-v1`.
   composition matches the existing approved plaza direction. No world changes.
 - Re-ran `npm run verify` after the desktop-only CSS correction; all 82 tests,
   typecheck, production build and static artifact checks passed.
-- Publication, GitHub automatic deployment and live desktop/mobile checks pending.
+
+## Publication and live checks
+
+- Public URL: **https://demo-district.pages.dev/**; project `demo-district`, free Pages.
+- GitHub integration: `ColumbusLabs/demo-district`, production `build/demo-district-v1`.
+  Dashboard explicitly reports automatic production deployments enabled.
+- Root build: `npm run build`; output `dist`; environment `NODE_VERSION=26`.
+- First deployed commit: `c8fe86d13703019b37db0d759aad4ab3640ce673`.
+  Deployment ID: `e5616ec4-e8ac-4a3a-b162-5881e5dfda67` (successful).
+- In-app browser live checks: animated loading/entry, rendered high-tier district,
+  keyboard walking (map position changed), map travel, eight destination buttons,
+  search, empty Art storefront, populated Learning storefront, and native project
+  link navigating to the actual Plane of Focus experience all worked.
+- The browser observed all 17 world assets, the loader artwork and application
+  bundles on the Pages origin, with no console errors or warnings in the live tab.
+  A separate command-line asset hash audit was blocked by HTTP 403; no claim of
+  byte-for-byte HTTP validation is made.
+- At 390×844: district, search, preview and map remained usable; document width and
+  scroll width were both 390px. This was viewport sizing, not physical touch hardware.
+  Actual Chromium touch controls were covered by the local browser/lifecycle suites.
+- Four-second hold is verified by source/unit tests; the live loader and transition
+  were observed, but browser-tool latency is not a precise live timing measurement.
+- This documentation-only push serves as a second GitHub-triggered deployment;
+  its exact commit and final automatic-deployment result are reported in the handoff.
+  No manual redeployment is needed to exercise that integration.
 
 Existing ChatGPT publication remains owner-private and untouched. No main merge,
 workflow change, paid plan, domain purchase, database, bucket or authentication
