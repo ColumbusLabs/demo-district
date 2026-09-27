@@ -1791,3 +1791,7 @@ Each category now has a distinct installation, backdrop silhouette and interior 
 ## September 26 — circulation and demo launch repair
 
 Added four flush channel bridges and a visible path network to every building, cleared planters and decorations from approaches, and mapped the routes. Replaced the reported nonfunctional popup launch with a native link to the verified canonical destination and a copy-address fallback. See NAVIGATION.md and FIRST_EXHIBIT.md for validation and the remaining hosted iPhone check.
+
+## September 26 — animated arrival experience
+
+Replaced the basic gradient loader with a custom architectural diorama, progress-driven light and route animation, responsive typography, actual progress reporting, reduced-motion treatment and a fade into the district. See [arrival checkpoint](ARRIVAL_LOADING.md) for behavior and the browser-preview limitation. The owner explicitly requested publication in this task; preserve the existing Site audience. Other slices remain unchanged.

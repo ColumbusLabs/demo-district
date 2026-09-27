@@ -251,7 +251,7 @@ export function mountApplication(doc: Document, options: MountOptions = {}): () 
     const autoTier = options.autoTier ?? (autoStart && qualityTiers.includes(autoStart) ? autoStart : undefined);
     const forcedTier = choice === 'auto' ? autoTier : choice;
     if (options.resumeAt) activeHud.setProgress(0, 'Applying graphics settings…');
-    const loadingLabels = options.resumeAt ? ['Applying graphics settings…'] : ['Preparing the plaza…', 'Laying the stone…', 'Filling the channels…', 'Lighting the storefronts…', 'Almost there…'];
+    const loadingLabels = options.resumeAt ? ['Applying graphics settings…'] : ['Getting the neighborhood ready…', 'Putting the district on the map…', 'Lighting up the storefronts…', 'Your next discovery is almost ready.'];
     world = createWorld(canvas, {
       ...(engineTest ? {} : {
         content: (context) => (district = createDistrict(context, {
@@ -279,7 +279,7 @@ export function mountApplication(doc: Document, options: MountOptions = {}): () 
     const activeWorld = world;
     controls = createNavigationController(canvas, world.camera, {
       invalidate: () => activeWorld.invalidate(),
-      canNavigate: () => activeWorld.snapshot().state === 'running' && !activePreview.isOpen(),
+      canNavigate: () => canvas.dataset.content === 'ready' && activeWorld.snapshot().state === 'running' && !activePreview.isOpen(),
       ...(engineTest ? {} : { config: { ...districtNavigation(), ...(devSpawn ? { spawn: devSpawn } : {}) } }),
       ...(options.resumeAt ? { start: options.resumeAt } : {}),
       movePad,
@@ -302,7 +302,7 @@ export function mountApplication(doc: Document, options: MountOptions = {}): () 
       interactions = createInteractions(canvas, world.camera, {
         targets: activeDistrict.targets,
         invalidate: () => activeWorld.invalidate(),
-        canInteract: () => activeWorld.snapshot().state === 'running' && !activePreview.isOpen(),
+        canInteract: () => canvas.dataset.content === 'ready' && activeWorld.snapshot().state === 'running' && !activePreview.isOpen(),
         onFocusChange: (id) => { focusedSlot = id; activeDistrict.highlight(id); minimap?.setFocus(id); renderPrompt(); },
         onActivate: (id, source) => {
           // Keyboard visitors return to the scene; pointer visitors keep their own focus.
@@ -355,6 +355,7 @@ export function mountApplication(doc: Document, options: MountOptions = {}): () 
     unmount();
     // Keep the loading brand visible and surface the explanation on top of it.
     doc.querySelector('#world-status')?.setAttribute('data-visible', 'true');
+    doc.querySelector('#loading')?.setAttribute('data-error', '');
     status.dataset.state = 'unavailable';
     status.textContent = 'The 3D world is unavailable on this browser.';
     detail.textContent = 'Try a WebGL 2-capable browser with graphics acceleration enabled. No projects have been loaded.';

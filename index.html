@@ -77,14 +77,41 @@
         <p id="runtime-detail">No creator experiences are loaded in this preview.</p>
       </div>
 
-      <section id="loading" class="loading" aria-labelledby="district-title">
-        <div class="loading__card">
-          <h1 id="district-title" class="loading__wordmark">Demo District</h1>
-          <p class="loading__tagline">A walkable showcase for things people build with AI.</p>
-          <div id="loading-bar" class="loading__bar" role="progressbar" aria-label="Loading the district" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div>
-          <p id="loading-text" class="loading__text">Preparing the plaza…</p>
-          <noscript><p>JavaScript is disabled. Enable it to initialize the 3D world. The district has not opened yet.</p></noscript>
+      <section id="loading" class="loading" aria-labelledby="district-title" aria-busy="true">
+        <header class="loading__masthead">
+          <h1 id="district-title" class="loading__wordmark">Demo District<span class="loading__edition">BY COLUMBUS LABS</span></h1>
+          <span class="loading__invitation">A little curiosity goes a long way.</span>
+        </header>
+        <div class="loading__composition">
+          <div class="loading__copy">
+            <p class="loading__eyebrow">A WORLD OF THINGS PEOPLE BUILD</p>
+            <h2 class="loading__headline">Big ideas.<br>Just around<br><em>the corner.</em></h2>
+            <p class="loading__tagline">Explore a walkable neighborhood of AI-built projects. Find a storefront. Try something new.</p>
+          </div>
+          <div class="loading__scene" aria-hidden="true">
+            <div class="loading__halo"></div>
+            <div class="loading__art">
+              <picture><source media="(max-width: 600px)" srcset="./loading/district-720.webp"><img class="loading__district" src="./loading/district-1440.webp" width="1536" height="1024" alt="" fetchpriority="high" decoding="async"></picture>
+              <div class="loading__light loading__light--one"></div>
+              <div class="loading__light loading__light--two"></div>
+              <div class="loading__light loading__light--three"></div>
+              <svg class="loading__route" viewBox="0 0 1536 1024" aria-hidden="true">
+                <path class="loading__route-track" d="M727 794 C696 732 669 692 711 619 Q725 575 810 552 C919 541 1055 527 1059 457 Q1061 396 960 363" />
+                <path class="loading__route-progress" pathLength="1" d="M727 794 C696 732 669 692 711 619 Q725 575 810 552 C919 541 1055 527 1059 457 Q1061 396 960 363" />
+              </svg>
+            </div>
+            <span class="loading__caption">YOUR NEXT DISCOVERY IS A SHORT WALK AWAY</span>
+          </div>
         </div>
+        <footer class="loading__footer">
+          <div class="loading__journey">
+            <div class="loading__status"><p id="loading-text" role="status" aria-live="polite">Getting the neighborhood ready…</p><span id="loading-percent" aria-hidden="true">0<span>%</span></span></div>
+            <div id="loading-bar" class="loading__bar" role="progressbar" aria-label="Loading the district" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div>
+            <div class="loading__stops" aria-hidden="true"><span data-stop="0">The plaza</span><span data-stop="1">The storefronts</span><span data-stop="2">The possibilities</span></div>
+          </div>
+          <p class="loading__tip"><span class="loading__tip-label">WHEN YOU ARRIVE</span><span id="loading-tip">Walk a little. Find something unexpected.</span></p>
+        </footer>
+        <noscript><p class="loading__noscript">Enable JavaScript to enter the district.</p></noscript>
       </section>
 
       <dialog id="project-preview" class="preview" aria-labelledby="preview-title">

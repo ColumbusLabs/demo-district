@@ -1,3 +1,5 @@
+import { createLoading } from './loading.ts';
+
 /**
  * Presentation-only HUD wiring: menu disclosure, map toggle, loading overlay, and the status
  * card. No world imports; the app layer connects these to the engine.
@@ -25,9 +27,7 @@ export function createHud(doc: Document, hooks: { onMapChange?: (open: boolean) 
   const menu = $<HTMLElement>('#menu-panel');
   const mapToggle = $<HTMLButtonElement>('#map-toggle');
   const minimap = $<HTMLElement>('#minimap');
-  const loading = $<HTMLElement>('#loading');
-  const bar = $<HTMLElement>('#loading-bar');
-  const loadingText = $<HTMLElement>('#loading-text');
+  const arrival = createLoading(doc);
   const status = $<HTMLElement>('#world-status');
   const searchInput = $<HTMLInputElement>('#search-input');
   // The mockup's full placeholder does not fit narrow screens; keep it short there.
@@ -60,6 +60,7 @@ export function createHud(doc: Document, hooks: { onMapChange?: (open: boolean) 
   listen(mapToggle, 'click', () => setMapOpen(Boolean(minimap?.hidden)));
   listen(doc, 'keydown', (raw) => {
     const event = raw as KeyboardEvent;
+    if (arrival.isActive()) return;
     const inMenu = menu?.contains(doc.activeElement) || doc.activeElement === menuToggle;
     if (event.key === 'Escape' && menu && !menu.hidden && (inMenu || !typing(event.target))) { setMenuOpen(false, inMenu); event.preventDefault(); return; }
     if ((event.key === 'm' || event.key === 'M') && !event.ctrlKey && !event.metaKey && !event.altKey && !typing(event.target) && !doc.querySelector('dialog[open]')) {
@@ -73,14 +74,9 @@ export function createHud(doc: Document, hooks: { onMapChange?: (open: boolean) 
   });
 
   return {
-    setProgress: (fraction, label) => {
-      const value = Math.max(0, Math.min(1, fraction));
-      bar?.style.setProperty('--progress', value.toFixed(3));
-      bar?.setAttribute('aria-valuenow', String(Math.round(value * 100)));
-      if (label && loadingText) loadingText.textContent = label;
-    },
-    finishLoading: () => { loading?.setAttribute('data-done', ''); },
-    setStatusVisible: (visible) => { status?.setAttribute('data-visible', String(visible)); },
+    setProgress: arrival.setProgress,
+    finishLoading: arrival.finish,
+    setStatusVisible: (visible) => { status?.setAttribute('data-visible', String(visible)); arrival.error(visible); },
     setMapOpen,
     isMapOpen: () => Boolean(minimap && !minimap.hidden),
     closeMenu: () => setMenuOpen(false),
@@ -88,8 +84,7 @@ export function createHud(doc: Document, hooks: { onMapChange?: (open: boolean) 
       for (const remove of removers.splice(0)) remove();
       setMenuOpen(false);
       setMapOpen(false);
-      loading?.removeAttribute('data-done');
-      bar?.style.setProperty('--progress', '0');
+      arrival.destroy();
       status?.setAttribute('data-visible', 'false');
       if (searchInput) searchInput.placeholder = fullPlaceholder;
     },

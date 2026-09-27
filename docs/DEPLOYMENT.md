@@ -1,6 +1,15 @@
 # Local development and Sites handoff
 
-## Current boundary
+## Current publication — September 26, 2026
+
+Demo District is published at `https://demo-district.zspringhorn.chatgpt.site` with owner-private access. The owner explicitly authorized publishing the loading-screen update to the existing site. Keep its project ID and audience unchanged; the older username-free-domain restriction below records the initial deployment discussion and is superseded for this requested existing-site update.
+
+Use the Sites opening/publishing workflow with `.openai/hosting.json`, preserve `build/demo-district-v1`, and publish the exact validated source/archive. This static Vite app needs no D1/R2 or runtime secret changes. See [arrival checkpoint](ARRIVAL_LOADING.md) for this update and its QA limitations.
+
+For the managed preview use `sites-preview start` from the checkout. A running preview can still be unreachable from the cloud browser; this session reported `ERR_BLOCKED_BY_CLIENT`. That is not evidence of a broken deployed app. For a portable local development environment, the commands below remain applicable.
+
+
+## Historical initial boundary (September 25)
 
 This repository is a portable static Vite + TypeScript + Three.js engine/navigation
 preview. A private GPT Sites project and saved source version now exist, but the
