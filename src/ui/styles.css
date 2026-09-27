@@ -130,6 +130,8 @@ button, input, select { font: inherit; color: inherit; }
 @keyframes arrival-district { from { opacity: 0; transform: translateY(28px) scale(.97); clip-path: inset(0 0 18% 0); } to { opacity: 1; transform: none; clip-path: inset(0); } }
 @keyframes arrival-beacon { 50% { box-shadow: 0 0 16px 5px #f2c98724; } }
 @media (min-width: 1600px) { .loading { padding-inline: max(5vw, calc((100vw - 1500px) / 2)); } }
+/* Reserve the masthead and footer before sizing the desktop illustration. */
+@media (min-width: 761px) { .loading__scene { max-width: max(240px, calc((100svh - 20rem) * 1.5)); justify-self: center; } }
 @media (max-width: 760px) {
   .loading { padding: max(1.5rem, env(safe-area-inset-top)) 1.5rem max(1.25rem, env(safe-area-inset-bottom)); }
   .loading__invitation { display: none; }

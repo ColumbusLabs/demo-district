@@ -12,7 +12,7 @@ test('production engine renders the test scene without external requests or deve
   expect(response?.status()).toBe(200);
   await expect(page).toHaveTitle('Demo District — World preview');
   // The brand heading lives on the loading card, which may already have faded (role queries skip hidden nodes).
-  await expect(page.locator('h1#district-title')).toHaveText('Demo District');
+  await expect(page.locator('h1#district-title')).toHaveText('Demo DistrictBY COLUMBUS LABS');
   await expect(page.locator('#runtime-status')).toHaveAttribute('data-state', 'ready');
   // The loading brand gives way to the scene once the district has loaded.
   await expect(page.locator('#loading')).toBeHidden({ timeout: 30_000 });
@@ -58,7 +58,7 @@ test('unavailable WebGL shows useful fallback instead of a blank page', async ({
   await page.goto('/');
   await expect(page.locator('#runtime-status')).toHaveAttribute('data-state', 'unavailable');
   await expect(page.locator('#runtime-detail')).toContainText('graphics acceleration');
-  await expect(page.getByRole('heading', { name: 'Demo District', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Demo District.*BY COLUMBUS LABS/ })).toBeVisible();
 });
 
 test('real graphics context loss recovers the production renderer', async ({ page }) => {
@@ -80,6 +80,8 @@ test('reduced motion retains a rendered scene without capturing the pointer', as
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
   await expect(page.locator('#runtime-status')).toHaveAttribute('data-state', 'ready');
+  // The accessible arrival keeps its four-second hold and 150ms exit fade.
+  await expect(page.locator('#loading')).toBeHidden({ timeout: 30_000 });
   expect(await page.evaluate(() => ({ animations: document.getAnimations().length, captured: document.pointerLockElement !== null })))
     .toEqual({ animations: 0, captured: false });
 });
@@ -89,8 +91,8 @@ test('no-JavaScript visitors receive identity and an explanation', async ({ brow
   try {
     const page = await context.newPage();
     await page.goto('http://127.0.0.1:4173/');
-    await expect(page.getByRole('heading', { name: 'Demo District', exact: true })).toBeVisible();
-    await expect(page.locator('noscript p')).toContainText('JavaScript is disabled');
+    await expect(page.getByRole('heading', { name: /Demo District.*BY COLUMBUS LABS/ })).toBeVisible();
+    await expect(page.locator('noscript p')).toHaveText('Enable JavaScript to enter the district.');
     await expect(page.locator('noscript p')).toBeVisible();
   } finally { await context.close(); }
 });

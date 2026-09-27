@@ -4,6 +4,7 @@ import { padCenter, touchscreen } from '../support/touch.mjs';
 const ready = async (page) => {
   await page.goto('/');
   await expect(page.locator('#runtime-status')).toHaveAttribute('data-state', 'ready');
+  await expect(page.locator('#loading')).toBeHidden({ timeout: 30_000 });
 };
 
 test('keyboard/mouse devices keep keyboard hints and never show the stick', async ({ page, hasTouch }) => {

@@ -1,6 +1,12 @@
 # Demo District — Detailed Implementation Plan
 
 **Project:** Demo District  
+
+**September 26 hosting follow-up:** reconcile the latest Site arrival source and
+publish the existing static application through free Cloudflare Pages on
+`build/demo-district-v1`; preserve the ChatGPT Site. See
+[Pages checkpoint](CLOUDFLARE_PAGES.md). Future slices below remain unchanged.
+
 **Primary experience:** A beautiful, walkable 3D district for discovering AI-created demos, games, scenes, experiments, and browser experiences.  
 **Primary host target:** ChatGPT Sites  
 **World technology:** Three.js  

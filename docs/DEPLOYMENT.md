@@ -1,4 +1,26 @@
-# Local development and Sites handoff
+# Local development and hosting
+
+## Cloudflare Pages setup — September 26, 2026
+
+The owner requested a public, username-free Cloudflare Pages deployment from
+`ColumbusLabs/demo-district`, production branch `build/demo-district-v1`.
+Use the Pages GitHub integration (not Workers or Direct Upload), project name
+`demo-district` or, if unavailable, `demo-district-columbuslabs`.
+Build from the repository root with `npm run build`, output `dist`, and
+`NODE_VERSION=26`. No Functions, D1, R2, paid plan, domain purchase, or secrets are
+needed. Keep automatic production branch deployments enabled.
+
+Before publication, Site version 14 source
+`e9bae46fee8cd8b1ed75979a45f1fd24abe50e81` was fetched and compared with GitHub
+`e861c4a`. The complete source difference is the arrival-loading update, its local
+artwork, tests and documentation. It was applied on top of the GitHub branch,
+preserving the newer walkways, bridges and storefront link behavior.
+While checks ran, GitHub received the same complete source as `52e8bb1`; its tree
+was verified identical to Site version 14 and adopted as the deployment baseline.
+The existing owner-private ChatGPT Site and `.openai/hosting.json` remain intact.
+
+Publication and live verification are pending GitHub browser sign-in/setup.
+See [Pages checkpoint](CLOUDFLARE_PAGES.md) for the latest evidence.
 
 ## Current publication — September 26, 2026
 

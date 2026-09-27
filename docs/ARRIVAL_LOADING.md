@@ -31,3 +31,15 @@ Future platform slices remain unchanged. No merge or CI workflow change.
 ## Four-second display follow-up
 
 The owner requested a minimum four-second welcome after finding the initial load too quick to see. The overlay now waits for both actual readiness and a 4,000ms timer. It can show 100% and the welcome copy while holding. HUD and world input stay inert until reveal; teardown cancels the hold timer. Reduced motion preserves the hold and shortens only the exit fade.
+
+## Pages preparation follow-up
+
+GitHub `52e8bb1` was verified tree-identical to saved Site version 14. Local checks
+on Node 26.8.2 passed: 82 unit tests, build/typecheck/artifact checks, all 24
+applicable production-browser cases (including a serial failure rerun), and 41
+lifecycle cases. Stale browser copy/readiness assertions were updated. Chrome
+visual inspection found a desktop caption/footer overlap; a desktop-only size cap
+fixes it while retaining all artwork and timing. Desktop and 390×844 phone loader
+views were inspected, plus the real-GPU high-tier district. The final CSS build
+and artifact checks passed. See [Pages checkpoint](CLOUDFLARE_PAGES.md) for the
+separate publication/authorization status; the ChatGPT Site was not changed.
